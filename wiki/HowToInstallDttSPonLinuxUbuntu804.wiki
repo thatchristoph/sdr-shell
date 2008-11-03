@@ -1,4 +1,3 @@
-#summary One-sentence summary of this page.
 How To Install DttSP on Linux Ubuntu 8.04
 
 = Introduction =
