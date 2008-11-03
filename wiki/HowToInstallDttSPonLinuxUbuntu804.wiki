@@ -39,7 +39,7 @@ DttSP can be downloaded via SVN. The latest source can be downloaded using the S
 
 `svn co svn://206.216.146.154/svn/repos_sdr_linux/branches/ab2kt/dttsp-ng`
 
-a new `dttsp-ng` directopry will be created.
+a new `dttsp-ng` directory will be created.
 
 = Compiling DttSP =
 
