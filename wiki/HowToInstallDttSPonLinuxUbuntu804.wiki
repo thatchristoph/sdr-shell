@@ -1,4 +1,4 @@
-How To Install DttSP on Linux Ubuntu 8.04
+#How To Install DttSP on Linux Ubuntu 8.04
 
 = Introduction =
 
