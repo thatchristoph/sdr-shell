@@ -9,6 +9,9 @@
 #include "tx.xpm"
 #include "logo.xpm"
 #include "text.h"
+#include "pmsdr_icons.h"
+
+#define max(x,y) (x > y ? x : y)
 
 Main_Widget::Main_Widget(QWidget *parent, const char *name) 
 	: QWidget(parent, name) 
@@ -129,7 +132,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 							cfgFrame->width() - 4, 
 							cfgFrame->height() - 2 );
 
-	// Staion Callsign
+	// Station Callsign
 	QGroupBox *cfgCallBox = new QGroupBox( cfgFrame1 );
 	cfgCallBox->setTitle( "Station Callsign" );
 	cfgCallBox->setGeometry( 5, 5, 340, 45 );
@@ -513,6 +516,76 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 			 this, SLOT(toggle_SPEC(int)) );
         
     // -----------------------------------------------------------------------
+    // PMSDR IF Gain Frame
+
+    QFrame *PmsdrIfGainFrame = new QFrame( ctlFrame );
+    PmsdrIfGainFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+
+    QPixmap ifgain10_pix( ifgain10_xpm );
+    PMSDR_IfGain10_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_IfGain10_label->setPixmap( ifgain10_pix );
+    PMSDR_IfGain10_label->setLabel (PMSDR_GAIN_10);
+    PMSDR_IfGain10_label->setGeometry( 3, 3, 27, 11 );
+    connect( PMSDR_IfGain10_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_IfGain (int)) );
+    
+    QPixmap ifgain20_pix( ifgain20_xpm ); 
+    PMSDR_IfGain20_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_IfGain20_label->setPixmap( ifgain20_pix );
+    PMSDR_IfGain20_label->setLabel (PMSDR_GAIN_20);
+    PMSDR_IfGain20_label->setGeometry( 33, 3, 27, 11 );
+    connect( PMSDR_IfGain20_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_IfGain (int)) );
+
+    QPixmap ifgain30_pix( ifgain30_xpm ); 
+    PMSDR_IfGain30_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_IfGain30_label->setPixmap( ifgain30_pix );
+    PMSDR_IfGain30_label->setLabel (PMSDR_GAIN_30);
+    PMSDR_IfGain30_label->setGeometry( 63, 3, 27, 11 );
+    connect( PMSDR_IfGain30_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_IfGain (int)) );
+
+    QPixmap ifgain40_pix( ifgain40_xpm ); 
+    PMSDR_IfGain40_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_IfGain40_label->setPixmap( ifgain40_pix );
+    PMSDR_IfGain40_label->setLabel (PMSDR_GAIN_40);
+    PMSDR_IfGain40_label->setGeometry( 93, 3, 27, 11 );
+    connect( PMSDR_IfGain40_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_IfGain (int)) );
+
+    QPixmap ifFilter1_pix( filter1_xpm ); 
+    PMSDR_Filter1_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_Filter1_label->setPixmap( ifFilter1_pix );
+    PMSDR_Filter1_label->setLabel( PMSDR_FILTER_1 );
+    PMSDR_Filter1_label->setGeometry( 3, 17, 27, 11 );
+    connect( PMSDR_Filter1_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_Filter(int)) );
+
+    QPixmap ifFilter2_pix( filter2_xpm ); 
+    PMSDR_Filter2_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_Filter2_label->setPixmap( ifFilter2_pix );
+    PMSDR_Filter2_label->setLabel( PMSDR_FILTER_2 );
+    PMSDR_Filter2_label->setGeometry( 33, 17, 27, 11 );
+    connect( PMSDR_Filter2_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_Filter(int)) );
+
+    QPixmap ifFilter3_pix( filter3_xpm ); 
+    PMSDR_Filter3_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_Filter3_label->setPixmap( ifFilter3_pix );
+    PMSDR_Filter3_label->setLabel( PMSDR_FILTER_3 );
+    PMSDR_Filter3_label->setGeometry( 63, 17, 27, 11 );
+    connect( PMSDR_Filter3_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_Filter(int)) );
+
+    QPixmap ifNoFilter_pix( nofilter_xpm ); 
+    PMSDR_NoFilter_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_NoFilter_label->setPixmap( ifNoFilter_pix  );
+    PMSDR_NoFilter_label->setLabel( PMSDR_FILTER_0 );
+    PMSDR_NoFilter_label->setGeometry( 93, 17, 27, 11 );
+    connect( PMSDR_NoFilter_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_Filter(int)) );
+
+    // -----------------------------------------------------------------------
     // Memory Cells
 
     f1_cell = new MemoryCell( ctlFrame2 );
@@ -749,6 +822,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     modeFrame->setGeometry( 363, 1, 99, 31 );
     swFrame->setGeometry( 463, 1, 93, 31 );
 
+    PmsdrIfGainFrame->setGeometry( 557, 1, 130, 31 );
+
     logoFrame = new QFrame( ctlFrame );
     logoFrame->setBackgroundColor( QColor( 0, 0, 0 ) );
 
@@ -774,6 +849,9 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 	setSpectrumType( spectrumType );
 	setAGC( agcType );
     processorLoad();
+
+    setPMSDR_IfGain ( pmsdr_gain_state   );
+    setPMSDR_Filter ( pmsdr_filter_state );
 
     //worldmap->setObserver( my_lat, my_lon );
     //worldmap->plot();
@@ -995,16 +1073,16 @@ void Main_Widget::updateLayout()
 		1, 
 		width() - 2, 
 		33 );		
-	logoFrame->setGeometry( 
-		557, 
-		1, 
-		ctlFrame->width() - 558, 
-		31 );
-	logoLabel->setGeometry( 
-		logoFrame->width() - 89, 
-		0, 
-		88, 
-		31 );		
+    logoFrame->setGeometry( 
+      	688, 
+   	    1, 
+   	    ctlFrame->width() - 688, 
+   	    31 );
+    logoLabel->setGeometry( 
+     	logoFrame->width() - 89, 
+     	0, 
+     	88, 
+     	31 );		
 	spectrogramFrame->setGeometry( 
 		1, 
 		35, 
@@ -1065,6 +1143,12 @@ void Main_Widget::loadSettings()
 		exit( 1 );
 	}
 
+    // Check for Dttsp version with different spectrum format
+	if ((ep = getenv("DTTSP_38"))) {
+        dttsp38 = atoi(ep);
+	} else {
+        dttsp38 = 0;
+    }
 
     // Open the command FIFO
 	if ((ep = getenv("SDR_PARMPATH"))) {
@@ -1110,6 +1194,21 @@ void Main_Widget::loadSettings()
 		fftFile = fopen( FFT_FILE, "r+" );
 		if ( fftFile == NULL ) {
 			perror( FFT_FILE );
+		}
+	}
+        
+    // Open the PMSDR command FIFO
+	if ((ep = getenv("PMSDR_CMDPATH"))) {
+		pmsdrFile = fopen( ep, "r+" );
+		if ( pmsdrFile == NULL ) {
+			perror( ep );
+		}
+	} else {
+		printf( "::: Unable to get PMSDR_CMDPATH environment variable.\n"
+				"Using default: %s\n", PMSDR_FILE );
+		pmsdrFile = fopen( PMSDR_FILE, "r+" );
+		if ( pmsdrFile == NULL ) {
+			perror( PMSDR_FILE );
 		}
 	}
         
@@ -1213,6 +1312,16 @@ void Main_Widget::loadSettings()
 
 	map_flag = 1;
 
+    //pmsdr_frequency = settings.readEntry( 
+	//	"/sdr-shell/pmsdr_frequency", "7050000" ).toLong();
+    pmsdr_frequency = 0;
+
+    pmsdr_gain_state = settings.readEntry( 
+		"/sdr-shell/pmsdr_gain", "10" ).toInt();
+
+    pmsdr_filter_state = settings.readEntry( 
+		"/sdr-shell/pmsdr_filter", "0" ).toInt();
+
 	printf( "::: Configuration loading completed\n" );
 }
 
@@ -1302,7 +1411,10 @@ void Main_Widget::saveSettings()
     
     settings.setPath( "n1vtn.org", ".qt", QSettings::User );
     //settings.writeEntry( "/sdr-shell/sample_rate", sample_rate );
-    settings.writeEntry( "/sdr-shell/rx_f", rx_f_string );
+
+    printf("Save freq: %s %llu\n", (const char *)rx_f_string, rx_f );
+
+    settings.writeEntry( "/sdr-shell/rx_f", (int)rx_f );
     settings.writeEntry( "/sdr-shell/rx_delta_f", rx_delta_f );
     settings.writeEntry( "/sdr-shell/specApertureLow", specApertureLow );
     settings.writeEntry( "/sdr-shell/specApertureHigh", specApertureHigh );
@@ -1402,6 +1514,11 @@ void Main_Widget::saveSettings()
     settings.writeEntry( "/sdr-shell/f8_mode", f8_cell->getMode() );
     settings.writeEntry( "/sdr-shell/f8_filter_l", f8_cell->getFilter_l() );
     settings.writeEntry( "/sdr-shell/f8_filter_h", f8_cell->getFilter_h() );
+
+    // Save the PM SDR if gain and filters
+    //settings.writeEntry( "/sdr-shell/pmsdr_frequency", pmsdr_frequency    );
+    settings.writeEntry( "/sdr-shell/pmsdr_gain",      pmsdr_gain_state   );
+    settings.writeEntry( "/sdr-shell/pmsdr_filter",    pmsdr_filter_state );
 }
 
 void Main_Widget::finish()
@@ -1450,6 +1567,7 @@ void Main_Widget::keyPressEvent( QKeyEvent * e )
 
 void Main_Widget::rx_cmd( int key )
 {  
+    fprintf (stderr, ">>>>>>>>>> %s %d\n", __FUNCTION__, tuneStep);
     switch( key ) {
         case 4117: // Down arrow
         case 72: // h
@@ -1460,8 +1578,16 @@ void Main_Widget::rx_cmd( int key )
         case 74: // j
             if ( rx_delta_f < sample_rate / 2 - 2000 )
                 rx_delta_f = rx_delta_f + (int)pow( 10, tuneStep );
-            else
-                rx_delta_f = sample_rate / 2 - 2000;
+            else {
+                // compute the new LO and delta
+                int orig_delta_f = 11025; 
+                int delta_lo = -orig_delta_f + rx_delta_f;
+
+                // move the LO up reconvering the original  rx_delta (fsample / 4 ?)
+                rx_f -= delta_lo;
+                rx_delta_f += (-delta_lo + (int)pow( 10, tuneStep ));
+            }
+                //rx_delta_f = sample_rate / 2 - 2000;
             setRxFrequency();
             break;
         case 4115: // Up arrow
@@ -1471,10 +1597,19 @@ void Main_Widget::rx_cmd( int key )
             break;
         case 4116: // Right arrow
         case 75:  // k
-            if ( rx_delta_f > -(sample_rate / 2 - 2000) )
+            if ( !( rx_delta_f > -(sample_rate / 2 - 2000)) ) {
+                // rx_delta_f = -(sample_rate / 2 - 2000);
+
+                // compute the new LO and delta
+                int orig_delta_f = 11025; 
+                int delta_lo = orig_delta_f - rx_delta_f;
+
+                // move the LO up recobvering the original  rx_delta (fsample / 4 ?)
+                rx_f += delta_lo;
+                rx_delta_f += (delta_lo - (int)pow( 10, tuneStep ));
+            } else {
                 rx_delta_f = rx_delta_f - (int)pow( 10, tuneStep );
-            else
-                rx_delta_f = -(sample_rate / 2 - 2000);
+            }
             setRxFrequency();
             break;
         case 4096:
@@ -1568,12 +1703,61 @@ void Main_Widget::process_key( int key )
 void Main_Widget::setRxFrequency()
 {
     char text[20];
-    
+    long newFreq = ( rx_f - rx_delta_f ) ;
+
+    printf(">>>>>>>>>>>> %s: newFreq: %ld rx_f: %llu rx_delta_f: %d\n", __FUNCTION__, newFreq, rx_f, rx_delta_f);
+
     sprintf( text, "%11.6lf", (double)( rx_f - rx_delta_f ) / 1000000.0 );
+
+    // printf("%s: [%s]\n", __FUNCTION__, text);
+
     lcd->display( text );
+
     fprintf( cmdFile, "setOsc %d\n", rx_delta_f );
-    fflush( cmdFile );
+
+    setPMSDRfrequency (rx_f);
 }
+
+
+
+void Main_Widget::setPMSDRfrequency ( int newFreq )
+{
+    printf(">>>>>>>>>>>> %s: newFreq: %d\n", __FUNCTION__, newFreq );
+
+    if ( pmsdrFile != NULL && pmsdr_frequency != newFreq) {
+        fprintf ( pmsdrFile, "f %d\n", newFreq );
+        fflush  ( pmsdrFile );
+        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newFreq);
+        pmsdr_frequency = newFreq ;
+    }
+}
+
+void Main_Widget::setPMSDRifGain ( int newIfGain )
+{
+    printf(">>>>>>>>>>>> %s: newIfGain: %d\n", __FUNCTION__, newIfGain );
+
+    if ( pmsdrFile != NULL) {
+        fprintf ( pmsdrFile, "ifgain %d\n", newIfGain );
+        fflush  ( pmsdrFile );
+        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newIfGain);
+    }
+
+    pmsdr_gain_state = newIfGain; 
+}
+
+void Main_Widget::setPMSDRfilter ( int newFilter )
+{
+    printf(">>>>>>>>>>>> %s: newFilter: %d\n", __FUNCTION__, newFilter );
+
+    if ( pmsdrFile != NULL) {
+        fprintf ( pmsdrFile, "filter %d\n", newFilter );
+        fflush  ( pmsdrFile );
+        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newFilter);
+    }
+    pmsdr_filter_state = newFilter;
+}
+
+
 
 void Main_Widget::setFilter_l( int n )
 {
@@ -1844,9 +2028,10 @@ void Main_Widget::readSpectrum()
     if (fread((char *) &label, sizeof(int), 1, fftFile) != 1) {
         perror( "fread spectrum label" );
     }
-    
+    if ( dttsp38 == 0) {
     if (fread((char *) &stamp, sizeof(int), 1, fftFile) != 1) {
          perror( "fread spectrum stamp" );
+        }
     }
     
     if (fread((char *) spectrum, sizeof(float), DEFSPEC, fftFile) != DEFSPEC) {
@@ -2096,11 +2281,45 @@ void Main_Widget::spectrogramClicked( int x )
 
     int f_limit = sample_rate/2 - 2000;
 
+
+    // bin width in Hz * distance from middle point of spectrogram
     f = (int)((sample_rate/4096.0)*(spectrogram->width()/2 - x));
 
+    fprintf (stderr, ">>>>>>>>>>>> %s: displacement: %d f_limit: %d f: %d\n", __FUNCTION__, x, f_limit, f);
+
+    // the new frequency is computed in order to put the point clicked from user
+    // in the middle of the filter in use in this moment
     rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
-    if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-    if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+
+    //
+    // new code for PMSDR
+    //
+    //if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+    if ( rx_delta_f > f_limit ) {
+
+        // compute the new LO and delta
+        int orig_delta_f = 11025; 
+        int delta_lo = -orig_delta_f + rx_delta_f;
+
+        // move the LO down but....
+        rx_f -= delta_lo;
+        // ...recover the original  rx_delta (fsample / 4 ?)
+        rx_delta_f += (-delta_lo);
+    }
+
+    //if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+    if ( rx_delta_f < -f_limit ) {
+
+        // compute the new LO and delta
+        int orig_delta_f = 11025; 
+        int delta_lo = orig_delta_f - rx_delta_f;
+
+        // move the LO up but... 
+        rx_f += delta_lo;
+        // ...recover the original  rx_delta (fsample / 4 ?)
+        rx_delta_f += delta_lo;
+    } 
+    
     setRxFrequency();
 }
 
@@ -2117,6 +2336,8 @@ void Main_Widget::f_at_mousepointer( int x )
 void Main_Widget::tune( int x )
 {
     int f_limit = sample_rate/2 - 2000;
+
+    fprintf (stderr, ">>>>>>>>>>>> %s: %d f_limit: %d\n", __FUNCTION__, x, f_limit);
     
     rx_delta_f += x;
     if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
@@ -2224,6 +2445,56 @@ void Main_Widget::toggle_SPEC( int )
     set_SPEC( !SPEC_state );
 }
 
+
+void Main_Widget::setPMSDR_IfGain (int newGain)
+{
+    PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+
+    switch (newGain) {
+    case PMSDR_GAIN_10:
+        PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_GAIN_20:
+        PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_GAIN_30:
+        PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_GAIN_40:
+        PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    }
+    setPMSDRifGain ( newGain );
+}
+
+
+void Main_Widget::setPMSDR_Filter (int newFilter)
+{
+    PMSDR_Filter1_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_Filter2_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_Filter3_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_NoFilter_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+
+    switch (newFilter) {
+    case PMSDR_FILTER_0:
+        PMSDR_NoFilter_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_FILTER_1:
+        PMSDR_Filter1_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_FILTER_2:
+        PMSDR_Filter2_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    case PMSDR_FILTER_3:
+        PMSDR_Filter3_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        break;
+    }
+    setPMSDRfilter ( newFilter );
+}
+
 void Main_Widget::set_SPEC( int state )
 {
     SPEC_state = state;
@@ -2280,6 +2551,9 @@ void Main_Widget::updateLOFreq()
 {
     rx_f = cfgLOFreqInput->text().toLongLong();
 	rx_f_string = cfgLOFreqInput->text();
+
+    printf(">>>>>>>>>>>>> %s: %llu (%s)\n", __FUNCTION__, rx_f, (const char *) rx_f_string);
+
 	setRxFrequency();
 }
 
