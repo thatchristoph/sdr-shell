@@ -43,6 +43,8 @@
 #define MTR_FILE "/dev/shm/SDRmeter"
 #define FFT_FILE "/dev/shm/SDRspectrum"
 
+#define PMSDR_FILE "/tmp/PMSDRcommands"
+
 // DttSP constants
 #define DEFSPEC (4096)
 #define MAXRX (4)
@@ -75,6 +77,16 @@ class Main_Widget : public QWidget
         Varilabel *MUTE_label;
         Varilabel *SPEC_label;
 		
+        Varilabel *PMSDR_IfGain10_label;
+        Varilabel *PMSDR_IfGain20_label;
+        Varilabel *PMSDR_IfGain30_label;
+        Varilabel *PMSDR_IfGain40_label;
+
+        Varilabel *PMSDR_Filter1_label;
+        Varilabel *PMSDR_Filter2_label;
+        Varilabel *PMSDR_Filter3_label;
+        Varilabel *PMSDR_NoFilter_label;
+
 		Varilabel *LSB_label;
 		Varilabel *USB_label;
 		Varilabel *DSB_label;
@@ -202,6 +214,7 @@ class Main_Widget : public QWidget
         FILE *cmdFile;
         FILE *mtrFile;
         FILE *fftFile;
+        FILE *pmsdrFile;
 
         FILE *loadavg_stream;
         
@@ -252,6 +265,26 @@ class Main_Widget : public QWidget
 		void updateLayout();
 		void loadMemoryCells();
 
+        enum pmsdr_gain {
+            PMSDR_GAIN_10 = 10,
+            PMSDR_GAIN_20 = 20,
+            PMSDR_GAIN_30 = 30,
+            PMSDR_GAIN_40 = 40
+        };
+        enum pmsdr_filter {
+            PMSDR_FILTER_0 = 0,
+            PMSDR_FILTER_1 = 1,
+            PMSDR_FILTER_2 = 2,
+            PMSDR_FILTER_3 = 3,
+        };
+        void setPMSDRfrequency ( int );
+        void setPMSDRifGain ( int newIfGain );
+        void setPMSDRfilter ( int newFilter );
+        int  dttsp38;
+        int  pmsdr_frequency;
+        int  pmsdr_gain_state;
+        int  pmsdr_filter_state;
+
     public:
         Main_Widget(QWidget *parent = 0, const char *name = 0);
 
@@ -272,7 +305,10 @@ class Main_Widget : public QWidget
         void toggle_BIN( int );
         void toggle_MUTE( int );
         void toggle_SPEC( int );
-        
+          
+        void setPMSDR_IfGain (int) ;
+        void setPMSDR_Filter (int) ;
+
         void setFilter_l( int );
         void setFilter_h( int );
         void setMode( int );
