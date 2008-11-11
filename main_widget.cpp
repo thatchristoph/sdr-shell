@@ -1523,6 +1523,14 @@ void Main_Widget::saveSettings()
 
 void Main_Widget::finish()
 {
+    //
+    // terminate the pmsdr helper program
+    //
+    if ( pmsdrFile != NULL ) {
+        fprintf ( pmsdrFile, "quit\n" );
+        fflush  ( pmsdrFile );
+        fclose ( pmsdrFile );
+    }
     saveSettings();
     exit( 0 );
 }
