@@ -2338,8 +2338,9 @@ void Main_Widget::f_at_mousepointer( int x )
 
     f = (int)((sample_rate/4096.0)*(spectrogram->width()/2 - x));
     
-    sprintf( temp, "%.6lf", (double)( rx_f - f ) / 1000000.0 );
-	M_label->setText( temp );}
+    sprintf( temp, "%.6lf", (double)( rx_f - rx_delta_f - f ) / 1000000.0 );
+	M_label->setText( temp );
+}
 
 void Main_Widget::tune( int x )
 {
