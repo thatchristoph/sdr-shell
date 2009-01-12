@@ -38,6 +38,7 @@
 #include "memorycell.h"
 #include "worldmap.h"
 #include "pbscale.h"
+#include "frequency.h"
 
 #define CMD_FILE "/dev/shm/SDRcommands"
 #define MTR_FILE "/dev/shm/SDRmeter"
@@ -164,13 +165,15 @@ class Main_Widget : public QWidget
 		QFrame *step_10Hz_frame;
 		QFrame *step_100Hz_frame;
 		QFrame *step_1000Hz_frame;
+		QFrame *step_10000Hz_frame;
+		QFrame *step_100000Hz_frame;
 
         WorldMap *worldmap;
         
         unsigned long long int rx_f;
         QString rx_f_string;
         int sample_rate;
-        int rx_delta_f, tuneStep;
+        int tuneStep;
         int *filter_l, *filter_h, filter_w;
         int USB_filter_l, USB_filter_h;
         int LSB_filter_l, LSB_filter_h;
@@ -277,11 +280,12 @@ class Main_Widget : public QWidget
             PMSDR_FILTER_2 = 2,
             PMSDR_FILTER_3 = 3,
         };
-        void setPMSDRfrequency ( int );
+
+        Frequency *pF;
+
         void setPMSDRifGain ( int newIfGain );
         void setPMSDRfilter ( int newFilter );
         int  dttsp38;
-        int  pmsdr_frequency;
         int  pmsdr_gain_state;
         int  pmsdr_filter_state;
 
@@ -296,6 +300,7 @@ class Main_Widget : public QWidget
         void spectrogramClicked( int );
         void plotSpectrum( int );
         void tune( int );
+        void wheelEvent( QWheelEvent * );
         void processorLoad();
 
         void setTuneStep( int );

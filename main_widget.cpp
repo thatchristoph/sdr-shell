@@ -14,7 +14,8 @@
 #define max(x,y) (x > y ? x : y)
 
 Main_Widget::Main_Widget(QWidget *parent, const char *name) 
-	: QWidget(parent, name) 
+	: QWidget(parent, name),
+    pF(0)
 {
     setFocusPolicy( QWidget::TabFocus );
     setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
@@ -24,7 +25,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     initConstants();
     loadSettings();
 
-	setCaption( "SDR-Shell v2b @ " + stationCallsign );
+	setCaption( "SDR-Shell PMSDR @ " + stationCallsign );
 
 	font1PointSize = 14;
     font1 = new QFont( "Andale Mono", font1PointSize, FALSE);
@@ -384,6 +385,12 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 
 	step_1000Hz_frame = new QFrame( ctlFrame );
 	step_1000Hz_frame->setGeometry( 282, 29, 11, 1 );
+
+	step_10000Hz_frame = new QFrame( ctlFrame );
+	step_10000Hz_frame->setGeometry( 282-13, 29, 11, 1 );
+
+	step_100000Hz_frame = new QFrame( ctlFrame );
+	step_100000Hz_frame->setGeometry( 282-13-13, 29, 11, 1 );
 
     rxPix = new QPixmap( rx_xpm );
     txPix = new QPixmap( tx_xpm );
@@ -1211,16 +1218,16 @@ void Main_Widget::loadSettings()
 			perror( PMSDR_FILE );
 		}
 	}
+
+
+    pF = new FrequencyPMSDR ( sample_rate, pmsdrFile, cmdFile );
+    pF->set (settings.readEntry("/sdr-shell/rx_f", "14060000" ).toLongLong());
         
 	// Read config
     //sample_rate = settings.readEntry( 
 	//	"/sdr-shell/sample_rate", "48000" ).toInt();
-    rx_f = settings.readEntry( 
-		"/sdr-shell/rx_f", "14060000" ).toLongLong();
     rx_f_string = settings.readEntry( 
 		"/sdr-shell/rx_f", "14060000" );    
-    rx_delta_f = settings.readEntry( 
-		"/sdr-shell/rx_delta_f", "11025" ).toInt();
     specApertureLow = settings.readEntry( 
 		"/sdr-shell/specApertureLow", "16" ).toInt();
     specApertureHigh = settings.readEntry( 
@@ -1311,10 +1318,6 @@ void Main_Widget::loadSettings()
 		"/sdr-shell/AM_filter_h", "2400" ).toInt();
 
 	map_flag = 1;
-
-    //pmsdr_frequency = settings.readEntry( 
-	//	"/sdr-shell/pmsdr_frequency", "7050000" ).toLong();
-    pmsdr_frequency = 0;
 
     pmsdr_gain_state = settings.readEntry( 
 		"/sdr-shell/pmsdr_gain", "10" ).toInt();
@@ -1412,10 +1415,8 @@ void Main_Widget::saveSettings()
     settings.setPath( "n1vtn.org", ".qt", QSettings::User );
     //settings.writeEntry( "/sdr-shell/sample_rate", sample_rate );
 
-    printf("Save freq: %s %llu\n", (const char *)rx_f_string, rx_f );
-
-    settings.writeEntry( "/sdr-shell/rx_f", (int)rx_f );
-    settings.writeEntry( "/sdr-shell/rx_delta_f", rx_delta_f );
+    printf("Save freq: %d\n", pF->get() );
+    settings.writeEntry( "/sdr-shell/rx_f", pF->get() );
     settings.writeEntry( "/sdr-shell/specApertureLow", specApertureLow );
     settings.writeEntry( "/sdr-shell/specApertureHigh", specApertureHigh );
     settings.writeEntry( "/sdr-shell/tuneStep", tuneStep );
@@ -1516,7 +1517,6 @@ void Main_Widget::saveSettings()
     settings.writeEntry( "/sdr-shell/f8_filter_h", f8_cell->getFilter_h() );
 
     // Save the PM SDR if gain and filters
-    //settings.writeEntry( "/sdr-shell/pmsdr_frequency", pmsdr_frequency    );
     settings.writeEntry( "/sdr-shell/pmsdr_gain",      pmsdr_gain_state   );
     settings.writeEntry( "/sdr-shell/pmsdr_filter",    pmsdr_filter_state );
 }
@@ -1582,20 +1582,9 @@ void Main_Widget::rx_cmd( int key )
             //if ( tuneStep > 0 ) tuneStep--;
             setTuneStep(-1);
             break;
-        case 4114: // Left arrow
+        case 4114: // Left arrow, decrease freq
         case 74: // j
-            if ( rx_delta_f < sample_rate / 2 - 2000 )
-                rx_delta_f = rx_delta_f + (int)pow( 10, tuneStep );
-            else {
-                // compute the new LO and delta
-                int orig_delta_f = 11025; 
-                int delta_lo = -orig_delta_f + rx_delta_f;
-
-                // move the LO up reconvering the original  rx_delta (fsample / 4 ?)
-                rx_f -= delta_lo;
-                rx_delta_f += (-delta_lo + (int)pow( 10, tuneStep ));
-            }
-                //rx_delta_f = sample_rate / 2 - 2000;
+            pF->change ((int)-pow( 10, tuneStep ));
             setRxFrequency();
             break;
         case 4115: // Up arrow
@@ -1603,21 +1592,9 @@ void Main_Widget::rx_cmd( int key )
             //if ( tuneStep < 3 ) tuneStep++;
             setTuneStep(+1);
             break;
-        case 4116: // Right arrow
+        case 4116: // Right arrow, increase freq
         case 75:  // k
-            if ( !( rx_delta_f > -(sample_rate / 2 - 2000)) ) {
-                // rx_delta_f = -(sample_rate / 2 - 2000);
-
-                // compute the new LO and delta
-                int orig_delta_f = 11025; 
-                int delta_lo = orig_delta_f - rx_delta_f;
-
-                // move the LO up recobvering the original  rx_delta (fsample / 4 ?)
-                rx_f += delta_lo;
-                rx_delta_f += (delta_lo - (int)pow( 10, tuneStep ));
-            } else {
-                rx_delta_f = rx_delta_f - (int)pow( 10, tuneStep );
-            }
+            pF->change ((int)pow( 10, tuneStep ));
             setRxFrequency();
             break;
         case 4096:
@@ -1710,35 +1687,13 @@ void Main_Widget::process_key( int key )
 
 void Main_Widget::setRxFrequency()
 {
-    char text[20];
-    long newFreq = ( rx_f - rx_delta_f ) ;
-
-    printf(">>>>>>>>>>>> %s: newFreq: %ld rx_f: %llu rx_delta_f: %d\n", __FUNCTION__, newFreq, rx_f, rx_delta_f);
-
-    sprintf( text, "%11.6lf", (double)( rx_f - rx_delta_f ) / 1000000.0 );
-
-    // printf("%s: [%s]\n", __FUNCTION__, text);
-
-    lcd->display( text );
-
-    fprintf( cmdFile, "setOsc %d\n", rx_delta_f );
-
-    setPMSDRfrequency (rx_f);
-}
-
-
-
-void Main_Widget::setPMSDRfrequency ( int newFreq )
-{
-    printf(">>>>>>>>>>>> %s: newFreq: %d\n", __FUNCTION__, newFreq );
-
-    if ( pmsdrFile != NULL && pmsdr_frequency != newFreq) {
-        fprintf ( pmsdrFile, "f %d\n", newFreq );
-        fflush  ( pmsdrFile );
-        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newFreq);
-        pmsdr_frequency = newFreq ;
+    if ( pF ) {
+        char text[20];
+        sprintf( text, "%11.6lf", (double)( pF->get() ) / 1000000.0 );
+        lcd->display( text );
     }
 }
+
 
 void Main_Widget::setPMSDRifGain ( int newIfGain )
 {
@@ -1841,7 +1796,7 @@ void Main_Widget::setCA_label()
 
 void Main_Widget::setTuneStep( int step )
 {
-    if ( tuneStep < 3 && step > 0 ) tuneStep++;
+    if ( tuneStep < 5 && step > 0 ) tuneStep++;
     else if ( tuneStep > 0 && step < 0 ) tuneStep--;
     
 	switch( tuneStep ) {
@@ -1850,30 +1805,56 @@ void Main_Widget::setTuneStep( int step )
 		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		break;
 	case 1:
 		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_10Hz_frame->setPaletteBackgroundColor( QColor( 200, 200, 255 ) );
 		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		break;
 	case 2:
 		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_100Hz_frame->setPaletteBackgroundColor( QColor( 200, 200, 255 ) );
 		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		break;
 	case 3:
 		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 200, 200, 255 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		break;
+	case 4:
+		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 200, 200, 255 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		break;
+	case 5:
+		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_100000Hz_frame->setPaletteBackgroundColor( QColor( 200, 200, 255 ) );
 		break;
 	default:
 		step_1Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_10Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_100Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		step_1000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
+		step_10000Hz_frame->setPaletteBackgroundColor( QColor( 50, 50, 100 ) );
 		break;
 	}
 }
@@ -2285,49 +2266,12 @@ void Main_Widget::plotSpectrum( int y )
 
 void Main_Widget::spectrogramClicked( int x )
 {
-    int f;
+    int f = (int)((sample_rate/4096.0)*(spectrogram->width()/2 - x));
 
-    int f_limit = sample_rate/2 - 2000;
+    fprintf (stderr, ">>>>>>>>>>>> %s: displacement: %d, frequency: %d\n", __FUNCTION__, x, f);
 
+    pF->change ( - ( f ) );
 
-    // bin width in Hz * distance from middle point of spectrogram
-    f = (int)((sample_rate/4096.0)*(spectrogram->width()/2 - x));
-
-    fprintf (stderr, ">>>>>>>>>>>> %s: displacement: %d f_limit: %d f: %d\n", __FUNCTION__, x, f_limit, f);
-
-    // the new frequency is computed in order to put the point clicked from user
-    // in the middle of the filter in use in this moment
-    rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
-
-    //
-    // new code for PMSDR
-    //
-    //if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-    if ( rx_delta_f > f_limit ) {
-
-        // compute the new LO and delta
-        int orig_delta_f = 11025; 
-        int delta_lo = -orig_delta_f + rx_delta_f;
-
-        // move the LO down but....
-        rx_f -= delta_lo;
-        // ...recover the original  rx_delta (fsample / 4 ?)
-        rx_delta_f += (-delta_lo);
-    }
-
-    //if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
-    if ( rx_delta_f < -f_limit ) {
-
-        // compute the new LO and delta
-        int orig_delta_f = 11025; 
-        int delta_lo = orig_delta_f - rx_delta_f;
-
-        // move the LO up but... 
-        rx_f += delta_lo;
-        // ...recover the original  rx_delta (fsample / 4 ?)
-        rx_delta_f += delta_lo;
-    } 
-    
     setRxFrequency();
 }
 
@@ -2338,19 +2282,39 @@ void Main_Widget::f_at_mousepointer( int x )
 
     f = (int)((sample_rate/4096.0)*(spectrogram->width()/2 - x));
     
-    sprintf( temp, "%.6lf", (double)( rx_f - rx_delta_f - f ) / 1000000.0 );
+    sprintf( temp, "%.6lf", (double)( pF->get() - f ) / 1000000.0 );
+
 	M_label->setText( temp );
 }
 
+//
+// Mouse wheel tuning 
+//
+// Rotating the mouse wheel over the main window the frequency increase/decrease;
+// the change rate is due accordingly to vertical position of mouse pointer (higher == low rate)
+//
+// See:
+// http://doc.trolltech.com/4.3/qwheelevent.html
+//
+void Main_Widget::wheelEvent(QWheelEvent *event)
+ {
+     int numDegrees = event->delta() / 8;
+     int numSteps   = numDegrees / 1;
+     float fraction = ( (float)event->y () / (float)height() );
+
+     int delta = numSteps * (100 * fraction) ;
+
+     tune ( delta );
+
+     // fprintf (stderr, ">>>>>>>>>>>> %s: %d %d %d %d %f\n", __FUNCTION__, numSteps, delta, event->y (), height(), fraction );
+
+     event->accept();
+ }
+
+
 void Main_Widget::tune( int x )
 {
-    int f_limit = sample_rate/2 - 2000;
-
-    fprintf (stderr, ">>>>>>>>>>>> %s: %d f_limit: %d\n", __FUNCTION__, x, f_limit);
-    
-    rx_delta_f += x;
-    if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-    if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+    pF->change (x);
     setRxFrequency();
 }
 
@@ -2519,7 +2483,8 @@ void Main_Widget::setCfg( int )
 void Main_Widget::readMem( MemoryCell *m )
 {
     setMode( m->getMode() );
-    rx_delta_f = m->getFrequency();
+    //rx_delta_f = m->getFrequency();
+    pF->set ( m->getFrequency() );
     setRxFrequency();
 	*filter_l = m->getFilter_l();
 	*filter_h = m->getFilter_h();
@@ -2528,7 +2493,8 @@ void Main_Widget::readMem( MemoryCell *m )
 
 void Main_Widget::writeMem( MemoryCell *m )
 {
-    m->setFrequency( rx_delta_f );
+    //m->setFrequency( rx_delta_f );
+    m->setFrequency( pF->get() );
     m->setMode( mode );
 	m->setFilter( *filter_l, *filter_h );
 }
