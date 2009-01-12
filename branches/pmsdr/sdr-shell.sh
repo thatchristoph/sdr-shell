@@ -245,10 +245,10 @@ fi
 
 ##########################################################################
 # Make sure that pmsdr is running
-TMP=`ps -ef | grep pmsdr | grep -v grep | wc -l`
-if [ $TMP == 0 ]; then
-  echo "pmsdr not running. Stopping..."
-  exit 1
+TMP=`killall -CONT pmsdr ; echo $?`
+if [ $TMP != 0 ]; then
+   echo "pmsdr not running. Stopping..." | gmessage -center -timeout 5 -file -
+   exit 1
 fi
 
 
