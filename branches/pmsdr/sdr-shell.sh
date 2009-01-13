@@ -57,14 +57,14 @@ echo "ALSA Sound card id: $ALSAH"
 # Sound Card Sampling Rate
 #
 if [ -z "$DEFRATE" ]; then
-   echo "Can't find DEFRATE definition"
+   echo "Can't find DEFRATE definition."
    exit 1
 fi
 
 export SDR_DEFRATE="$DEFRATE"
 
 
-JACKD_PARAM=" -R -dalsa -d$ALSAH -r$SDR_DEFRATE "
+JACKD_PARAM=" -dalsa -d$ALSAH -r$SDR_DEFRATE "
 
 ##############################################################################
 
@@ -90,12 +90,19 @@ export PMSDR_CMDPATH=/tmp/PMSDRcommands
 ##############################################################################
 # Test if we have the needed executables and directories
 if [ ! -x $JACKD ]; then
-  echo "Can't find $JACKD"
+  echo "Can't find $JACKD executable."
   exit 1
 fi
 
 if [ ! -d $DTTSP ]; then 
-  echo "Can't find $DTTSP"
+  echo "Can't find directory $DTTSP"
+  exit 1
+fi
+
+DTTSP_EXEC=$DTTSP/sdr-core
+
+if [ ! -x $DTTSP_EXEC ]; then 
+  echo "Can't find $DTTSP_EXEC executable."
   exit 1
 fi
 
@@ -190,9 +197,9 @@ sleep 1
 
 ##########################################################################
 # Start dttsp
-echo "> Starting dttsp: $DTTSP/sdr-core $DTTSP_PARAM..."
+echo "> Starting dttsp: $DTTSP_EXEC $DTTSP_PARAM..."
 cd $DTTSP
-$DTTSP/sdr-core $DTTSP_PARAM &
+$DTTSP_EXEC $DTTSP_PARAM &
 DTTSP_RC=$?
 DTTSP_PID=$!
 
@@ -204,7 +211,7 @@ then
      echo $DTTSP_PID > $VARRUN/sdr-core.pid
      echo "  Succeeded. DttSP PID is $DTTSP_PID"
    else
-     echo "  Failed to start $DTTSP/sdr-core"
+     echo "  Failed to start $DTTSP_EXEC"
      exit 1
    fi
 else
@@ -219,7 +226,7 @@ sleep 1
 ##########################################################################
 # Connect the jack ports
 echo "> Connecting dttsp to jack..."
-sleep 2
+
 echo "  sdr-$DTTSP_PID:ol -> alsa_pcm:playback_1"
 $JACKC sdr-$DTTSP_PID:ol alsa_pcm:playback_1
 echo "  sdr-$DTTSP_PID:or -> alsa_pcm:playback_2"
