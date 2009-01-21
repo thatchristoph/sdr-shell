@@ -1,5 +1,5 @@
 
-char *helptext = 
+const char *helptext = 
 "<center> \
 Table of Contents<br> \
 ----------------------------------<br> \
@@ -118,4 +118,17 @@ VFO cell.<br> \
 The AGC Control is located at the AGC label on the lower Control Frame. The \
 AGC types are long (L), slow (S), medium (M), and fast (F). To select a type, \
 right-click on the type letter.<br> \
+<br> \
+<center>Use as IF for Older Rig<br> \
+With a Softrock, you can connect into the IF of an older rig.   This software \
+in conjunction with Hamlib, allows you to display the correct frequency on the \
+computer.  You can use the DSP features described above with the exception that \
+tuning by clicking on the spectrum will not change your frequency.  You can effect \
+IF shift by using the arrow keys.  The -> and <- arrows shift the IF, the up and down \
+arrows change the amount the IF is shifted.  The G key will center the IF again. Slope \
+Tuning on the (Kenwood TS-850S anyway with a Softrock on the 455 KHz IF) is compensated \
+for if you select it.  You can adjust \
+the offsets for LSB and USB separately.  Mode selection can be made from the rig or the \
+computer.  \
+<br> \
 ";

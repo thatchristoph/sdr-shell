@@ -16,7 +16,7 @@ void MemoryCell::setID( int i )
     id = i;
 }
 
-void MemoryCell::setMode( int m )
+void MemoryCell::setMode( rmode_t m )
 {
     mode = m;
 }
