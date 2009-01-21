@@ -1834,7 +1834,7 @@ void Main_Widget::readMeter()
 void Main_Widget::readSpectrum()
 {
     int j, k;
-    int label, stamp;
+    int label;
     
     if ( fftFile == NULL ) return;
     
@@ -1843,10 +1843,6 @@ void Main_Widget::readSpectrum()
 
     if (fread((char *) &label, sizeof(int), 1, fftFile) != 1) {
         perror( "fread spectrum label" );
-    }
-    
-    if (fread((char *) &stamp, sizeof(int), 1, fftFile) != 1) {
-         perror( "fread spectrum stamp" );
     }
     
     if (fread((char *) spectrum, sizeof(float), DEFSPEC, fftFile) != DEFSPEC) {
