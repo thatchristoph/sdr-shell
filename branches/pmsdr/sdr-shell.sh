@@ -20,7 +20,13 @@ function trapped {
    kill  $JACKD_PID $DTTSP_PID 
 
    rm -f $PMSDR_CMDPATH
-   exit 0
+
+   killall socat
+   killall pmsdr
+
+   rm -f $SDR_PARMPATH
+   rm -f $SDR_METERPATH
+   rm -f $SDR_SPECPATH
 }
 
 trap "trapped" EXIT
@@ -177,7 +183,7 @@ fi
 
 ##########################################################################
 # Start jackd
-echo "> Starting jack: $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM"
+echo ">>>> Starting jack: $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM"
 
 $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM &
 
@@ -186,18 +192,31 @@ if [ $JACKD_PID ]
 then
   echo $JACKD_PID > $VARRUN/jackd.pid
   echo "  Succeeded. JackD PID is $JACKD_PID"
+  echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 else
   echo "  Failed"
   exit 1
 fi
 
 ##########################################################################
-# Needed in some systems
-sleep 1
+# 
+# wait for jackd startup 
+#
+sleep 2
+
+if [ $UDP_HELPER ] 
+then
+   ##########################################################################
+   # Start the helpers
+   #
+   socat -u -b 65536   UDP-LISTEN:19002   PIPE:$SDR_SPECPATH  &
+   socat -u            UDP-LISTEN:19003   PIPE:$SDR_METERPATH &
+fi
+
 
 ##########################################################################
 # Start dttsp
-echo "> Starting dttsp: $DTTSP_EXEC $DTTSP_PARAM..."
+echo ">>>> Starting dttsp: $DTTSP_EXEC $DTTSP_PARAM..."
 cd $DTTSP
 $DTTSP_EXEC $DTTSP_PARAM &
 DTTSP_RC=$?
@@ -210,6 +229,7 @@ then
    then
      echo $DTTSP_PID > $VARRUN/sdr-core.pid
      echo "  Succeeded. DttSP PID is $DTTSP_PID"
+     echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
    else
      echo "  Failed to start $DTTSP_EXEC"
      exit 1
@@ -219,25 +239,11 @@ else
    exit 1
 fi 
 
-##########################################################################
-# Needed in some systems
-sleep 1
 
-##########################################################################
-# Connect the jack ports
-echo "> Connecting dttsp to jack..."
-
-echo "  sdr-$DTTSP_PID:ol -> alsa_pcm:playback_1"
-$JACKC sdr-$DTTSP_PID:ol alsa_pcm:playback_1
-echo "  sdr-$DTTSP_PID:or -> alsa_pcm:playback_2"
-$JACKC sdr-$DTTSP_PID:or alsa_pcm:playback_2
-echo "  alsa_pcm:capture_1 -> sdr-$DTTSP_PID:il"
-$JACKC alsa_pcm:capture_1 sdr-$DTTSP_PID:il
-echo "  alsa_pcm:capture_2 -> sdr-$DTTSP_PID:ir"
-$JACKC alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
 
 ##########################################################################
 # Start the PMSDR
+#
 echo "> Start the pmsdr.... $PMSDR"
 $PMSDR &
 PMSDR_PID=$!
@@ -249,9 +255,9 @@ else
   echo "  Failed"
 fi
 
-
 ##########################################################################
 # Make sure that pmsdr is running
+#
 TMP=`killall -CONT pmsdr ; echo $?`
 if [ $TMP != 0 ]; then
    echo "pmsdr not running. Stopping..." | gmessage -center -timeout 5 -file -
@@ -259,6 +265,31 @@ if [ $TMP != 0 ]; then
 fi
 
 
+##########################################################################
+# Start the Dttsp command helper
+#
+if [ $UDP_HELPER ] 
+then
+   socat -u     PIPE:$SDR_PARMPATH UDP:localhost:19001,connect-timeout=10 &
+fi
+
+
+##########################################################################
+#
+# Connect Dttsp to jack ports
+#
+echo ">>>> Connecting dttsp to jack..."
+
+echo "  sdr-$DTTSP_PID:ol -> alsa_pcm:playback_1"
+$JACKC sdr-$DTTSP_PID:ol alsa_pcm:playback_1
+echo "  sdr-$DTTSP_PID:or -> alsa_pcm:playback_2"
+$JACKC sdr-$DTTSP_PID:or alsa_pcm:playback_2
+echo "  alsa_pcm:capture_1 -> sdr-$DTTSP_PID:il"
+$JACKC alsa_pcm:capture_1 sdr-$DTTSP_PID:il
+echo "  alsa_pcm:capture_2 -> sdr-$DTTSP_PID:ir"
+$JACKC alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
+
+##########################################################################
 #
 # Start the real thing ....
 #
@@ -267,3 +298,4 @@ $SDRSHELL
 SDRSHELL_RC=$?
 
 exit $SDRSHELL_RC
+
