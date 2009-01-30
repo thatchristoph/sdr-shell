@@ -1,0 +1,140 @@
+How To Compile and Install DttSP from CGRAN repository on Linux Ubuntu 8.04
+#labels Phase-Deploy
+
+= Introduction =
+
+This 'how to' explains how to compile and use with sdr-shell 
+the new CGRAN Dttsp.
+
+Frank ab2kt wrote:
+
+_In older versions, sdr-core was commanded by sending lines of text into a named pipe. 
+Blocks of meter data, and spectrum snapshots, were read as binary data from names pipes. 
+This was simple, but it did mean that any process sending commands or reading data 
+had to be running on the same host as sdr-core._
+
+_Commands are simple formulations like *setFilter 200 4000* to set the filter 
+corners to 200 and 4000._
+
+_In the current versions, commands are passed as text strings in UDP datagrams to a socket._
+_Meter data and spectrum snapshots are read as UDP datagrams from sockets._
+_These sockets can be talked to from any client that has a network connection to the host running sdr-core._
+_The client can be written in any language on any OS that does UDP/IP._
+
+= Downloading the prerequisite packages =
+
+{{{
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install gcc g++ manpages-dev autoconf automake subversion
+sudo apt-get install fftw3 fftw3-dev libgsl0-dev
+sudo apt-get install jackd jack-tools qjackctl libjack-dev
+sudo apt-get install linux-rt
+sudo apt-get install liblo0 liblo0-dev
+}}}
+
+= Kernel Paramenters =
+
+The following steps are needed to use jack with the real-time kernel scheduler:
+
+{{{
+sudo su -c 'echo @audio - rtprio 99 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - memlock 250000 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - nice -10 >> /etc/security/limits.conf'
+sudo usermod -G audio -a <user>
+}}}
+
+Replace `<user>` by your login_id. The system needs to be rebooted for the changes to take effect.
+
+= Dowloading DttSP =
+
+DttSP can be downloaded via SVN. The latest source can be downloaded using the SVN:
+
+`svn co https://www.cgran.org/cgran/projects/dttsp dttsp-new`
+
+a new `dttsp-new` directory will be created.
+
+Note: the previosu command will extract from CGRAN SVN repository the whole DttSP project.
+In this howto we are going to use the 'sdr-core' part only.
+
+= Compiling DttSP =
+
+It may be good to keep different versions of DttSP on different directories. 
+
+This way you can easily rollback to the previous version in case of problems. 
+
+In general use the following commands to extract and compile a selected revision, 
+changing the number in the first line:
+
+{{{
+cd   # start from your home dir
+rev=220
+svn co -r $rev https://www.cgran.org/cgran/projects/dttsp/branches/ab2kt/sdr-core/base dttsp-cgran-r$rev
+cd dttsp-cgran-r$rev/src
+./bootstrap
+./configure
+make
+}}}
+
+the previous procedure leaves a sdr-core executable in your `dttsp-ng-r$rev/src` directory.
+Test it with 
+
+{{{
+./sdr-core -h
+}}}
+
+A help text will be showed.
+
+Note: to extract the last release you don't need to indicate -r paramater in svn checkoput; 
+for example, you can use the following commands:
+
+{{{
+cd   # start from your home dir
+svn co https://www.cgran.org/cgran/projects/dttsp/branches/ab2kt/sdr-core/base dttsp-cgran
+cd dttsp-cgran/src
+./bootstrap
+./configure
+make
+}}}
+
+
+= Integrate the socket DttSP with sdr-shell =
+
+In the current versions the sdr-shell communicate with sdr-core via named pipe (FIFO).
+To integrate the new CGRAN DttSP we need to glue the UDP sockets.
+To do that we need the socat program.
+
+{{{
+sudo apt-get install socat
+}}}
+
+Finally, somewhere into yours startup script, just before to start sdr-shell, 
+write down the following commands:
+
+{{{
+socat -u -b 65536 UDP-LISTEN:19002   PIPE:$SDR_SPECPATH  &
+socat -u          UDP-LISTEN:19003   PIPE:$SDR_METERPATH &
+}}}
+
+both must be started *before* sdr-core starts.
+
+This one must start after sdr-core has already bind its udp command socket:
+{{{
+socat -u     PIPE:$SDR_PARMPATH UDP:localhost:19001,connect-timeout=10 &
+}}}
+
+On each row we are going to copy the source specified by firts parameter into the destination as indicated by second parameter.
+
+We must use -u (unidirectional) to avoid that the sdr-core answers to commands will get echoed back
+causing a recursion to infinite.
+
+We must use -b parameter to avoid socat to get lock writing the command pipe.
+For all details on socat see 
+
+[http://www.dest-unreach.org/socat/]
+
+For an example startup script, see the sdr-shell.sh in pmsdr branch.
+
+Nothing has to be modified in the audio stream part.  
+
+
