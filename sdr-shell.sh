@@ -270,7 +270,15 @@ fi
 #
 if [ $UDP_HELPER ] 
 then
-   socat -u     PIPE:$SDR_PARMPATH UDP:localhost:19001,connect-timeout=10 &
+   #
+   # using socat for command pipe sometime may cause an error due to
+   # sdr-core command interpreter that requires each command to travel in 
+   # a single packet udp packet; starting from DttSP release #223 Frank ab2kt 
+   # has written a small utility to circumvent the problem.
+   #
+   #socat -u     PIPE:$SDR_PARMPATH UDP:localhost:19001,connect-timeout=10 &
+   #
+   $DTTSP/passport $SDR_PARMPATH &
 fi
 
 
