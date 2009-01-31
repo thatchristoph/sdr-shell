@@ -1,5 +1,5 @@
 
-char *helptext = 
+const char *helptext = 
 "<center> \
 Table of Contents<br> \
 ----------------------------------<br> \
