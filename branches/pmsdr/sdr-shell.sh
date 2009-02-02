@@ -14,19 +14,11 @@
 
 function trapped {
 
-   JACKD_PID=`cat $VARRUN/sdr-core.pid`
-   DTTSP_PID=`cat $VARRUN/jackd.pid`
-   echo "Killing....... $JACKD_PID $DTTSP_PID"
-   kill  $JACKD_PID $DTTSP_PID 
+   JACKD_PID=`cat $VARRUN/jackd.pid`
+   echo "Killing....... jackd ($JACKD_PID)"
+   kill  $JACKD_PID
 
    rm -f $PMSDR_CMDPATH
-
-   killall socat
-   killall pmsdr
-
-   rm -f $SDR_PARMPATH
-   rm -f $SDR_METERPATH
-   rm -f $SDR_SPECPATH
 }
 
 trap "trapped" EXIT
@@ -77,19 +69,6 @@ JACKD_PARAM=" -dalsa -d$ALSAH -r$SDR_DEFRATE "
 VARRUN=/tmp/
 
 ##############################################################################
-# Setup the DttSP Environment Variables
-
-# Path to DttSP command FIFO
-export SDR_PARMPATH=/dev/shm/SDRcommands
-
-# Path to DttSP meter FIFO
-export SDR_METERPATH=/dev/shm/SDRmeter
-
-# Path to DttSP spectrum FIFO
-export SDR_SPECPATH=/dev/shm/SDRspectrum
-
-
-##############################################################################
 # Setup the PMSDR environment variables
 export PMSDR_CMDPATH=/tmp/PMSDRcommands
 
@@ -117,6 +96,11 @@ if [ ! -x $JACKC ]; then
   exit 1
 fi
 
+if [ ! -x $PMSDR ]; then
+  echo "Can't find $PMSDR executable."
+  exit 1
+fi
+
 # If we have RT capability, get the realtime module ready
 if [ $REALTIME ]; then
   echo "Configuring realtime module"
@@ -129,17 +113,7 @@ fi
 
 ##########################################################################
 # Create FIFOs if needed
-if [ ! -p $SDR_PARMPATH ]; then
-   mkfifo $SDR_PARMPATH
-fi
-
-if [ ! -p $SDR_METERPATH ]; then
-   mkfifo $SDR_METERPATH
-fi
-
-if [ ! -p $SDR_SPECPATH ]; then
-   mkfifo $SDR_SPECPATH
-fi
+#
 
 if [ ! -p $PMSDR_CMDPATH ]; then
    mkfifo $PMSDR_CMDPATH
@@ -147,21 +121,7 @@ fi
 
 ##########################################################################
 # Sanity check
-if [ ! -p $SDR_PARMPATH ]; then
-   echo "Error while creating $SDR_PARMPATH fifo"
-   exit 1
-fi
-
-if [ ! -p $SDR_METERPATH ]; then
-   echo "Error while creating $SDR_METERPATH fifo"
-   exit 1
-fi
-
-if [ ! -p $SDR_SPECPATH ]; then
-   echo "Error while creating $SDR_SPECPATH fifo"
-   exit 1
-fi
-
+#
 if [ ! -p $PMSDR_CMDPATH ]; then
    echo "Error while creating $PMSDR_CMDPATH fifo"
    exit 1
@@ -171,14 +131,14 @@ fi
 # Make sure jack and dttsp are not already running
 TMP=`ps -ef | grep jackd | grep -v grep | wc -l`
 if [ ! $TMP == 0 ]; then
-  echo "jackd is already running. Stopping..."
-  # exit 1
+  echo "jackd is already running. Stopping it..."
+  killall jackd
 fi
 
 TMP=`ps -ef | grep sdr-core | grep -v grep | wc -l`
 if [ ! $TMP == 0 ]; then
-  echo "sdr-core is already running. Stopping..."
-  exit 1
+  echo "sdr-core is already running. Stopping it..."
+  killall sdr-core
 fi
 
 ##########################################################################
@@ -203,16 +163,6 @@ fi
 # wait for jackd startup 
 #
 sleep 2
-
-if [ $UDP_HELPER ] 
-then
-   ##########################################################################
-   # Start the helpers
-   #
-   socat -u -b 65536   UDP-LISTEN:19002   PIPE:$SDR_SPECPATH  &
-   socat -u            UDP-LISTEN:19003   PIPE:$SDR_METERPATH &
-fi
-
 
 ##########################################################################
 # Start dttsp
@@ -262,23 +212,6 @@ TMP=`killall -CONT pmsdr ; echo $?`
 if [ $TMP != 0 ]; then
    echo "pmsdr not running. Stopping..." | gmessage -center -timeout 5 -file -
    exit 1
-fi
-
-
-##########################################################################
-# Start the Dttsp command helper
-#
-if [ $UDP_HELPER ] 
-then
-   #
-   # using socat for command pipe sometime may cause an error due to
-   # sdr-core command interpreter that requires each command to travel in 
-   # a single packet udp packet; starting from DttSP release #223 Frank ab2kt 
-   # has written a small utility to circumvent the problem.
-   #
-   #socat -u     PIPE:$SDR_PARMPATH UDP:localhost:19001,connect-timeout=10 &
-   #
-   $DTTSP/passport $SDR_PARMPATH &
 fi
 
 

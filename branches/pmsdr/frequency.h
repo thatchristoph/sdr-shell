@@ -90,6 +90,26 @@ class FrequencyPMSDR: public FrequencyExtOsc {
 };
 
 
+class DttSPcmd;
+
+class FrequencyPMSDRudp: public FrequencyExtOsc {
+
+    private:
+        FILE *pPmsdr;
+        DttSPcmd *cp;
+
+    protected:
+
+        virtual void changeExtOsc ();
+        virtual void changeSwOsc ();
+
+    public:
+        FrequencyPMSDRudp ( int sampleRate, FILE *pPmSdrFile, DttSPcmd *pCmd );
+        virtual ~FrequencyPMSDRudp ();
+};
+
+
+
 
 
 

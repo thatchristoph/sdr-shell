@@ -10,6 +10,7 @@
 #include "logo.xpm"
 #include "text.h"
 #include "pmsdr_icons.h"
+#include "dttsp.h"
 
 #define max(x,y) (x > y ? x : y)
 
@@ -1157,52 +1158,24 @@ void Main_Widget::loadSettings()
         dttsp38 = 0;
     }
 
-    // Open the command FIFO
-	if ((ep = getenv("SDR_PARMPATH"))) {
-		cmdFile = fopen( ep, "r+" );
-		if ( cmdFile == NULL ) {
-			perror( ep );
-			cmdFile = stdout;
-		}
-	} else {
-		printf( "::: Unable to get SDR_PARMPATH environment variable.\n"
-				"Using default: %s\n", CMD_FILE );
-		cmdFile = fopen( CMD_FILE, "r+" );
-		if ( cmdFile == NULL ) {
-			perror( CMD_FILE );
-			cmdFile = stdout;
-		}
-	}
 
-    // Open the meter FIFO
-	if ((ep = getenv("SDR_METERPATH"))) {
-		mtrFile = fopen( ep, "r+" );
-		if ( mtrFile == NULL ) {
-			perror( ep );
-		}
-	} else {
-		printf( "::: Unable to get SDR_METERPATH environment variable.\n"
-				"Using default: %s\n", MTR_FILE );
-		mtrFile = fopen( MTR_FILE, "r+" );
-		if ( mtrFile == NULL ) {
-			perror( MTR_FILE );
-		}
-	}
+     // create the command, spectrum, and meter ports
 
-    // Open the spectrum FIFO
-	if ((ep = getenv("SDR_SPECPATH"))) {
-		fftFile = fopen( ep, "r+" );
-		if ( fftFile == NULL ) {
-			perror( ep );
-		}
-	} else {
-		printf( "::: Unable to get SDR_SPECPATH environment variable.\n"
-				"Using default: %s\n", FFT_FILE );
-		fftFile = fopen( FFT_FILE, "r+" );
-		if ( fftFile == NULL ) {
-			perror( FFT_FILE );
-		}
-	}
+     // this does a blind send to a port that's already bound,
+     // so it's outbound == !inbound -> inbound = 0
+     //cp = new_dttsp_port_client(DTTSP_PORT_CLIENT_COMMAND, 0);
+
+     // these need to suck up blind sends from elsewhere,
+     // so they need to be bound, hence inbound = 1
+     //sp = new_dttsp_port_client(DTTSP_PORT_CLIENT_SPECTRUM, 1);
+     //mp = new_dttsp_port_client(DTTSP_PORT_CLIENT_METER, 1);
+
+     pCmd = new DttSPcmd ();
+
+     pMeter = new DttSPmeter ();
+
+     pSpectrum = new DttSPspectrum ();
+
         
     // Open the PMSDR command FIFO
 	if ((ep = getenv("PMSDR_CMDPATH"))) {
@@ -1220,7 +1193,7 @@ void Main_Widget::loadSettings()
 	}
 
 
-    pF = new FrequencyPMSDR ( sample_rate, pmsdrFile, cmdFile );
+    pF = new FrequencyPMSDRudp ( sample_rate, pmsdrFile, pCmd );
     pF->set (settings.readEntry("/sdr-shell/rx_f", "14060000" ).toLongLong());
         
 	// Read config
@@ -1523,6 +1496,12 @@ void Main_Widget::saveSettings()
 
 void Main_Widget::finish()
 {
+    saveSettings();
+    //
+    // terminate the sdr-core
+    //
+    pCmd->sendCommand ("setFinish");
+
     //
     // terminate the pmsdr helper program
     //
@@ -1531,7 +1510,10 @@ void Main_Widget::finish()
         fflush  ( pmsdrFile );
         fclose ( pmsdrFile );
     }
-    saveSettings();
+    delete pSpectrum;
+    delete pMeter;
+    delete pCmd;
+    fprintf (stderr, "sdr-shell exiting.\n");
     exit( 0 );
 }
 
@@ -1754,8 +1736,7 @@ void Main_Widget::setFilter_h( int n )
 
 void Main_Widget::setFilter()
 {
-	fprintf( cmdFile, "setFilter %d %d\n", *filter_l, *filter_h );
-	fflush( cmdFile );
+    pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
 	drawPassBandScale();
 }
 
@@ -1877,57 +1858,49 @@ void Main_Widget::setMode( int m )
 
     switch ( mode ) {
         case USB:
-            fprintf( cmdFile, "setMode %d\n", USB );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", USB );
             filter_l = &USB_filter_l; //20;
             filter_h = &USB_filter_h; //2400;
 			USB_label->setBackgroundColor( c_on );
             break;
         case LSB:
-            fprintf( cmdFile, "setMode %d\n", LSB );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", LSB );
             filter_l = &LSB_filter_l; //-2400;
             filter_h = &LSB_filter_h; //-20;
 			LSB_label->setBackgroundColor( c_on );
             break;
         case DSB:
-            fprintf( cmdFile, "setMode %d\n", DSB );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", DSB );
             filter_l = &DSB_filter_l; //-2400;
             filter_h = &DSB_filter_h; //2400;
 			DSB_label->setBackgroundColor( c_on );
             break;
         case AM:
-            fprintf( cmdFile, "setMode %d\n", AM );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", AM );
             filter_l = &AM_filter_l; //-2400;
             filter_h = &AM_filter_h; //2400;
 			AM_label->setBackgroundColor( c_on );
             break;
         case CWL:
-            fprintf( cmdFile, "setMode %d\n", CWL );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", CWL );
             filter_l = &CWL_filter_l; //-500;
             filter_h = &CWL_filter_h; //-200;
 			CWL_label->setBackgroundColor( c_on );
             break;
         case CWU:
-            fprintf( cmdFile, "setMode %d\n", CWU );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", CWU );
             filter_l = &CWU_filter_l; //200;
             filter_h = &CWU_filter_h; //500;
 			CWU_label->setBackgroundColor( c_on );
             break;
         case SAM:
-            fprintf( cmdFile, "setMode %d\n", SAM );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", SAM );
             filter_l = &SAM_filter_l; //-2400;
             filter_h = &SAM_filter_h; //2400;
 			SAM_label->setBackgroundColor( c_on );
             break;
         case FMN:
-            fprintf( cmdFile, "setMode %d\n", FMN );
-            fflush( cmdFile );
+            pCmd->sendCommand ("setMode %d\n", FMN );
             filter_l = &FMN_filter_l; //-4000;
             filter_h = &FMN_filter_h; //4000;
 			FMN_label->setBackgroundColor( c_on );
@@ -1939,47 +1912,34 @@ void Main_Widget::setMode( int m )
 
 void Main_Widget::setIQGain()
 {
-    fprintf( cmdFile, "setcorrectIQgain %d\n", iqGain );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setcorrectIQgain %d\n", iqGain );
 }
 
 void Main_Widget::setIQPhase()
 {
-    fprintf( cmdFile, "setcorrectIQphase %d\n", iqPhase );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setcorrectIQphase %d\n", iqPhase );
 }
 
 void Main_Widget::readMeter()
 {
     int j, k = 0, label;
-    float rxm[MAXRX][RXMETERPTS];
-    char text[10];
     static double meter_peak = 0;
     static int peak_count = 0;
-    
-    if ( mtrFile == NULL ) return;
-    
-    fprintf(cmdFile, "reqRXMeter %d\n", getpid() );
-    fflush(cmdFile);
-    
-    if ( fread((char *) &label, sizeof(int), 1, mtrFile) != 1) {
-		perror("fread meter label");
-    }
-	
-    if ( fread((char *) rxm, sizeof(float), MAXRX * RXMETERPTS, mtrFile)
-         != MAXRX * RXMETERPTS ) {
-		perror("fread meter");
-    }
-    
-    if ( rxm[0][0] >= meter_peak ) {
+    float rxm[MAXRX * RXMETERPTS];
+    char text[10];
+
+    pCmd->sendCommand ("reqRXMeter %d\n", getpid() );
+    pMeter->fetch (&label, rxm, MAXRX * RXMETERPTS);
+
+    if ( rxm[0] >= meter_peak ) {
 		peak_count = 0;
-		meter_peak = rxm[0][0];
-		sprintf( text, "%4d", (int)(rxm[0][0] - metrCal)  );
+		meter_peak = rxm[0];
+		sprintf( text, "%4d", (int)(rxm[0] - metrCal)  );
 		signal_dBm->setText( text );
     } else {
 		if( peak_count++ >= 15 ) {
 			peak_count = 0;
-			meter_peak = rxm[0][0];
+			meter_peak = rxm[0];
 		} else {
 			for ( j = 0; j < 34; j++ ) {
 				if ( meter_peak - metrCal < s_dbm[j] ) {
@@ -1991,7 +1951,7 @@ void Main_Widget::readMeter()
     }
     
     for ( j = 0; j < 34; j++ ) {
-		if ( rxm[0][0] - metrCal > s_dbm[j] )
+		if ( rxm[0] - metrCal > s_dbm[j] )
 			//signalBargraph[j]->setPaletteBackgroundColor( *signalColor[j] );
 			signalBargraph[j]->setPaletteBackgroundColor( QColor( 0,180,255 ));
 		else if ( j != k )
@@ -2009,29 +1969,9 @@ void Main_Widget::readSpectrum()
     int j, k;
     int label, stamp;
     
-    if ( fftFile == NULL ) return;
-    
-    fprintf(cmdFile, "reqSpectrum %d\n", getpid() );
-    fflush(cmdFile);
+    pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
-    if (fread((char *) &label, sizeof(int), 1, fftFile) != 1) {
-        perror( "fread spectrum label" );
-    }
-    if ( dttsp38 == 0) {
-    if (fread((char *) &stamp, sizeof(int), 1, fftFile) != 1) {
-         perror( "fread spectrum stamp" );
-        }
-    }
-    
-    if (fread((char *) spectrum, sizeof(float), DEFSPEC, fftFile) != DEFSPEC) {
-        perror( "fread spec" );
-    }
-
-    //if (fread((char *) oscope, sizeof(float), DEFSPEC, fftFile) != DEFSPEC) {
-    //    perror( "fread spec" );
-    // }
-    
-    //printf("<%d>", label);
+    pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
 
     j = 0;
     for (k = 1; k < DEFSPEC; k++) {
@@ -2349,8 +2289,8 @@ void Main_Widget::set_NR( int state )
     if ( NR_state ) NR_label->setBackgroundColor( QColor( 0, 100, 200 ) );
     else NR_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    fprintf( cmdFile, "setNR %d\n", state );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setNR %d\n", state );
+
 }
 
 void Main_Widget::toggle_ANF( int )
@@ -2364,8 +2304,8 @@ void Main_Widget::set_ANF( int state )
     if ( ANF_state ) ANF_label->setBackgroundColor( QColor( 0, 100, 200 ) );
     else ANF_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    fprintf( cmdFile, "setANF %d\n", ANF_state );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setANF %d\n", ANF_state );
+
 }
 
 void Main_Widget::toggle_NB( int )
@@ -2379,8 +2319,8 @@ void Main_Widget::set_NB( int state )
     if ( NB_state ) NB_label->setBackgroundColor( QColor( 0, 100, 200 ) );
     else NB_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    fprintf( cmdFile, "setNB %d\n", NB_state );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setNB %d\n", NB_state );
+
 }
 
 void Main_Widget::toggle_BIN( int )
@@ -2394,8 +2334,8 @@ void Main_Widget::set_BIN( int state )
     if ( BIN_state ) BIN_label->setBackgroundColor( QColor( 200, 0, 0 ) );
     else BIN_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    fprintf( cmdFile, "setBIN %d\n", BIN_state );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setBIN %d\n", BIN_state );
+
 }
 
 void Main_Widget::toggle_MUTE( int )
@@ -2409,8 +2349,8 @@ void Main_Widget::set_MUTE( int state )
     if ( MUTE_state ) MUTE_label->setBackgroundColor( QColor( 200, 0, 0 ) );
     else MUTE_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    fprintf( cmdFile, "setRunState %d\n", MUTE_state ? 0 : 2 );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setRunState %d\n", MUTE_state ? 0 : 2 );
+
 }
 
 void Main_Widget::toggle_SPEC( int )
@@ -2547,29 +2487,25 @@ void Main_Widget::updateIQPhase( int phase )
 void Main_Widget::setPolyFFT( int state )
 {
 	polyphaseFFT = state;
-    fprintf( cmdFile, "setSpectrumPolyphase %d\n", state );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setSpectrumPolyphase %d\n", state );
 }
 
 void Main_Widget::setFFTWindow( int window )
 {
 	fftWindow = window;
-    fprintf( cmdFile, "setSpectrumWindow %d\n", window );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setSpectrumWindow %d\n", window );
 }
 
 void Main_Widget::setSpectrumType( int type )
 {
 	spectrumType = type;
-    fprintf( cmdFile, "setSpectrumType %d\n", type + 1 );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setSpectrumType %d\n", type + 1 );
 }
 
 void Main_Widget::setAGC( int type )
 {
 	agcType = type;
-    fprintf( cmdFile, "setRXAGC %d\n", type );
-    fflush( cmdFile );
+    pCmd->sendCommand ("setRXAGC %d\n", type );
 
 	QColor on( 150, 50, 50 );
 	QColor off( 0, 0, 0 );

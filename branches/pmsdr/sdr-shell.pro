@@ -8,8 +8,8 @@ INCLUDEPATH += .
 # Input
 HEADERS += main_widget.h spectrogram.h varilabel.h memorycell.h \
            pbscale.h sunpropagator.h moonpropagator.h worldmap.h \
-           spectrum.h text.h frequency.h
+           spectrum.h text.h frequency.h dttsp.h
 SOURCES += main.cpp main_widget.cpp spectrogram.cpp varilabel.cpp \
            memorycell.cpp spectrum.cpp \
            pbscale.cpp sunpropagator.cpp moonpropagator.cpp worldmap.cpp \
-	   frequency.cpp
+	   frequency.cpp dttsp.cpp

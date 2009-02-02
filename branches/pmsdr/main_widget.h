@@ -57,6 +57,11 @@
 
 #define NUM_MODES 12
 
+// forward decls for dttsp.h classes
+class DttSPcmd;
+class DttSPmeter;
+class DttSPspectrum;
+
 class Main_Widget : public QWidget
 {
     Q_OBJECT
@@ -214,9 +219,10 @@ class Main_Widget : public QWidget
         float loadavg;
         double my_lon, my_lat;
         
-        FILE *cmdFile;
-        FILE *mtrFile;
-        FILE *fftFile;
+        DttSPcmd      *pCmd;
+        DttSPspectrum *pSpectrum;
+        DttSPmeter    *pMeter;
+
         FILE *pmsdrFile;
 
         FILE *loadavg_stream;
