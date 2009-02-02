@@ -8,6 +8,7 @@
 //
 #include <stdio.h>
 #include <stdlib.h>
+#include "dttsp.h"
 #include "frequency.h"
 
 
@@ -109,6 +110,46 @@ void FrequencyPMSDR :: changeSwOsc ()
     if ( pDttsp != NULL ) {
         fprintf( pDttsp, "setOsc %d\n", fSwOsc_ );
         fflush ( pDttsp );
+    }
+}
+
+FrequencyPMSDRudp :: FrequencyPMSDRudp ( int sampleRate, FILE *pPmSdrFile, DttSPcmd *pCmd ):
+    FrequencyExtOsc (sampleRate, 7050000, 30*1E6, 1E5 ),
+    pPmsdr (pPmSdrFile),
+    cp (pCmd)
+{
+
+}
+
+FrequencyPMSDRudp :: ~FrequencyPMSDRudp ()
+{
+}
+
+void FrequencyPMSDRudp :: changeExtOsc ()
+{
+    printf(">>>>>>>>>>>> %s: new Ext Osc: %d\n", __FUNCTION__, fExtOsc_ );
+
+    if ( pPmsdr != NULL) {
+        fprintf ( pPmsdr, "f %d\n", fExtOsc_ );
+        fflush  ( pPmsdr );
+        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, fExtOsc_);
+    }
+}
+
+void FrequencyPMSDRudp :: changeSwOsc ()
+{
+    printf(">>>>>>>>>>>> %s: new Sw Osc: %d\n", __FUNCTION__, fSwOsc_ );
+    if ( cp != NULL ) {
+        //char szBuf [BUFSIZ];
+
+        //sprintf (szBuf, "setOsc %d\n", fSwOsc_ );
+
+        //send_command (cp, szBuf);
+        int rc = cp->sendCommand ( "setOsc %d\n", fSwOsc_ );
+
+        if (rc < 0) {
+            fprintf (stderr, "%s: sendCommand rc: %d\n", __FUNCTION__, rc);
+        }
     }
 }
 
