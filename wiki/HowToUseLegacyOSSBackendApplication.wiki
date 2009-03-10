@@ -2,7 +2,7 @@
 
 = Introduction =
 
-There are many useful backend application: digital modes decoder, WEFAX decoder...
+There are many useful backend applications: digital mode decoders, WEFAX decoders...
 Alas these applications were written in the pre-JACKD age to work on the audio board device.
 
 These applications need to open a some /dev/dsp device but in modern environment the device is locked
@@ -63,6 +63,4 @@ in this program you configure the device via the Settings->Devices->Sound menu.
 
 Write down _/dev/dsp5_ into *Sound Card Device* entry field and write the correct sample rate in
 *Requested Sample Rate* entry field.
-
-
 
