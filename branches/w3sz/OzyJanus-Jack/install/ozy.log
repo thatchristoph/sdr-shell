@@ -1,0 +1,31 @@
+HPSDR_UploadFirmware: Processed 725 lines.
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+ResetCPU(true).......returns 1
+UploadFirmware('/home/John Melton G0ORX/N6LYT/NetBeansProjects/java-sdr/bin/ozy/ozyfw-sdr1k.hex')......returns 725
+ResetCPU(false).......returns 1
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+87010 bytes transferred.
+LoadFPGA succeeded!
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
+usb_find_busses returned: 5
+usb_find_devices returned: 8
+I2C Bytes written = 2 
