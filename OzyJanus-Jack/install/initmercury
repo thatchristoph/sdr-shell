@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#/bin/echo "creating /var/lock/ozy.lock" >> /var/log/ozy.log 2>&1
+#/bin/echo `/bin/date` > /var/lock/ozy.lock
+
+PATH=/usr/local/ozy:$PATH
+RELEASE=/usr/local/ozy
+
+USB_VID=0xfffe
+USB_PID=0x0007
+#USB_VID=$1
+#USB_PID=$2
+
+#OZY_HEX=ozyfw.hex
+OZY_HEX=ozyfw-sdr1k.hex
+
+/bin/echo "Loading Ozy hex file $OZY_HEX" >> /var/log/ozy.log
+loadFW $USB_VID $USB_PID $RELEASE/$OZY_HEX
+sleep 5
+
+#JANUS_RBF=SpecAn.rbf
+JANUS_RBF=Ozy_Janus.rbf
+
+/bin/echo "Loading Janus FPGA file $JANUS_RBF" >> /var/log/ozy.log
+loadFPGA $USB_VID $USB_PID $RELEASE/$JANUS_RBF

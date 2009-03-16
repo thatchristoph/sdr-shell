@@ -31,6 +31,7 @@
 
 #include <time.h>
 #include <sys/timeb.h>
+
 #include "spectrogram.h"
 #include "spectrum.h"
 #include "varilabel.h"
@@ -42,9 +43,6 @@
 #define CMD_FILE "/dev/shm/SDRcommands"
 #define MTR_FILE "/dev/shm/SDRmeter"
 #define FFT_FILE "/dev/shm/SDRspectrum"
-//added by W3SZ
-#define HW_FILE "/dev/shm/hw_commands"
-//
 
 // DttSP constants
 #define DEFSPEC (4096)
@@ -84,8 +82,6 @@ class Main_Widget : public QWidget
 		bool useSlopeTune;
 		bool muteXmit;
 
-		//added by w3sz
-		int preampVal;
 		bool useIF;
 		int usbOffset;
 		int lsbOffset;
@@ -234,8 +230,6 @@ class Main_Widget : public QWidget
 		FILE *cmdFile;
 		FILE *mtrFile;
 		FILE *fftFile;
-		//added by W3SZ
-		FILE *hw_File;
 
 		FILE *loadavg_stream;
 

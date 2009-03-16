@@ -1,0 +1,20 @@
+#!/bin/bash
+
+DEVICE=`echo $1 | sed -e '/usbdev.*/!d'`
+
+echo "DEVICE=$DEVICE" >> /var/log/ozy.log 2>&1
+
+if test "$DEVICE" == "$1"; then
+    if [ ! -f /var/lock/ozy.lock ]; then
+        /bin/echo `/bin/date` >> /var/log/ozy.log 2>&1
+        /bin/echo "****** Loading OZY/Janus ******" >> /var/log/ozy.log 2>&1
+        /bin/echo "PARAMS $1 $2 $3 $4" >> /var/log/ozy.log 2>&1 
+        /bin/echo "Loading firmware" >> /var/log/ozy.log 2>&1
+        /usr/local/ozy/initozy $3 $4 >> /var/log/ozy.log 2>&1 &
+    else
+        /bin/echo `/bin/date` >> /var/log/ozy.log 2>&1
+        /bin/echo "****** Loading OZY/Janus ******" >> /var/log/ozy.log 2>&1
+        /bin/echo "/var/lock/ozy.lock exists - ignoring device reset" >> /var/log/ozy.log 2>&1
+    fi
+fi
+

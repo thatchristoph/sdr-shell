@@ -14,8 +14,12 @@ Spectrogram<br> \
 Filter Control<br> \
 Spectrum<br> \
 Virtual VFOs<br> \
-Automatic Gain Control (AGC) \
-</center><br> \
+Automatic Gain Control (AGC)<br> \
+Keystoke Chart<br> \
+Mouse Commands<br> \
+<br> \
+----------------------------------</center><br> \
+<br>\
 <center><a name=\"S-Meter\">S-Meter</a><br> \
 ----------------------------------</center><br> \
 <center>S-points for frequencies below 30 MHz:</center><br> \
@@ -118,4 +122,77 @@ VFO cell.<br> \
 The AGC Control is located at the AGC label on the lower Control Frame. The \
 AGC types are long (L), slow (S), medium (M), and fast (F). To select a type, \
 right-click on the type letter.<br> \
+<br> \
+<center>Use as IF for Older Rig <br>\
+----------------------------------</center><br> \
+With a Softrock, you can connect into the IF of an older rig.   This software \
+in conjunction with Hamlib, allows you to display the correct frequency on the \
+computer.  You can use the DSP features described above with the exception that \
+tuning by clicking on the spectrum will not change your frequency.  You can effect \
+IF shift by using the arrow keys.  The left and right arrows shift the IF, the up and down \
+arrows change the amount the IF is shifted.  The G key will center the IF again. Slope \
+Tuning on the (Kenwood TS-850S anyway with a Softrock on the 455 KHz IF) is compensated \
+for if you select it.  You can adjust \
+the offsets for LSB and USB separately.  Mode selection can be made from the rig or the \
+computer. <br> \
+<br> \
+<br> \
+<center>Keystroke Chart <br> \
+----------------------------------</center><br> \
+<blockquote> \
+<pre> \
+Keystroke     Function<br> \
+<br> \
+comma         Preamp Off<br> \
+period        Preamp Onn<br> \
+Alt-H         Config Menus and Help Page <br> \
+Down arrow    Decrease Tune Step Size<br> \
+Up arrow      Increase Tune Step Size<br> \
+Left arrow    Decrease frequency by Tune Step Size<br> \
+Right arrow   Increase frequency by Tune Step Size<br> \
+G             Return to Configured LO Frequency<br> \
+j             Increase tuning frequency<br> \
+k             Decrease tuning frequency<br> \
+l             Increase tuning step<br> \
+h             Decrease tuning step<br> \
+u             Decrease lower limit of filter passband<br> \
+i             Increase lower limit of filter passband<br> \
+o             Decrease higher limit of filter passband<br> \
+p             Increase higher limit of filter passband<br> \
+q             Decrease IQ gain<br> \
+w             Increase IQ gain<br> \
+e             Decrease IQ phase<br> \
+r             Increase IQ phase<br> \
+z             Decrease spectrogram color aperture lower limit<br> \
+x             Increase spectrogram color aperture lower limit<br> \
+c             Decrease spectrogram color aperture higher limit<br> \
+v             Increase spectrogram color aperture higher limit<br> \
+ESC           Quit program<br> \
+</pre> \
+</blockquote> \
+<br> \
+<br> \
+<br> \
+<center>Mouse Commands <br> \
+----------------------------------</center><br> \
+<blockquote> \
+<pre> \
+Left click on upper spectrogram  Bring signal to passband<br> \
+Left click + horizontal drag     Tune in 1 Hz steps<br> \
+     on upper spectrogram<br> \
+Right click + horizontal drag    Tune in 10 Hz steps<br> \
+     on upper spectrogram<br> \
+Middle click + horizontal drag   Tune in 100 Hz steps<br> \
+     on upper spectrogram<br> \
+Left click on NR label           Toggle Noise Reduction<br> \
+Left click on ANF label          Toggle Automatic Notch Filter<br> \
+Left click on NB label           Toggle Noise Blanker<br> \
+Left click on BIN label          Tougle Binaural Audio output<br> \
+Right click on F1-F8 labels      Read memory<br> \
+Left click on F1-F8 labels       Write memory<br> \
+Right click on CFG label         Open configuration window<br> \
+</pre> \
+</blockquote> \
+<br> \
+<br> \
 ";

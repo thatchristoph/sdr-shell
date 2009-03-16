@@ -1246,17 +1246,6 @@ void Main_Widget::loadSettings()
 		}
 	}
 
-
-	// Open Hardware FIFO--added by w3sz
-
-    hw_File = fopen (HW_FILE,"r+");
-	if ( hw_File == NULL ) {
-			perror( HW_FILE );
-		
-	                printf( "::: Unable to findhw_commands file.\n");
-	   }
-	//
-
 	// Open the meter FIFO
 	if ( ( ep = getenv ( "SDR_METERPATH" ) ) )
 	{
@@ -1325,9 +1314,9 @@ void Main_Widget::loadSettings()
 	tuneStep = settings.readEntry (
 	               "/sdr-shell/tuneStep", "1" ).toInt();
 	stationCallsign = settings.readEntry (
-	                      "/sdr-shell/stationCallsign", "W3SZ" );
+	                      "/sdr-shell/stationCallsign", "nocall" );
 	stationQTH = settings.readEntry (
-	                 "/sdr-shell/stationQTH", "FN20ag" );
+	                 "/sdr-shell/stationQTH", "AA00aa" );
 	iqGain = settings.readEntry (
 	             "/sdr-shell/iqGain", "0" ).toInt();
 	iqPhase = settings.readEntry (
@@ -1355,9 +1344,9 @@ void Main_Widget::loadSettings()
 	filterLine = settings.readEntry (
 	                 "/sdr-shell/filterLine", "0" ).toInt();
 	my_lat = settings.readEntry (
-	             "/sdr-shell/my_lat", "40.267" ).toDouble();
+	             "/sdr-shell/my_lat", "0" ).toDouble();
 	my_lon = settings.readEntry (
-	             "/sdr-shell/my_lon", "75.966" ).toDouble();
+	             "/sdr-shell/my_lon", "0" ).toDouble();
 	font1PointSize = settings.readEntry (
 	                     "/sdr-shell/font1PointSize", "8" ).toInt();
 	polyphaseFFT = settings.readEntry (
@@ -1411,24 +1400,13 @@ void Main_Widget::loadSettings()
 	FMN_filter_h = settings.readEntry (
 	                   "/sdr-shell/FMN_filter_h", "4000" ).toInt();
 	AM_filter_l = settings.readEntry (
-	                  "/sdr-shell/AM_filter_l", "-4000" ).toInt();
+	                  "/sdr-shell/AM_filter_l", "-2400" ).toInt();
 	AM_filter_h = settings.readEntry (
-	                  "/sdr-shell/AM_filter_h", "4000" ).toInt();
-	//added by w3sz
-	preampVal = 	settings.readEntry (
-					  "/sdr-shell/preampVal","1").toInt();
-			fprintf( hw_File, "setPreampGain %d\n", preampVal);
-			fflush( hw_File ); 
-	
-	//added by w3sz [LT2208 dither and random both fixed to 'on']
-		fprintf( hw_File, "setLT2208Dither %d\n", 1);
-   
-        fprintf( hw_File, "setLT2208Random %d\n", 1);
-	//
+	                  "/sdr-shell/AM_filter_h", "2400" ).toInt();
 	useHamlib = ( bool ) settings.readEntry (
 	            "/sdr-shell/useHamlib", "0" ).toInt();
 	rigString = settings.readEntry (
-	                "/sdr-shell/hamlib_rig", "1" );
+	                "/sdr-shell/hamlib_rig", "1901" );
 	rig = rigString.toInt();
 	portString =  settings.readEntry (
 	                  "/sdr-shell/hamlib_port", "localhost" );
@@ -1438,7 +1416,7 @@ void Main_Widget::loadSettings()
 	speed = speedString.toInt();
 
 	map_flag = 1;
-	
+
 	printf ( "::: Configuration loading completed\n" );
 }
 
@@ -1525,7 +1503,7 @@ void Main_Widget::saveSettings()
 	QSettings settings;
 
 	printf ( "Saving settings...\n" );
-	//These are saved to /root/.qt/sdr-shellrc
+
 	settings.setPath ( "n1vtn.org", ".qt", QSettings::User );
 	//settings.writeEntry( "/sdr-shell/sample_rate", sample_rate );
 	settings.writeEntry ( "/sdr-shell/rx_f", rx_f_string );
@@ -1585,9 +1563,6 @@ void Main_Widget::saveSettings()
 	settings.writeEntry ( "/sdr-shell/FMN_filter_h", FMN_filter_h );
 	settings.writeEntry ( "/sdr-shell/AM_filter_l", AM_filter_l );
 	settings.writeEntry ( "/sdr-shell/AM_filter_h", AM_filter_h );
-	
-	// Save preamp values
-	settings.writeEntry ("/sdr-shell/preampVal",preampVal);
 
 	// Save memory cells
 	QString f_string;
@@ -1680,7 +1655,6 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 				case 65: setMode ( RIG_MODE_AM , FALSE ); break; // a
 				case 76: setMode ( RIG_MODE_LSB , FALSE ); break; // l
 				case 85: setMode ( RIG_MODE_USB, FALSE ); break; // u
-				case 72: setCfg(4); break; //h calls up help
 				default: break;
 			}
 			break;
@@ -1701,7 +1675,6 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 
 void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 {
-
 	switch ( key )
 	{
 		case 4117: // Down arrow
@@ -1711,12 +1684,10 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
 		case 4114: // Left arrow
 		case 74: // j
-		//deleted by w3sz
-		//	if ( rx_delta_f < sample_rate / 2 - 2000 )
+			if ( rx_delta_f < sample_rate / 2 - 2000 )
 				rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
-		//deleted by w3sz
-		//	else
-		//		rx_delta_f = sample_rate / 2 - 2000;
+			else
+				rx_delta_f = sample_rate / 2 - 2000;
 			setRxFrequency();
 			break;
 		case 4115: // Up arrow
@@ -1726,29 +1697,15 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
 		case 4116: // Right arrow
 		case 75:  // k
-		//deleted by w3sz
-		//	if ( rx_delta_f > - ( sample_rate / 2 - 2000 ) )
+			if ( rx_delta_f > - ( sample_rate / 2 - 2000 ) )
 				rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep );
-		//deleted by w3sz
-		//	else
-		//		rx_delta_f = - ( sample_rate / 2 - 2000 );
+			else
+				rx_delta_f = - ( sample_rate / 2 - 2000 );
 			setRxFrequency();
 			break;
 		case 71: //g
 			setDefaultRxFrequency();
 			break;
-		//added by w3sz
-		case 44: //comma, used for preamp gain down
-			fprintf( hw_File, "setPreampGain %d\n", 0);
-			fflush( hw_File ); 			
-			preampVal = 0;			
-			break;
-		case 46: //period, used for preamp gain up
-			fprintf( hw_File, "setPreampGain %d\n", 1);
-			fflush( hw_File ); 	
-			preampVal = 1;
-			break;
-	
 		case 4096:
 			finish();
 			break;
@@ -1768,7 +1725,7 @@ void Main_Widget::process_key ( int key )
 
 	switch ( key )
 	{
-		case 85: 
+		case 85:
 			setFilter_l ( -1 );
 			break;
 		case 73:
@@ -1855,33 +1812,23 @@ void Main_Widget::setDefaultRxFrequency ( )
 	switch ( mode )
 	{
 		case RIG_MODE_USB:
-		//	substitution by w3sz
-		//	rx_delta_f = rx_if - rx_f + usbOffset + slopeTuneOffset; //1358;
-			rx_delta_f = usbOffset + slopeTuneOffset + 11000 ; //1358;
+			rx_delta_f = rx_if - rx_f + usbOffset + slopeTuneOffset; //1358;
 			break;
 		case RIG_MODE_LSB:
-		//	substitution by w3sz
-		//	rx_delta_f = rx_if -rx_f -lsbOffset + slopeTuneOffset;  //1585;  
-			rx_delta_f = -lsbOffset + slopeTuneOffset + 11000 ;  //1585;
+			rx_delta_f = rx_if -rx_f -lsbOffset + slopeTuneOffset;  //1585;  
 			break;
 		case RIG_MODE_CW:
-		//	substitution by w3sz
-		//	rx_delta_f = rx_if -rx_f + cwPitch + slopeTuneOffset; // This seems to be only correct with narrow filters in.
-			rx_delta_f = cwPitch + slopeTuneOffset + 11000 ;
+			rx_delta_f = rx_if -rx_f + cwPitch + slopeTuneOffset; // This seems to be only correct with narrow filters in.
 			break;
 		case RIG_MODE_CWR:
-		//	substitution by w3sz
-		//	rx_delta_f = rx_if -rx_f - cwPitch + slopeTuneOffset; // This seems to be only correct with narrow filters in.
-			rx_delta_f = - cwPitch + slopeTuneOffset + 11000 ;
+			rx_delta_f = rx_if -rx_f - cwPitch + slopeTuneOffset; // This seems to be only correct with narrow filters in.
 			break;
 		case RIG_MODE_AM:
 		case RIG_MODE_SAM:
 		case RIG_MODE_DSB:
 		case RIG_MODE_FM:
 		default:
-		//	substitution by w3sz
-		//	rx_delta_f = rx_if - rx_f + slopeTuneOffset;
-			rx_delta_f = slopeTuneOffset + 11000 ;
+			rx_delta_f = rx_if - rx_f + slopeTuneOffset;
 			break;
 	}
 	setRxFrequency();
@@ -1891,20 +1838,12 @@ void Main_Widget::setRxFrequency()
 {
 	char text[20];
 	if ( !useIF )
-	//frequency adjusted by w3sz
 	{
-		sprintf ( text, "%11.6lf", ( double ) ( rx_f - rx_delta_f + 11000 ) / 1000000.0 );
+		sprintf ( text, "%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
 		lcd->display ( text );
 	}
-
-//  deleted by w3sz
-//	fprintf ( cmdFile, "setOsc %d\n", rx_delta_f );
-//	fflush ( cmdFile );
-	
-//  added by w3sz  
-    fprintf( hw_File, "setFrequency %f\n", (rx_f - rx_delta_f) / 1000000.0 );
-    fflush( hw_File ); 
-//
+	fprintf ( cmdFile, "setOsc %d\n", rx_delta_f );
+	fflush ( cmdFile );
 }
 
 void Main_Widget::setFilter_l ( int n )
@@ -2202,7 +2141,7 @@ void Main_Widget::readMeter()
 void Main_Widget::readSpectrum()
 {
 	int j, k;
-	int label, stamp;
+	int label;
 
 	if ( fftFile == NULL ) return;
 
@@ -2213,12 +2152,6 @@ void Main_Widget::readSpectrum()
 	{
 		perror ( "fread spectrum label" );
 	}
-
-//	added by w3sz   
-   	 if (fread((char *) &stamp, sizeof(int), 1, fftFile) != 1) {
-       		perror( "fread spectrum stamp" );
-    }
-//
 
 	if ( fread ( ( char * ) spectrum, sizeof ( float ), DEFSPEC, fftFile ) != DEFSPEC )
 	{
@@ -2472,28 +2405,21 @@ void Main_Widget::plotSpectrum ( int y )
 	         0, 0, pix.width(), pix.height(), Qt::CopyROP, true );
 }
 
-//click
-
 void Main_Widget::spectrogramClicked ( int x )
 {
 	int f;
 
 	int f_limit = sample_rate/2 - 2000;
-//	following removed by w3sz
-//	if ( useIF )  // Disable changing frequency for IF mode.  Add IF shift later.
-//	{
-//
+	if ( useIF )  // Disable changing frequency for IF mode.  Add IF shift later.
+	{
 		f = ( int ) ( ( sample_rate/4096.0 ) * ( spectrogram->width() /2 - x ) );
 
 
-
 		rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
-//	following removed by w3sz
-//		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-//		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
 		setRxFrequency();
-//	}
-//
+	}
 }
 
 void Main_Widget::f_at_mousepointer ( int x )
@@ -2512,8 +2438,8 @@ void Main_Widget::tune ( int x )
 	int f_limit = sample_rate/2 - 2000;
 
 	rx_delta_f += x;
-//	if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-//	if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+	if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+	if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
 	setRxFrequency();
 }
 
@@ -2673,12 +2599,8 @@ void Main_Widget::updateLOFreq()
 {
 	rx_f = cfgLOFreqInput->text().toLongLong();
 	rx_f_string = cfgLOFreqInput->text();
-	// added by w3sz
-	rx_delta_f = 11000;
-	//
 	if ( useIF ) setDefaultRxFrequency();
 	else setRxFrequency();
-
 }
 
 void Main_Widget::updateIFreq()
