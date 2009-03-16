@@ -16,7 +16,7 @@ void MemoryCell::setID( int i )
     id = i;
 }
 
-void MemoryCell::setMode( int m )
+void MemoryCell::setMode( rmode_t m )
 {
     mode = m;
 }
@@ -61,7 +61,7 @@ void MemoryCell::mouseReleaseEvent ( QMouseEvent *e )
 {
     if ( e->state() == LeftButton )
         emit read( this );
-    else if ( e->state() == MidButton )
+    else if ( e->state() == RightButton )
         emit write( this );
 }
 

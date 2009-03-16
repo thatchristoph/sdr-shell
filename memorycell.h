@@ -3,6 +3,7 @@
 
 #include <qlabel.h>
 #include <qstring.h>
+#include <hamlib/rig.h>
 
 class MemoryCell : public QLabel
 {
@@ -14,7 +15,7 @@ class MemoryCell : public QLabel
         void setID( int );
         void setMemo( QString );
         void setFrequency( long long int );
-        void setMode( int );
+        void setMode( rmode_t );
         void setFilter( int, int );
         
         int getID();
