@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#
+killall jackd sdr-core socat passport sdr-shell ozy qjackctl&
+exit
+
