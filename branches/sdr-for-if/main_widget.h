@@ -41,6 +41,7 @@
 #include "worldmap.h"
 #include "pbscale.h"
 #include "hamlibwrapper.h"
+#include "dttsp.h"
 
 #define CMD_FILE "/dev/shm/SDRcommands"
 #define MTR_FILE "/dev/shm/SDRmeter"
@@ -234,8 +235,13 @@ class Main_Widget : public QWidget
 		float loadavg;
 		double my_lon, my_lat;
 
+		DttSPcmd      *pCmd;
+		DttSPspectrum *pSpectrum;
+		DttSPmeter    *pMeter;
+
+/*	The old FIFO way.
 		FILE *cmdFile;
-		FILE *mtrFile;
+		FILE *mtrFile; */
 		FILE *fftFile;
 
 		FILE *loadavg_stream;
