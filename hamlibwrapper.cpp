@@ -123,23 +123,23 @@ void hamlibWrapper::run()
 		
 		if ( muteOnXmit )
 		{
-			mutex.lock();
+			//mutex.lock();
 			if ( rig_get_ptt ( rRig, vfo, &transmit ) != RIG_OK )
 			{
 				fprintf ( stderr, "Error getting vfo from radio!\n" );
 				retval--;
 			}
-			mutex.unlock();
+			//mutex.unlock();
 			if ( oldtrstate != transmit )
 			{
-				mutex.lock();
+				//mutex.lock();
 				emit nowTransmit ( ( int ) transmit );
-				mutex.unlock();
+				//mutex.unlock();
 				oldtrstate = transmit;
 			}
 		}
 
-		mutex.lock(); //Check vfo and mode
+		//mutex.lock(); //Check vfo and mode
 		if ( rig_get_vfo ( rRig, &vfo ) != RIG_OK )
 		{
 			fprintf ( stderr, "Error getting vfo from radio!\n" );
@@ -150,12 +150,12 @@ void hamlibWrapper::run()
 			fprintf ( stderr, "Error getting vfo from radio!\n" );
 			retval--;
 		}
-		mutex.unlock();
+		//mutex.unlock();
 		if ( oldmode != mode )
 		{
-			mutex.lock();
+			//mutex.lock();
 			emit rigChangedMode ( mode, TRUE );
-			mutex.unlock();
+			//mutex.unlock();
 			oldmode = mode;
 		}
 		fr=getHardwareFrequency();  //Check frequency
@@ -163,14 +163,14 @@ void hamlibWrapper::run()
 		{
 			oldfreq=fr;
 			getfreq=fr;
-			mutex.lock();
+			//mutex.lock();
 			emit newFreq ( ( double ) getfreq );
-			mutex.unlock();
+			//mutex.unlock();
 		}
 
 		if ( useSlopeTuning ) //Check slope tuning
 		{
-			mutex.lock();  //Check SlopeLow
+			//mutex.lock();  //Check SlopeLow
 			retval = rig_get_level ( rRig, RIG_VFO_CURR, RIG_LEVEL_SLOPE_LOW, &slopeLowVal );
 			// Note you have to put RIG_VFO_CURR here to make this call work.  (vfo won't).
 			if ( retval != RIG_OK )
@@ -178,29 +178,29 @@ void hamlibWrapper::run()
 				fprintf ( stderr, "Error getting slope tune low from radio!\n" );
 				retval--;
 			}
-			mutex.unlock();
+			//mutex.unlock();
 			slopeLow = slopeLowVal.i;
 			if ( oldSlopeLow != slopeLow )
 			{
-				mutex.lock();
+				//mutex.lock();
 				emit slopeLowChangedByRig ( slopeLow );
-				mutex.unlock();
+				//mutex.unlock();
 				oldSlopeLow = slopeLow;
 			}
 
-			mutex.lock();  //Check SlopeHigh
+			//mutex.lock();  //Check SlopeHigh
 			if ( rig_get_level ( rRig, RIG_VFO_CURR, RIG_LEVEL_SLOPE_HIGH, &slopeHighVal ) != RIG_OK )
 			{
 				fprintf ( stderr, "Error getting slope tune high from radio!\n" );
 				retval--;
 			}
 			slopeHigh = slopeHighVal.i;
-			mutex.unlock();
+			//mutex.unlock();
 			if ( oldSlopeHigh != slopeHigh )
 			{
-				mutex.lock();
+				//mutex.lock();
 				emit slopeHighChangedByRig ( slopeHigh );
-				mutex.unlock();
+				//mutex.unlock();
 				oldSlopeHigh = slopeHigh;
 			}
 		}
@@ -210,9 +210,9 @@ void hamlibWrapper::run()
 			setmodes=false;
 			if ( rRig )
 			{
-				mutex.lock();
+				//mutex.lock();
 				rig_set_mode ( rRig, vfo, newMode, newWidth );
-				mutex.unlock();
+				//mutex.unlock();
 			}
 		}
 	}
@@ -235,7 +235,7 @@ freq_t hamlibWrapper::getHardwareFrequency()
 	const char* errorstring=NULL;
 	int errorcode;
 	freq_t frequency=0;
-	mutex.lock();
+	//mutex.lock();
 	errorcode=rig_get_freq ( rRig, vfo, &frequency );
 	if ( errorcode!=RIG_OK )
 	{
@@ -244,7 +244,7 @@ freq_t hamlibWrapper::getHardwareFrequency()
 		if ( errorstring )
 			fprintf ( stderr, "The reported error was: %s\n", errorstring );
 	}
-	mutex.unlock();
+	//mutex.unlock();
 	return frequency;
 }
 
