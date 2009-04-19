@@ -10,9 +10,9 @@ LIBS += `pkg-config --cflags --libs hamlib`
 # Input
 HEADERS += main_widget.h spectrogram.h varilabel.h memorycell.h \
            pbscale.h sunpropagator.h moonpropagator.h worldmap.h \
-           spectrum.h text.h hamlibwrapper.h
+           spectrum.h text.h hamlibwrapper.h dttsp.h
 SOURCES += main.cpp main_widget.cpp spectrogram.cpp varilabel.cpp \
            memorycell.cpp spectrum.cpp hamlibwrapper.cpp \
-           pbscale.cpp sunpropagator.cpp moonpropagator.cpp worldmap.cpp
+           pbscale.cpp sunpropagator.cpp moonpropagator.cpp worldmap.cpp dttsp.cpp
 DISTFILES += test \
 KL7NA_Notes
