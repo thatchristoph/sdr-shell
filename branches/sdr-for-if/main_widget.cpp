@@ -23,7 +23,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	slopeTuneOffset = 0;
 	loadSettings();
 
-	setCaption ( "SDR-Shell v3c @ " + stationCallsign );
+	setCaption ( "SDR-Shell v3d @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
