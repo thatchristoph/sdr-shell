@@ -28,3 +28,5 @@ sleep 2
 /usr/local/bin/jack_connect ${NAME}_RX:or system:playback_2
 sleep 2
 
+# start sdr-shell
+sdr-shell&
