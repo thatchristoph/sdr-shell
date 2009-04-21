@@ -29,7 +29,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
 	font1Metrics = new QFontMetrics ( *font1 );
 	
-	fontlcdPointSize = 20;
+	fontlcdPointSize = 16;
 	fontlcd = new QFont ( "Andald Mono", fontlcdPointSize, FALSE );
 	fontlcdMetrics = new QFontMetrics ( *fontlcd );
 
