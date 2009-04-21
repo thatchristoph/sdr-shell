@@ -1,3 +1,9 @@
+#include <iostream>
+#include <limits.h>
+#include <qobjectlist.h>
+#include <qptrlist.h>
+#include <qlayout.h>
+
 #include "main_widget.h"
 #include "switches.h"
 #include "modes.h"
@@ -22,6 +28,9 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
 	setMinimumWidth( 650 );
 	setMinimumHeight( 300 );
+
+    // load station list
+    pEibiStat = new EibiStation;
 
     initConstants();
     loadSettings();
@@ -96,9 +105,9 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     ctlFrame->setBackgroundColor( QColor( 0, 15, 150 ) );
 
 	// Top Filler
-    QFrame *ctlFrame1 = new QFrame( ctlFrame );
-    ctlFrame1->setPaletteForegroundColor( QColor( 255, 255, 255 ) );
-    ctlFrame1->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    //QFrame *ctlFrame1 = new QFrame( ctlFrame );
+    //ctlFrame1->setPaletteForegroundColor( QColor( 255, 255, 255 ) );
+    //ctlFrame1->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
            
 	// Bottom
     ctlFrame2 = new QFrame( this );
@@ -348,14 +357,18 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 		
     // -----------------------------------------------------------------------
     // S meter
+
     QPixmap *meter1_pix = new QPixmap( meter1_xpm );
-    signalFrame = new QFrame( ctlFrame );
+    signalFrame = new QFrame( ctlFrame, "M_smeter" );
     signalFrame->setPaletteBackgroundPixmap( *meter1_pix );
+    signalFrame->setFixedSize ( 173, 29 );
+    signalFrame->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed); 
     
+
     for ( int i = 0; i < 34; i++ ) {
         signalBargraph[i] = new QFrame( signalFrame );
         signalBargraph[i]->setPaletteBackgroundColor( QColor( 50, 50, 50 ) );
-        signalBargraph[i]->setGeometry( 3 + 4 * i, 3, 3, 9 );
+        signalBargraph[i]->setGeometry( 3 + (4 * i), 3, 3, 9 );
         signalBargraph[i]->show();
     }
 
@@ -363,58 +376,94 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     signal_dBm->setFont( *font1 );
     signal_dBm->setPaletteForegroundColor( QColor( 255, 255, 255 ) );
     signal_dBm->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    signal_dBm->setGeometry( 140, 2, 35, 12 );
 
     QLabel *dBmLabel = new QLabel( this, " dBm", signalFrame );
     dBmLabel->setFont( *font1 );
     dBmLabel->setPaletteForegroundColor( QColor( 255, 255, 255 ) );
     dBmLabel->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    dBmLabel->setGeometry( 140, 14, 35, 12 );
 
-    lcd = new QLCDNumber( 12, ctlFrame );
+    //
+    // Frequency Display
+    //
+    QFrame *fdFrame = new QFrame( ctlFrame );
+    fdFrame->setBackgroundColor( QColor( 0, 0, 0 ) );
+    fdFrame->setFixedSize ( 180, 31 );
+    fdFrame->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    lcd = new QLCDNumber( 12, fdFrame, "M_lcdnumber" );
     lcd->setFrameStyle( QFrame::NoFrame );
     lcd->setSegmentStyle( QLCDNumber::Filled );
     lcd->setPaletteForegroundColor( QColor( 255, 255, 255 ) );
     lcd->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    lcd->setGeometry( 3, 3, 170, 27 );
 
-	step_1Hz_frame = new QFrame( ctlFrame );
-	step_1Hz_frame->setGeometry( 321, 29, 11, 1 );
+	step_1Hz_frame = new QFrame( fdFrame );
+	step_1Hz_frame->setGeometry( 155 - (13 * 0), 29, 11, 1 );
 
-	step_10Hz_frame = new QFrame( ctlFrame );
-	step_10Hz_frame->setGeometry( 308, 29, 11, 1 );
+	step_10Hz_frame = new QFrame( fdFrame );
+	step_10Hz_frame->setGeometry( 155 - (13 * 1), 29, 11, 1 );
 
-	step_100Hz_frame = new QFrame( ctlFrame );
-	step_100Hz_frame->setGeometry( 295, 29, 11, 1 );
+	step_100Hz_frame = new QFrame( fdFrame );
+	step_100Hz_frame->setGeometry( 155 - (13 * 2), 29, 11, 1 );
 
-	step_1000Hz_frame = new QFrame( ctlFrame );
-	step_1000Hz_frame->setGeometry( 282, 29, 11, 1 );
+	step_1000Hz_frame = new QFrame( fdFrame );
+	step_1000Hz_frame->setGeometry( 155 - (13 * 3), 29, 11, 1 );
 
-	step_10000Hz_frame = new QFrame( ctlFrame );
-	step_10000Hz_frame->setGeometry( 282-13, 29, 11, 1 );
+	step_10000Hz_frame = new QFrame( fdFrame );
+	step_10000Hz_frame->setGeometry( 155 - (13 * 4), 29, 11, 1 );
 
-	step_100000Hz_frame = new QFrame( ctlFrame );
-	step_100000Hz_frame->setGeometry( 282-13-13, 29, 11, 1 );
+	step_100000Hz_frame = new QFrame( fdFrame );
+	step_100000Hz_frame->setGeometry( 155 - (13 * 5), 29, 11, 1 );
+
+
+    // -----------------------------------------------------------------------
+    // Tx/Rx Frame
+    
+    QFrame *statusFrame = new QFrame( ctlFrame );
+    statusFrame->setBackgroundColor( QColor( 0, 0, 0 ) );
+    statusFrame->setFixedSize ( 25, 31 );
+    statusFrame->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     rxPix = new QPixmap( rx_xpm );
     txPix = new QPixmap( tx_xpm );
     
-    trxFrame = new QFrame( ctlFrame );
+    trxFrame = new QFrame( statusFrame );
     trxFrame->setPaletteBackgroundPixmap( *rxPix );
+    trxFrame->setFixedSize ( 19, 11 );
+    trxFrame->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     
     QPixmap *mhz_pix = new QPixmap( mhz_xpm );
-    QFrame *mhzFrame = new QFrame( ctlFrame );
+    QFrame *mhzFrame = new QFrame( statusFrame );
     mhzFrame->setPaletteBackgroundPixmap( *mhz_pix );
-    signal_dBm->setGeometry( 140, 2, 35, 12 );
+    mhzFrame->setFixedSize ( 19, 8 ); 
+    mhzFrame->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    //   trxFrame->setGeometry( 337, 4, 19, 11 );
+    //   mhzFrame->setGeometry( 337, 19, 19, 8 );
+
+    QVBoxLayout *pRxTxLayout = new QVBoxLayout (statusFrame);
+    pRxTxLayout->setMargin(1);
+    pRxTxLayout->setSpacing(1);
+    pRxTxLayout->addWidget (trxFrame);
+    pRxTxLayout->addWidget (mhzFrame);
+
+
 
     // -----------------------------------------------------------------------
     // Mode Frame
     
-    QFrame *modeFrame = new QFrame( ctlFrame );
+    QFrame *modeFrame = new QFrame( ctlFrame, "M_mode" );
     modeFrame->setBackgroundColor( QColor( 100, 0, 0 ) );
+    modeFrame->setFixedSize ( 99, 31 ) ;
 
     QPixmap lsb_pix( lsb_xpm );
     LSB_label = new Varilabel( modeFrame );
     LSB_label->setPixmap( lsb_pix );
     LSB_label->setLabel( LSB );
-    LSB_label->setGeometry( 3, 3, 21, 11 );
+    //LSB_label->setGeometry( 3, 3, 21, 11 );
+    LSB_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( LSB_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -422,7 +471,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     USB_label = new Varilabel( modeFrame );
     USB_label->setPixmap( usb_pix );
     USB_label->setLabel( USB );
-    USB_label->setGeometry( 27, 3, 21, 11 );
+    //USB_label->setGeometry( 27, 3, 21, 11 );
+    USB_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( USB_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -430,7 +480,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     DSB_label = new Varilabel( modeFrame );
     DSB_label->setPixmap( dsb_pix );
     DSB_label->setLabel( DSB );
-    DSB_label->setGeometry( 51, 3, 21, 11 );
+    //DSB_label->setGeometry( 51, 3, 21, 11 );
+    DSB_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( DSB_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -438,7 +489,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     AM_label = new Varilabel( modeFrame );
     AM_label->setPixmap( am_pix );
     AM_label->setLabel( AM );
-    AM_label->setGeometry( 75, 3, 21, 11 );
+    //AM_label->setGeometry( 75, 3, 21, 11 );
+    AM_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( AM_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -446,7 +498,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     CWL_label = new Varilabel( modeFrame );
     CWL_label->setPixmap( cwl_pix );
     CWL_label->setLabel( CWL );
-    CWL_label->setGeometry( 3, 17, 21, 11 );
+    //CWL_label->setGeometry( 3, 17, 21, 11 );
+    CWL_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( CWL_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -454,7 +507,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     CWU_label = new Varilabel( modeFrame );
     CWU_label->setPixmap( cwu_pix );
     CWU_label->setLabel( CWU );
-    CWU_label->setGeometry( 27, 17, 21, 11 );
+    //CWU_label->setGeometry( 27, 17, 21, 11 );
+    CWU_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( CWU_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -462,7 +516,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     SAM_label = new Varilabel( modeFrame );
     SAM_label->setPixmap( sam_pix );
     SAM_label->setLabel( SAM );
-    SAM_label->setGeometry( 51, 17, 21, 11 );
+    //SAM_label->setGeometry( 51, 17, 21, 11 );
+    SAM_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( SAM_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
 
@@ -470,41 +525,65 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     FMN_label = new Varilabel( modeFrame );
     FMN_label->setPixmap( fmn_pix );
     FMN_label->setLabel( FMN );
-    FMN_label->setGeometry( 75, 17, 21, 11 );
+    //FMN_label->setGeometry( 75, 17, 21, 11 );
+    FMN_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( FMN_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setMode(int)) );
+
+    QHBoxLayout *pModeFirstRowLayout = new QHBoxLayout;
+    pModeFirstRowLayout->addWidget (LSB_label);
+    pModeFirstRowLayout->addWidget (USB_label);
+    pModeFirstRowLayout->addWidget (DSB_label);
+    pModeFirstRowLayout->addWidget (AM_label);
+
+    QHBoxLayout *pModeSecondRowLayout = new QHBoxLayout;
+    pModeSecondRowLayout->addWidget (CWL_label);
+    pModeSecondRowLayout->addWidget (CWU_label);
+    pModeSecondRowLayout->addWidget (SAM_label);
+    pModeSecondRowLayout->addWidget (FMN_label);
+
+    QVBoxLayout *pModeLayout = new QVBoxLayout (modeFrame);
+    pModeLayout->setMargin(3);
+    pModeLayout->setSpacing(3);
+    pModeLayout->addLayout (pModeFirstRowLayout);
+    pModeLayout->addLayout (pModeSecondRowLayout);
 
     // -----------------------------------------------------------------------
     // Noise Reduction Frame
 
-    QFrame *swFrame = new QFrame( ctlFrame );
+    QFrame *swFrame = new QFrame( ctlFrame, "M_sw" );
     swFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+    swFrame->setFixedSize ( 93, 31 ) ;
 
     QPixmap nr_pix( nr_xpm );
     NR_label = new Varilabel( swFrame );
     NR_label->setPixmap( nr_pix );
-    NR_label->setGeometry( 3, 3, 27, 11 );
+    //NR_label->setGeometry( 3, 3, 27, 11 );
+    NR_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( NR_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_NR(int)) );
     
     QPixmap anf_pix( anf_xpm );
     ANF_label = new Varilabel( swFrame );
     ANF_label->setPixmap( anf_pix );
-    ANF_label->setGeometry( 33, 3, 27, 11 );
+    //ANF_label->setGeometry( 33, 3, 27, 11 );
+    ANF_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( ANF_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_ANF(int)) );
     
     QPixmap nb_pix( nb_xpm );
     NB_label = new Varilabel( swFrame );
     NB_label->setPixmap( nb_pix );
-    NB_label->setGeometry( 63, 3, 27, 11 );
+    //NB_label->setGeometry( 63, 3, 27, 11 );
+    NB_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( NB_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_NB(int)) );
 
     QPixmap bin_pix( bin_xpm );
     BIN_label = new Varilabel( swFrame );
     BIN_label->setPixmap( bin_pix );
-    BIN_label->setGeometry( 3, 17, 27, 11 );
+    //BIN_label->setGeometry( 3, 17, 27, 11 );
+    BIN_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( BIN_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_BIN(int)) );
 
@@ -512,28 +591,48 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     MUTE_label = new Varilabel( swFrame );
     MUTE_label->setPixmap( mute_pix );
     MUTE_label->setGeometry( 33, 17, 27, 11 );
-    MUTE_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    //MUTE_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    MUTE_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( MUTE_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_MUTE(int)) );
 
     QPixmap spec_pix( spec_xpm );
     SPEC_label = new Varilabel( swFrame );
     SPEC_label->setPixmap( spec_pix );
-    SPEC_label->setGeometry( 63, 17, 27, 11 );
+    //SPEC_label->setGeometry( 63, 17, 27, 11 );
+    SPEC_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( SPEC_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(toggle_SPEC(int)) );
         
+    QHBoxLayout *pNRfirstRowLayout = new QHBoxLayout;
+    pNRfirstRowLayout->addWidget (NR_label);
+    pNRfirstRowLayout->addWidget (ANF_label);
+    pNRfirstRowLayout->addWidget (NB_label);
+
+    QHBoxLayout *pNRsecondRowLayout = new QHBoxLayout;
+    pNRsecondRowLayout->addWidget (BIN_label);
+    pNRsecondRowLayout->addWidget (MUTE_label);
+    pNRsecondRowLayout->addWidget (SPEC_label);
+
+    QVBoxLayout *pNRLayout = new QVBoxLayout (swFrame);
+    pNRLayout->setMargin(3);
+    pNRLayout->setSpacing(3);
+    pNRLayout->addLayout (pNRfirstRowLayout);
+    pNRLayout->addLayout (pNRsecondRowLayout);
+
     // -----------------------------------------------------------------------
     // PMSDR IF Gain Frame
 
-    QFrame *PmsdrIfGainFrame = new QFrame( ctlFrame );
+    QFrame *PmsdrIfGainFrame = new QFrame( ctlFrame, "M_pmsdr" );
     PmsdrIfGainFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+    PmsdrIfGainFrame->setFixedSize ( 130, 31 ) ;
 
     QPixmap ifgain10_pix( ifgain10_xpm );
     PMSDR_IfGain10_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_IfGain10_label->setPixmap( ifgain10_pix );
     PMSDR_IfGain10_label->setLabel (PMSDR_GAIN_10);
-    PMSDR_IfGain10_label->setGeometry( 3, 3, 27, 11 );
+    //PMSDR_IfGain10_label->setGeometry( 3, 3, 27, 11 );
+    PMSDR_IfGain10_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_IfGain10_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_IfGain (int)) );
     
@@ -541,7 +640,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_IfGain20_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_IfGain20_label->setPixmap( ifgain20_pix );
     PMSDR_IfGain20_label->setLabel (PMSDR_GAIN_20);
-    PMSDR_IfGain20_label->setGeometry( 33, 3, 27, 11 );
+    //PMSDR_IfGain20_label->setGeometry( 33, 3, 27, 11 );
+    PMSDR_IfGain20_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_IfGain20_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_IfGain (int)) );
 
@@ -549,7 +649,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_IfGain30_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_IfGain30_label->setPixmap( ifgain30_pix );
     PMSDR_IfGain30_label->setLabel (PMSDR_GAIN_30);
-    PMSDR_IfGain30_label->setGeometry( 63, 3, 27, 11 );
+    //PMSDR_IfGain30_label->setGeometry( 63, 3, 27, 11 );
+    PMSDR_IfGain30_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_IfGain30_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_IfGain (int)) );
 
@@ -557,7 +658,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_IfGain40_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_IfGain40_label->setPixmap( ifgain40_pix );
     PMSDR_IfGain40_label->setLabel (PMSDR_GAIN_40);
-    PMSDR_IfGain40_label->setGeometry( 93, 3, 27, 11 );
+    //PMSDR_IfGain40_label->setGeometry( 93, 3, 27, 11 );
+    PMSDR_IfGain40_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_IfGain40_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_IfGain (int)) );
 
@@ -565,7 +667,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_Filter1_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter1_label->setPixmap( ifFilter1_pix );
     PMSDR_Filter1_label->setLabel( PMSDR_FILTER_1 );
-    PMSDR_Filter1_label->setGeometry( 3, 17, 27, 11 );
+    //PMSDR_Filter1_label->setGeometry( 3, 17, 27, 11 );
+    PMSDR_Filter1_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter1_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
 
@@ -573,7 +676,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_Filter2_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter2_label->setPixmap( ifFilter2_pix );
     PMSDR_Filter2_label->setLabel( PMSDR_FILTER_2 );
-    PMSDR_Filter2_label->setGeometry( 33, 17, 27, 11 );
+    //PMSDR_Filter2_label->setGeometry( 33, 17, 27, 11 );
+    PMSDR_Filter2_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter2_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
 
@@ -581,7 +685,8 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_Filter3_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter3_label->setPixmap( ifFilter3_pix );
     PMSDR_Filter3_label->setLabel( PMSDR_FILTER_3 );
-    PMSDR_Filter3_label->setGeometry( 63, 17, 27, 11 );
+    //PMSDR_Filter3_label->setGeometry( 63, 17, 27, 11 );
+    PMSDR_Filter3_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter3_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
 
@@ -589,9 +694,59 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_NoFilter_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_NoFilter_label->setPixmap( ifNoFilter_pix  );
     PMSDR_NoFilter_label->setLabel( PMSDR_FILTER_0 );
-    PMSDR_NoFilter_label->setGeometry( 93, 17, 27, 11 );
+    //PMSDR_NoFilter_label->setGeometry( 93, 17, 27, 11 );
+    PMSDR_NoFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_NoFilter_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
+
+
+    QHBoxLayout *pPmsdrGainLayout = new QHBoxLayout;
+    pPmsdrGainLayout->addWidget (PMSDR_IfGain10_label);
+    pPmsdrGainLayout->addWidget (PMSDR_IfGain20_label);
+    pPmsdrGainLayout->addWidget (PMSDR_IfGain30_label);
+    pPmsdrGainLayout->addWidget (PMSDR_IfGain40_label);
+
+    QHBoxLayout *pPmsdrFilterLayout = new QHBoxLayout;
+    pPmsdrFilterLayout->addWidget (PMSDR_Filter1_label);
+    pPmsdrFilterLayout->addWidget (PMSDR_Filter2_label);
+    pPmsdrFilterLayout->addWidget (PMSDR_Filter3_label);
+    pPmsdrFilterLayout->addWidget (PMSDR_NoFilter_label);
+
+    QVBoxLayout *pPmsdrLayout = new QVBoxLayout (PmsdrIfGainFrame);
+    pPmsdrLayout->setMargin(3);
+    pPmsdrLayout->setSpacing(3);
+    pPmsdrLayout->addLayout (pPmsdrGainLayout);
+    pPmsdrLayout->addLayout (pPmsdrFilterLayout);
+
+    // -----------------------------------------------------------------------
+    // Display remote station data
+    // 
+    // iw0hdv - Feb 2009
+    //
+
+	font3PointSize = 8;
+    font3 = new QFont( "Verdana", font3PointSize, FALSE);
+    font3Metrics = new QFontMetrics( *font3 );
+
+
+    QFrame *pStationDataFrame = new QFrame( ctlFrame, "M_stationdata" );
+    pStationDataFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+
+    stationData = new QLabel( pStationDataFrame );
+    stationData->setGeometry( 1, 1, 530, 31 );
+    stationData->setText( "XXXXXXXXXXXXXXXXXXXXXXXXXX" );
+
+    //stationData->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+    //stationData->setAlignment( AlignTop | AlignLeft );
+
+    stationData->setFont( *font3 );
+    stationData->setPaletteForegroundColor( QColor( 0, 255, 0 ) );
+    stationData->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    stationData->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+
+    stationData->setText( "0123456789 first line 0123456789\n0123456789 second line 0123456789" );
+    stationData->show( );
+    pStationDataFrame->setFixedSize ( 530, 31 );
 
     // -----------------------------------------------------------------------
     // Memory Cells
@@ -792,7 +947,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 			 this, SLOT(setAGC(int)) );
    
     // -----------------------------------------------------------------------
-    // Sapacer for filling up empty space
+    // Spacer for filling up empty space
     
 	Spacer_label = new QLabel( ctlFrame2 );
     Spacer_label->setFont( *font1 );
@@ -800,11 +955,11 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     Spacer_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
     Spacer_label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
 
-    f_label = new Varilabel( ctlFrame );
-    f_label->setFont( *font1 );
-    f_label->setPaletteForegroundColor( QColor( 255,255,25 ) );
-    f_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
-    f_label->setGeometry( 173, 48, 85, 14 );
+  //f_label = new Varilabel( ctlFrame );
+  //f_label->setFont( *font1 );
+  //f_label->setPaletteForegroundColor( QColor( 255,255,25 ) );
+  //f_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+  //f_label->setGeometry( 173, 48, 85, 14 );
     
     CFG_label = new Varilabel( ctlFrame2 );
     CFG_label->setFont( *font1 );
@@ -820,17 +975,10 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     CPU_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
     CPU_label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
 
-    ctlFrame1->setGeometry( 1, 1, 361, 31 );
-    signalFrame->setGeometry( 1, 3, 170, 27 );
-    dBmLabel->setGeometry( 140, 14, 35, 12 );
-    lcd->setGeometry( 170, 3, 170, 27 );
-    trxFrame->setGeometry( 337, 4, 19, 11 );
-    mhzFrame->setGeometry( 337, 19, 19, 8 );
 
-    modeFrame->setGeometry( 363, 1, 99, 31 );
-    swFrame->setGeometry( 463, 1, 93, 31 );
-
-    PmsdrIfGainFrame->setGeometry( 557, 1, 130, 31 );
+    //
+    // Logo
+    //
 
     logoFrame = new QFrame( ctlFrame );
     logoFrame->setBackgroundColor( QColor( 0, 0, 0 ) );
@@ -839,6 +987,39 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     logoLabel = new QLabel( logoFrame );
     logoLabel->setPixmap( logo_pix );
     logoLabel->setBackgroundColor( QColor( 0, 0, 0 ) );
+    logoLabel->setFixedSize ( 128, 31 );
+    logoLabel->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    logoLabel->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+
+
+    QLabel *logoFiller = new QLabel(ctlFrame );
+    logoFiller->setBackgroundColor( QColor( 0, 0, 0 ) );
+
+
+    // -----------------------------------------------------------------------
+    // Setup the layouts
+    //
+
+    QHBoxLayout *pUpperLayout = new QHBoxLayout (ctlFrame);
+    pUpperLayout->setMargin(1);
+    pUpperLayout->setSpacing(1);
+
+    pUpperLayout->addWidget (signalFrame);
+    pUpperLayout->addWidget (fdFrame);
+    pUpperLayout->addWidget (statusFrame);
+    pUpperLayout->addWidget (modeFrame);
+    pUpperLayout->addWidget (swFrame);
+    pUpperLayout->addWidget (PmsdrIfGainFrame);
+    pUpperLayout->addWidget (pStationDataFrame);
+
+    QHBoxLayout *pLogoLayout = new  QHBoxLayout ;
+    pLogoLayout->addWidget (logoFiller     );
+    pLogoLayout->addWidget (logoFrame      );
+
+    pUpperLayout->addLayout (pLogoLayout);
+
+    // -----------------------------------------------------------------------
+    // Setup the internals
 
     setRxFrequency();
     setMode( mode );
@@ -863,7 +1044,11 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 
     //worldmap->setObserver( my_lat, my_lon );
     //worldmap->plot();
-    
+
+    //
+    // Setup timers to refresh signal meter, spectrogram and CPU load meter
+    //
+
     QTimer *cpuTimer = new QTimer( this );
     connect( cpuTimer, SIGNAL(timeout()), this, SLOT(processorLoad()) );
     cpuTimer->start( 5000, FALSE );
@@ -874,7 +1059,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 
     QTimer *fftTimer = new QTimer( this );
     connect( fftTimer, SIGNAL(timeout()), this, SLOT(readSpectrum()) );
-    fftTimer->start( 100, FALSE );
+    fftTimer->start( 50, FALSE );
 }
 
 void Main_Widget::initConstants()
@@ -1081,16 +1266,7 @@ void Main_Widget::updateLayout()
 		1, 
 		width() - 2, 
 		33 );		
-    logoFrame->setGeometry( 
-      	688, 
-   	    1, 
-   	    ctlFrame->width() - 688, 
-   	    31 );
-    logoLabel->setGeometry( 
-     	logoFrame->width() - 89, 
-     	0, 
-     	88, 
-     	31 );		
+
 	spectrogramFrame->setGeometry( 
 		1, 
 		35, 
@@ -1669,11 +1845,56 @@ void Main_Widget::process_key( int key )
 
 void Main_Widget::setRxFrequency()
 {
+    // update frequency on the main display
     if ( pF ) {
         char text[20];
         sprintf( text, "%11.6lf", (double)( pF->get() ) / 1000000.0 );
         lcd->display( text );
+
+        //
+        // update PMSDR LCD display
+        //
+        if ( pmsdrFile != NULL) {
+            fprintf ( pmsdrFile, "plcd 0 1 %16.ld\n", (long int)pF->get() );
+            fflush  ( pmsdrFile );
+            printf("************ %s: sent to PMSDR LCD: [%s]\n", __FUNCTION__, text);
+        }
+
+        if (pEibiStat && pEibiStat->getStationCount ()) {
+
+            std::cerr << "Station in range at " << pF->get() << " ?" << std::endl;
+
+            QPtrList<Station> sl = pEibiStat->getStationInFreqRange ( pF->get(), 2 );
+
+            if (! sl.isEmpty() ) {
+
+              QString ds;
+
+              std::cerr << "List not empty: " << sl.count() << std::endl;
+
+              Station *ps = 0;
+              QPtrListIterator<Station> i(sl);
+
+              while ( (ps = i.current()) != 0 ) {
+                  ++i;
+
+                  std::cout << "****** "
+                            << ps->getFreq()
+                            << " -- "
+                            << (const char *) (ps->getId())
+                            << std::endl; 
+
+                  ds =   ds + ps->getId() + "-" + ps->getCc() + " * ";
+              }
+              stationData->setText (ds);
+            } else {
+                std::cerr << "No station in range." << std::endl;
+                stationData->setText ("No station in range");
+            }
+        }
     }
+
+
 }
 
 
@@ -2038,22 +2259,19 @@ void Main_Widget::drawSpectrogram()
 
     spectrum_head = y;
     
-    // Draw the spectrum line
+    // Draw the spectrum scrolling down the older lines
+    // this does flicker TBD
     QPainter p;
     p.begin( spectrogram );
-    p.drawImage( 0, y = (y+1) % spectrogram->height(), spectrogramLine );
 
-    p.setPen( Qt::yellow );
-    p.drawLine( spectrogram->width() / 2 + 
-				(int)(*filter_l / (sample_rate/4096.0)), y+1,
-                spectrogram->width() / 2 + 
-				(int)(*filter_h / (sample_rate/4096.0)), y+1 );
-    p.drawLine( spectrogram->width() / 2 + 
-				(int)(*filter_l / (sample_rate/4096.0)), y+2,
-                spectrogram->width() / 2 + 
-				(int)(*filter_h / (sample_rate/4096.0)), y+2 );
+    // check for wrap around
+    int y_mod_h = (y+1) % spectrogram->height() ;
+    if ( y_mod_h ) y = y_mod_h;
     
+    p.drawImage( 0, y, spectrogramLine );
     p.end();
+
+    if ( ! y_mod_h ) spectrogram->scroll (0, -1);
 }    
 
 void Main_Widget::drawPassBandScale()

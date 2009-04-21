@@ -40,6 +40,7 @@
 #include "worldmap.h"
 #include "pbscale.h"
 #include "frequency.h"
+#include "stations.h"
 
 #define CMD_FILE "/dev/shm/SDRcommands"
 #define MTR_FILE "/dev/shm/SDRmeter"
@@ -110,6 +111,8 @@ class Main_Widget : public QWidget
 
 		QFont *font1;
 		QFontMetrics *font1Metrics;
+		QFont *font3;
+		QFontMetrics *font3Metrics;
         QLabel *signal_S;
         QLabel *signal_dBm;
         QLabel *qtrLabel;
@@ -176,6 +179,10 @@ class Main_Widget : public QWidget
 
         WorldMap *worldmap;
         
+		QLabel *stationData;
+
+        EibiStation *pEibiStat;
+
         unsigned long long int rx_f;
         QString rx_f_string;
         int sample_rate;
@@ -201,6 +208,7 @@ class Main_Widget : public QWidget
         int SPEC_state;
         int filterLine;
         int font1PointSize;
+        int font3PointSize;
         int theme;
 		int map_flag;
 		int polyphaseFFT;

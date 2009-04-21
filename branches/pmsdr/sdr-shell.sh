@@ -14,17 +14,43 @@
 
 function trapped {
 
+   echo "Trapped $1"
+
+   DTTSP_PID=`cat $VARRUN/sdr-core.pid`
+   echo "Killing....... sdr-core ($DTTSP_PID)"
+   kill  $DTTSP_PID
+
    JACKD_PID=`cat $VARRUN/jackd.pid`
    echo "Killing....... jackd ($JACKD_PID)"
    kill  $JACKD_PID
 
+
    rm -f $PMSDR_CMDPATH
+
 }
 
-trap "trapped" EXIT
-trap "trapped" INT
-trap "trapped" KILL
+trap "trapped EXIT" EXIT
+trap "trapped INT " INT
+trap "trapped KILL" KILL
 
+#
+# Make reliable jackd - sdr-core interconnection
+#
+function make_connection {
+
+   for ((i=0; i<5; i++)) {
+
+      echo "Connecting $1 to $2 ($i)...."
+      res=$($JACKC $1 $2)
+      rc=$?
+      if [ $rc == 0 ]; then
+         return 0
+      fi
+      sleep 1
+   }
+   echo "jackd connection $1 to $2 failed after $i attempt: $res"
+   exit 1
+}
 
 
 #
@@ -166,6 +192,9 @@ sleep 2
 
 ##########################################################################
 # Start dttsp
+
+prev_dir=`pwd`
+
 echo ">>>> Starting dttsp: $DTTSP_EXEC $DTTSP_PARAM..."
 cd $DTTSP
 $DTTSP_EXEC $DTTSP_PARAM &
@@ -189,6 +218,8 @@ else
    exit 1
 fi 
 
+cd $prev_dir
+
 
 
 ##########################################################################
@@ -199,10 +230,11 @@ $PMSDR &
 PMSDR_PID=$!
 if [ $PMSDR_PID ] 
 then
-  echo $PMSDR_PID > $VARRUN/pmsdr.pid
-  echo "  Succeeded. pmsdr PID is $PMSDR_PID"
+   echo $PMSDR_PID > $VARRUN/pmsdr.pid
+   echo "  Succeeded. pmsdr PID is $PMSDR_PID"
 else
-  echo "  Failed"
+   echo "  Failed"
+   exit 1
 fi
 
 ##########################################################################
@@ -215,20 +247,18 @@ if [ $TMP != 0 ]; then
 fi
 
 
+
 ##########################################################################
 #
 # Connect Dttsp to jack ports
 #
 echo ">>>> Connecting dttsp to jack..."
 
-echo "  sdr-$DTTSP_PID:ol -> alsa_pcm:playback_1"
-$JACKC sdr-$DTTSP_PID:ol alsa_pcm:playback_1
-echo "  sdr-$DTTSP_PID:or -> alsa_pcm:playback_2"
-$JACKC sdr-$DTTSP_PID:or alsa_pcm:playback_2
-echo "  alsa_pcm:capture_1 -> sdr-$DTTSP_PID:il"
-$JACKC alsa_pcm:capture_1 sdr-$DTTSP_PID:il
-echo "  alsa_pcm:capture_2 -> sdr-$DTTSP_PID:ir"
-$JACKC alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
+make_connection sdr-$DTTSP_PID:ol  alsa_pcm:playback_1
+make_connection sdr-$DTTSP_PID:or  alsa_pcm:playback_2
+
+make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:il
+make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
 
 ##########################################################################
 #
