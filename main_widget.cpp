@@ -2723,7 +2723,7 @@ void Main_Widget::displayNCO ( int x )
 void Main_Widget::updateCallsign()
 {
 	stationCallsign = cfgCallInput->text();
-	setCaption ( "SDR-Shell v3a @ " + stationCallsign );
+	setCaption ( "SDR-Shell v3d @ " + stationCallsign );
 }
 
 void Main_Widget::updateLOFreq()
