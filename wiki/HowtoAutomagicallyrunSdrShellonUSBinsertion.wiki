@@ -86,8 +86,12 @@ Check for the right device group ownership:
  crw-rw-r-- 1 root pmsdrusb 189, 397 2008-11-09 13:48 /dev/bus/usb/004/014
 }}}
 
-In the past the setup procedure would be finished here.
+In the past the setup procedure would be finished here, because the udev daemon must discover automatically any change in /etc/udev/rules.d/. However, as signaled by Ken N9VV, on newer Ubuntu versions (8.10 and 9.04) and on Fedora 11, sometimes you might need a daemon restart
 
+sudo /etc/init.d/hal restart
+sudo /etc/init.d/udev restart
+
+or a reboot. 
 
 = HAL =
 
@@ -191,4 +195,3 @@ and the script startup with
 {{{
 tail -f /var/log/messages
 }}}
-
