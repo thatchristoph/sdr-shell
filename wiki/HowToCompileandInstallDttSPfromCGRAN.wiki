@@ -1,4 +1,4 @@
-#summary How To Compile and Install DttSP from CGRAN repository on Linux Ubuntu 8.04
+#summary How To Compile and Install DttSP from CGRAN repository on Linux Ubuntu 8.04 and Fedora Core 11
 
 = Introduction =
 
@@ -25,6 +25,8 @@ _The client can be written in any language on any OS that does UDP/IP._
 
 = Downloading the prerequisite packages =
 
+== Ubuntu ==
+
 {{{
 sudo apt-get update
 sudo apt-get upgrade
@@ -41,7 +43,7 @@ On Ubuntu 8.10:
 sudo apt-get install liblo0ldbl  liblo0-dev
 }}}
 
-= Kernel Paramenters =
+=== Kernel Paramenters ===
 
 The following steps are needed to use jack with the real-time kernel scheduler:
 
@@ -53,6 +55,22 @@ sudo usermod -G audio -a <user>
 }}}
 
 Replace `<user>` by your login_id. The system needs to be rebooted for the changes to take effect.
+
+== Fedora Core 11 ==
+
+Get root status with the method you prefer, for example
+
+{{{
+su - root
+}}}
+
+{{{
+yum update
+yum install gcc gcc-c++ man-pages autoconf automake subversion
+yum install fftw fftw-devel gsl gsl-devel
+yum install jack-audio-connection-kit  jack-audio-connection-kit-devel qjackctl
+yum install liblo liblo-devel
+}}}
 
 = Dowloading DttSP =
 
