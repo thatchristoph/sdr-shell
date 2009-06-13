@@ -64,11 +64,13 @@ Get root status with the method you prefer, for example
 su - root
 }}}
 
+next install the prerequisite packages:
+
 {{{
 yum update
 yum install gcc gcc-c++ man-pages autoconf automake subversion
 yum install fftw fftw-devel gsl gsl-devel
-yum install jack-audio-connection-kit  jack-audio-connection-kit-devel qjackctl
+yum install jack-audio-connection-kit  jack-audio-connection-kit-devel qjackctl jack-audio-connection-kit-example-clients
 yum install liblo liblo-devel
 }}}
 
