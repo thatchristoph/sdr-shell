@@ -17,6 +17,7 @@
 #include "text.h"
 #include "pmsdr_icons.h"
 #include "dttsp.h"
+#include "hwknob.h"
 
 #define max(x,y) (x > y ? x : y)
 
@@ -1060,6 +1061,17 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     QTimer *fftTimer = new QTimer( this );
     connect( fftTimer, SIGNAL(timeout()), this, SLOT(readSpectrum()) );
     fftTimer->start( 50, FALSE );
+
+    //
+    // Setup hardware knob
+    //
+    {
+       char *pn;
+       if ((pn = getenv("HW_KNOB_PARALLEL"))) {
+          pHwKnob = new HwKnobWidget (pn, this, "HardwareKnobWidget");
+          pHwKnob->setViewer (this);
+       }
+    }
 }
 
 void Main_Widget::initConstants()

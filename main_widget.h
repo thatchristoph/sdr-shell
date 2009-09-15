@@ -63,6 +63,8 @@
 class DttSPcmd;
 class DttSPmeter;
 class DttSPspectrum;
+// forward decls for hwknob.h class
+class HwKnobWidget;
 
 class Main_Widget : public QWidget
 {
@@ -303,6 +305,8 @@ class Main_Widget : public QWidget
         int  dttsp38;
         int  pmsdr_gain_state;
         int  pmsdr_filter_state;
+
+        HwKnobWidget    *pHwKnob;
 
     public:
         Main_Widget(QWidget *parent = 0, const char *name = 0);
