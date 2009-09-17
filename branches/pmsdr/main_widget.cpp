@@ -30,9 +30,6 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 	setMinimumWidth( 650 );
 	setMinimumHeight( 300 );
 
-    // load station list
-    pEibiStat = new EibiStation;
-
     initConstants();
     loadSettings();
 
@@ -624,9 +621,20 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     // -----------------------------------------------------------------------
     // PMSDR IF Gain Frame
 
+	font3PointSize = 8;
+    font3 = new QFont( "Verdana", font3PointSize, FALSE);
+    font3Metrics = new QFontMetrics( *font3 );
+
     QFrame *PmsdrIfGainFrame = new QFrame( ctlFrame, "M_pmsdr" );
-    PmsdrIfGainFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
-    PmsdrIfGainFrame->setFixedSize ( 130, 31 ) ;
+
+    if (getenv("PMSDR_IFGAIN")) {
+       PmsdrIfGainFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+       PmsdrIfGainFrame->setFixedSize ( 130, 31 ) ;
+    } else {
+       PmsdrIfGainFrame->setBackgroundColor( QColor( 0, 0, 0 ) );
+       PmsdrIfGainFrame->setFixedSize ( 160, 31 ) ;
+    }
+    if (getenv("PMSDR_IFGAIN")) {
 
     QPixmap ifgain10_pix( ifgain10_xpm );
     PMSDR_IfGain10_label = new Varilabel( PmsdrIfGainFrame );
@@ -664,11 +672,22 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     connect( PMSDR_IfGain40_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_IfGain (int)) );
 
+    }
+
+    QPixmap ifNoFilter_pix( nofilter_xpm ); 
+    PMSDR_NoFilter_label = new Varilabel( PmsdrIfGainFrame );
+    PMSDR_NoFilter_label->setPixmap( ifNoFilter_pix  );
+    PMSDR_NoFilter_label->setLabel( PMSDR_FILTER_0 );
+    //PMSDR_NoFilter_label->setGeometry( 3, 17, 27, 11 );
+    PMSDR_NoFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    connect( PMSDR_NoFilter_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_Filter(int)) );
+
     QPixmap ifFilter1_pix( filter1_xpm ); 
     PMSDR_Filter1_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter1_label->setPixmap( ifFilter1_pix );
     PMSDR_Filter1_label->setLabel( PMSDR_FILTER_1 );
-    //PMSDR_Filter1_label->setGeometry( 3, 17, 27, 11 );
+    //PMSDR_Filter1_label->setGeometry( 33, 17, 27, 11 );
     PMSDR_Filter1_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter1_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
@@ -677,7 +696,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_Filter2_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter2_label->setPixmap( ifFilter2_pix );
     PMSDR_Filter2_label->setLabel( PMSDR_FILTER_2 );
-    //PMSDR_Filter2_label->setGeometry( 33, 17, 27, 11 );
+    //PMSDR_Filter2_label->setGeometry( 63, 17, 27, 11 );
     PMSDR_Filter2_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter2_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
@@ -686,37 +705,56 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     PMSDR_Filter3_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_Filter3_label->setPixmap( ifFilter3_pix );
     PMSDR_Filter3_label->setLabel( PMSDR_FILTER_3 );
-    //PMSDR_Filter3_label->setGeometry( 63, 17, 27, 11 );
+    //PMSDR_Filter3_label->setGeometry( 93, 17, 27, 11 );
     PMSDR_Filter3_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect( PMSDR_Filter3_label, SIGNAL(mouseRelease(int)), 
 			 this, SLOT(setPMSDR_Filter(int)) );
 
-    QPixmap ifNoFilter_pix( nofilter_xpm ); 
-    PMSDR_NoFilter_label = new Varilabel( PmsdrIfGainFrame );
-    PMSDR_NoFilter_label->setPixmap( ifNoFilter_pix  );
-    PMSDR_NoFilter_label->setLabel( PMSDR_FILTER_0 );
-    //PMSDR_NoFilter_label->setGeometry( 93, 17, 27, 11 );
-    PMSDR_NoFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
-    connect( PMSDR_NoFilter_label, SIGNAL(mouseRelease(int)), 
-			 this, SLOT(setPMSDR_Filter(int)) );
+    if (!getenv("PMSDR_IFGAIN")) {
+       QPixmap ifFilter4_pix( filter4_xpm ); 
+       PMSDR_Filter4_label = new Varilabel( PmsdrIfGainFrame );
+       PMSDR_Filter4_label->setPixmap( ifFilter4_pix );
+       PMSDR_Filter4_label->setLabel( PMSDR_FILTER_4 );
+       //PMSDR_Filter4_label->setGeometry( 123, 17, 27, 11 );
+       PMSDR_Filter4_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+       connect( PMSDR_Filter4_label, SIGNAL(mouseRelease(int)), 
+			    this, SLOT(setPMSDR_Filter(int)) );
 
+       PMSDR_Filter_label = new Varilabel( PmsdrIfGainFrame );
+       PMSDR_Filter_label->setLabel( PMSDR_FILTER_4 );
+       PMSDR_Filter_label->setFont( *font3 );
+       PMSDR_Filter_label->setPaletteForegroundColor( QColor( 0, 255, 0 ) );
+       PMSDR_Filter_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+       PMSDR_Filter_label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+       PMSDR_Filter_label->setText( "Low pass 2MHz" );
+
+    }
 
     QHBoxLayout *pPmsdrGainLayout = new QHBoxLayout;
-    pPmsdrGainLayout->addWidget (PMSDR_IfGain10_label);
-    pPmsdrGainLayout->addWidget (PMSDR_IfGain20_label);
-    pPmsdrGainLayout->addWidget (PMSDR_IfGain30_label);
-    pPmsdrGainLayout->addWidget (PMSDR_IfGain40_label);
+    if (getenv("PMSDR_IFGAIN")) {
+       pPmsdrGainLayout->addWidget (PMSDR_IfGain10_label);
+       pPmsdrGainLayout->addWidget (PMSDR_IfGain20_label);
+       pPmsdrGainLayout->addWidget (PMSDR_IfGain30_label);
+       pPmsdrGainLayout->addWidget (PMSDR_IfGain40_label);
+    }
 
     QHBoxLayout *pPmsdrFilterLayout = new QHBoxLayout;
     pPmsdrFilterLayout->addWidget (PMSDR_Filter1_label);
     pPmsdrFilterLayout->addWidget (PMSDR_Filter2_label);
     pPmsdrFilterLayout->addWidget (PMSDR_Filter3_label);
-    pPmsdrFilterLayout->addWidget (PMSDR_NoFilter_label);
+    if (!getenv("PMSDR_IFGAIN")) {
+       pPmsdrFilterLayout->addWidget (PMSDR_Filter4_label);
+    }
+    pPmsdrFilterLayout->addWidget (PMSDR_NoFilter_label);    
 
     QVBoxLayout *pPmsdrLayout = new QVBoxLayout (PmsdrIfGainFrame);
-    pPmsdrLayout->setMargin(3);
-    pPmsdrLayout->setSpacing(3);
-    pPmsdrLayout->addLayout (pPmsdrGainLayout);
+    pPmsdrLayout->setMargin(1);
+    pPmsdrLayout->setSpacing(1);
+    if (getenv("PMSDR_IFGAIN")) {
+       pPmsdrLayout->addLayout (pPmsdrGainLayout);
+    } else {
+       pPmsdrLayout->addWidget (PMSDR_Filter_label);
+    }
     pPmsdrLayout->addLayout (pPmsdrFilterLayout);
 
     // -----------------------------------------------------------------------
@@ -724,11 +762,6 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     // 
     // iw0hdv - Feb 2009
     //
-
-	font3PointSize = 8;
-    font3 = new QFont( "Verdana", font3PointSize, FALSE);
-    font3Metrics = new QFontMetrics( *font3 );
-
 
     QFrame *pStationDataFrame = new QFrame( ctlFrame, "M_stationdata" );
     pStationDataFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
@@ -1061,6 +1094,12 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     QTimer *fftTimer = new QTimer( this );
     connect( fftTimer, SIGNAL(timeout()), this, SLOT(readSpectrum()) );
     fftTimer->start( 50, FALSE );
+
+    // load station list
+    pEibiStat = new EibiStation;
+    if ( pEibiStat->getStationCount() == 0 ) {
+            stationData->setText ("No valid stations database found !\nDonwload it at http://www.eibispace.de");
+    }
 
     //
     // Setup hardware knob
@@ -2591,26 +2630,28 @@ void Main_Widget::toggle_SPEC( int )
 
 void Main_Widget::setPMSDR_IfGain (int newGain)
 {
-    PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 0, 0 ) );
-    PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 0, 0 ) );
-    PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 0, 0 ) );
-    PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    if (getenv("PMSDR_IFGAIN")) {
+       PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+       PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+       PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+       PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
-    switch (newGain) {
-    case PMSDR_GAIN_10:
-        PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 150, 50 ) );
-        break;
-    case PMSDR_GAIN_20:
-        PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 150, 50 ) );
-        break;
-    case PMSDR_GAIN_30:
-        PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 150, 50 ) );
-        break;
-    case PMSDR_GAIN_40:
-        PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 150, 50 ) );
-        break;
+       switch (newGain) {
+       case PMSDR_GAIN_10:
+           PMSDR_IfGain10_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+           break;
+       case PMSDR_GAIN_20:
+           PMSDR_IfGain20_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+           break;
+       case PMSDR_GAIN_30:
+           PMSDR_IfGain30_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+           break;
+       case PMSDR_GAIN_40:
+           PMSDR_IfGain40_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+           break;
+       }
+       setPMSDRifGain ( newGain );
     }
-    setPMSDRifGain ( newGain );
 }
 
 
@@ -2619,20 +2660,29 @@ void Main_Widget::setPMSDR_Filter (int newFilter)
     PMSDR_Filter1_label->setBackgroundColor( QColor( 0, 0, 0 ) );
     PMSDR_Filter2_label->setBackgroundColor( QColor( 0, 0, 0 ) );
     PMSDR_Filter3_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_Filter4_label->setBackgroundColor( QColor( 0, 0, 0 ) );
     PMSDR_NoFilter_label->setBackgroundColor( QColor( 0, 0, 0 ) );
 
     switch (newFilter) {
     case PMSDR_FILTER_0:
         PMSDR_NoFilter_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Filter_label->setText( "No filter" );
         break;
     case PMSDR_FILTER_1:
         PMSDR_Filter1_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Filter_label->setText( "Band pass 2-6 MHz" );
         break;
     case PMSDR_FILTER_2:
         PMSDR_Filter2_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Filter_label->setText( "Band pass 6-13 MHz" );
         break;
     case PMSDR_FILTER_3:
         PMSDR_Filter3_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Filter_label->setText( "Band pass 12-30 MHz" );
+        break;
+    case PMSDR_FILTER_4:
+        PMSDR_Filter4_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Filter_label->setText( "Low pass 2MHz" );
         break;
     }
     setPMSDRfilter ( newFilter );
