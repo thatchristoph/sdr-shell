@@ -95,7 +95,9 @@ class Main_Widget : public QWidget
         Varilabel *PMSDR_Filter1_label;
         Varilabel *PMSDR_Filter2_label;
         Varilabel *PMSDR_Filter3_label;
+        Varilabel *PMSDR_Filter4_label;
         Varilabel *PMSDR_NoFilter_label;
+        Varilabel *PMSDR_Filter_label;
 
 		Varilabel *LSB_label;
 		Varilabel *USB_label;
@@ -296,6 +298,7 @@ class Main_Widget : public QWidget
             PMSDR_FILTER_1 = 1,
             PMSDR_FILTER_2 = 2,
             PMSDR_FILTER_3 = 3,
+            PMSDR_FILTER_4 = 4,
         };
 
         Frequency *pF;
