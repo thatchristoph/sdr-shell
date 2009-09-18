@@ -257,8 +257,11 @@ echo ">>>> Connecting dttsp to jack..."
 make_connection sdr-$DTTSP_PID:ol  alsa_pcm:playback_1
 make_connection sdr-$DTTSP_PID:or  alsa_pcm:playback_2
 
-make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:il
-make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
+#
+# Input channel reversed to comply with PMSDR 2.1
+#
+make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:ir
+make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:il
 
 ##########################################################################
 #

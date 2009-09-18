@@ -75,8 +75,8 @@ int Qt3Knob :: processEvent(void)
     ioctl (fd, PPRSTATUS, &status);
 
     //printf ("BB: %04X STATUS: %02X COUNTER: %d ..... ", busy, status, counter);
-    if ( status & 0x80 ) --delta;
-                   else  ++delta;
+    if ( status & 0x80 ) ++delta;
+                   else  --delta;
     //printf ("%d        \n", delta);  fflush (stdout); 
 
     /* We are now marked as busy. */
@@ -126,7 +126,7 @@ void HwKnobWidget::hwKnobRotated( void )
 
       pMw->tune( delta );
 
-      printf ("%s: DELTA: %d\n", __FUNCTION__, delta); fflush(stdout);
+      //printf ("%s: DELTA: %d\n", __FUNCTION__, delta); fflush(stdout);
    }
 }
 
