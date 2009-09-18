@@ -17,7 +17,7 @@
 #include <qptrlist.h>
 #include <qstringlist.h>
 
-//#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <limits.h>
 
@@ -121,8 +121,8 @@ QPtrList<Station> EibiStation::getStationInFreqRange (int xFreq, unsigned int ra
                 if ( xl ) {
                    int currDiff = abs(newF - xl->getFreq());
 
-                   std::cerr << xl->getFreq()      << " - " << xl->getId()      << " - " 
-                             << xl->getStartTime() << " - " << xl->getEndTime() << std::endl;
+                   //std::cerr << xl->getFreq()      << " - " << xl->getId()      << " - " 
+                   //          << xl->getStartTime() << " - " << xl->getEndTime() << std::endl;
 
                    if ( currDiff <= fDiff ) {
                       fDiff = currDiff;
@@ -140,20 +140,20 @@ QPtrList<Station> EibiStation::getStationInFreqRange (int xFreq, unsigned int ra
                           if (ptm) {
                               if ( ( (ptm->tm_hour >= xl->getStartTime()) && (ptm->tm_hour <= xl->getEndTime()) ) ) {
 
-                                  std::cerr << xl->getFreq()      << " * " << xl->getId()      << " * " 
-                                            << xl->getStartTime() << " * " << xl->getEndTime() << std::endl;
+                                //  std::cerr << xl->getFreq()      << " * " << xl->getId()      << " * " 
+                                //            << xl->getStartTime() << " * " << xl->getEndTime() << std::endl;
 
                                   ll.append (xl);
                               } 
                           }
 
                       }  else {
-                          std::cerr << xl->getFreq() << " - " << xl->getId() << std::endl;
+                          //std::cerr << xl->getFreq() << " - " << xl->getId() << std::endl;
                           ll.append (xl);
                       }
                    }
                 } else {
-                   std::cout << "No station at " << x << std::endl;
+                   //std::cout << "No station at " << x << std::endl;
                 }
 
             }

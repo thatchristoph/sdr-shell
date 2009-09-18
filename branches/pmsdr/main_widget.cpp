@@ -1098,7 +1098,9 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     // load station list
     pEibiStat = new EibiStation;
     if ( pEibiStat->getStationCount() == 0 ) {
-            stationData->setText ("No valid stations database found !\nDonwload it at http://www.eibispace.de");
+        stationData->setText ("No valid stations database found !\nDonwload it at http://www.eibispace.de");
+    } else {
+        stationData->setText ("");
     }
 
     //
@@ -1108,9 +1110,12 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
        char *pn;
        if ((pn = getenv("HW_KNOB_PARALLEL"))) {
           pHwKnob = new HwKnobWidget (pn, this, "HardwareKnobWidget");
+          pHwKnob->hide();
           pHwKnob->setViewer (this);
        }
     }
+    setRxFrequency();
+
 }
 
 void Main_Widget::initConstants()
@@ -1908,12 +1913,12 @@ void Main_Widget::setRxFrequency()
         if ( pmsdrFile != NULL) {
             fprintf ( pmsdrFile, "plcd 0 1 %16.ld\n", (long int)pF->get() );
             fflush  ( pmsdrFile );
-            printf("************ %s: sent to PMSDR LCD: [%s]\n", __FUNCTION__, text);
+            //printf("************ %s: sent to PMSDR LCD: [%s]\n", __FUNCTION__, text);
         }
 
         if (pEibiStat && pEibiStat->getStationCount ()) {
 
-            std::cerr << "Station in range at " << pF->get() << " ?" << std::endl;
+            //std::cerr << "Station in range at " << pF->get() << " ?" << std::endl;
 
             QPtrList<Station> sl = pEibiStat->getStationInFreqRange ( pF->get(), 2 );
 
@@ -1921,7 +1926,7 @@ void Main_Widget::setRxFrequency()
 
               QString ds;
 
-              std::cerr << "List not empty: " << sl.count() << std::endl;
+              //std::cerr << "List not empty: " << sl.count() << std::endl;
 
               Station *ps = 0;
               QPtrListIterator<Station> i(sl);
@@ -1929,17 +1934,17 @@ void Main_Widget::setRxFrequency()
               while ( (ps = i.current()) != 0 ) {
                   ++i;
 
-                  std::cout << "****** "
-                            << ps->getFreq()
-                            << " -- "
-                            << (const char *) (ps->getId())
-                            << std::endl; 
+                  //std::cout << "****** "
+                  //          << ps->getFreq()
+                  //          << " -- "
+                  //          << (const char *) (ps->getId())
+                  //          << std::endl; 
 
                   ds =   ds + ps->getId() + "-" + ps->getCc() + " * ";
               }
               stationData->setText (ds);
             } else {
-                std::cerr << "No station in range." << std::endl;
+                //std::cerr << "No station in range." << std::endl;
                 stationData->setText ("No station in range");
             }
         }

@@ -12,9 +12,9 @@ Do you need to issue
 make clean ; make staticlib ; make 
 
 
-For version UDP enabled please follow instrunctions in
+For version UDP enabled please follow instructions in
 
-
+http://code.google.com/p/sdr-shell/wiki/HowToCompileandInstallDttSPfromCGRAN
 
 
 Install gmessage:
