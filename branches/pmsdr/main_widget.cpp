@@ -1104,14 +1104,17 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     }
 
     //
-    // Setup hardware knob
+    // Setup hardware knob management
     //
     {
-       char *pn;
-       if ((pn = getenv("HW_KNOB_PARALLEL"))) {
-          pHwKnob = new HwKnobWidget (pn, this, "HardwareKnobWidget");
-          pHwKnob->hide();
-          pHwKnob->setViewer (this);
+       Qt3Knob *pKnob = Qt3Knob::Create ();
+       
+       if (pKnob) {
+          pHwKnob = new HwKnobWidget (pKnob, this, "HardwareKnobWidget");
+          if (pHwKnob) {
+             pHwKnob->hide();
+             pHwKnob->setViewer (this);
+          }
        }
     }
     setRxFrequency();

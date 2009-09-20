@@ -24,6 +24,10 @@ function trapped {
    echo "Killing....... jackd ($JACKD_PID)"
    kill  $JACKD_PID
 
+   if [ ! -z "$HW_KNOB_FIFO" ]; then
+      kill "$HW_KNOB_FIFO_PROGRAM_PID"
+      rm -f "$HW_KNOB_FIFO"
+   fi
 
    rm -f $PMSDR_CMDPATH
 
@@ -130,7 +134,7 @@ fi
 # If we have RT capability, get the realtime module ready
 if [ $REALTIME ]; then
   echo "Configuring realtime module"
-  JACKD="$JACKDRT -R"
+  JACKD="$JACKD -R "
   rmmod capability
   rmmod commoncap
   modprobe realcap any=1 allcaps=1
@@ -262,6 +266,22 @@ make_connection sdr-$DTTSP_PID:or  alsa_pcm:playback_2
 #
 make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:ir
 make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:il
+
+##########################################################################
+#
+#
+#
+#
+# Sound Card Sampling Rate
+#
+if [ ! -z "$HW_KNOB_FIFO" ]; then
+   echo "Create FIFO for KNOB conrol"
+   mkfifo $HW_KNOB_FIFO
+   "$HW_KNOB_FIFO_PROGRAM" 90 > $HW_KNOB_FIFO & 
+   HW_KNOB_FIFO_PROGRAM_PID=$!
+fi
+
+
 
 ##########################################################################
 #
