@@ -21,12 +21,76 @@
 #include "hwknob.h"
 #include "main_widget.h"
 
+Qt3Knob * Qt3Knob::Create (void)
 
-
-Qt3Knob :: Qt3Knob (const char *pszPort):
-   fd(-1),
-   counter(0)
 {
+   char *pn;
+   if ((pn = getenv("HW_KNOB_PARALLEL"))) {
+      fprintf (stderr, "Parallel knob\n");
+      return new Qt3KnobIoctl(pn);
+   }
+   if ((pn = getenv("HW_KNOB_FIFO"))) {
+      fprintf (stderr, "FIFO knob\n");
+      return new Qt3KnobFifo(pn);
+   }
+   return 0;
+}
+
+Qt3KnobFifo :: Qt3KnobFifo (const char *pszFifo):
+   Qt3Knob()
+{
+    int rtpri =90;
+    struct sched_param param;
+    printf("using realtime, priority: %d\n",rtpri);
+    param.sched_priority = rtpri;
+    /* enable realtime fifo scheduling */
+    if(sched_setscheduler(0, SCHED_FIFO, &param)==-1){
+         perror("sched_setscheduler failed");
+         exit(-1);
+    }
+
+    fd = open (pszFifo, O_RDWR);
+    if (fd == -1) {
+       perror ("open");
+       return;
+    }    
+    pF = fdopen (fd, "rw");
+    if (pF == 0) {
+       perror ("open");
+       return; 
+    }
+}
+
+int Qt3KnobFifo :: processEvent(void)
+{
+   char szBuf[BUFSIZ];
+   int  delta = 0;
+
+   // read data
+   if (fgets (szBuf, sizeof(szBuf), pF)) {
+      sscanf (szBuf, "%d", &delta);
+      fprintf (stderr, "%s: %d\n", __FUNCTION__, delta);
+   }
+   return delta;
+}
+void Qt3KnobFifo :: postProcessEvent(void)
+{}
+
+Qt3KnobIoctl :: Qt3KnobIoctl (const char *pszPort):
+   Qt3Knob(),
+   counter(0),
+   direction(0)
+{
+    int rtpri =90;
+    struct sched_param param;
+    printf("using realtime, priority: %d\n",rtpri);
+    param.sched_priority = rtpri;
+    /* enable realtime fifo scheduling */
+    if(sched_setscheduler(0, SCHED_FIFO, &param)==-1){
+         perror("sched_setscheduler failed");
+         exit(-1);
+    }
+
     fd = open (pszPort, O_RDWR);
     if (fd == -1) {
         perror ("open");
@@ -40,7 +104,7 @@ Qt3Knob :: Qt3Knob (const char *pszPort):
     activate();    
 }
 
-void Qt3Knob :: activate (void)
+void Qt3KnobIoctl :: activate (void)
 {
 
     nAck = PARPORT_STATUS_ACK;
@@ -60,21 +124,16 @@ void Qt3Knob :: activate (void)
 
 }
 
-bool Qt3Knob :: isActive (void) const
+int Qt3KnobIoctl :: processEvent(void)
 {
-	return (fd != -1);
-}
+    int delta = 0;
 
-int Qt3Knob :: processEvent(void)
-{
-	int delta = 0;
-
-	counter = counter + 1;
-	//printf ("counter: %d\n",counter);
+    counter = counter + 1;
+    //printf ("counter: %d\n",counter);
     // read the pin 11, /BUSY
     ioctl (fd, PPRSTATUS, &status);
 
-    //printf ("BB: %04X STATUS: %02X COUNTER: %d ..... ", busy, status, counter);
+    printf ("BB: %04X STATUS: %02X COUNTER: %d ..... ", busy, status, counter);
     if ( status & 0x80 ) ++delta;
                    else  --delta;
     //printf ("%d        \n", delta);  fflush (stdout); 
@@ -86,8 +145,12 @@ int Qt3Knob :: processEvent(void)
 
     /* Clear the interrupt. */
     ioctl (fd, PPCLRIRQ, &irqc);
-    if (irqc > 1) fprintf (stderr, "Arghh! Missed %d interrupt%s!\n", irqc - 1, irqc == 2 ? "s" : "");
-
+    if (irqc > 1) {
+       fprintf (stderr, "Arghhhh! Missed %d interrupt%s!\n", irqc - 1, irqc == 2 ? "s" : "");
+       delta = (irqc - 1) * direction;
+    } else {
+       direction = (delta > 0) ? 1 : -1;
+    }
     /* Ack it. */
     ioctl (fd, PPWCONTROL, &acking);
     //usleep (2);
@@ -95,18 +158,26 @@ int Qt3Knob :: processEvent(void)
 
     //printf ("--->%02X\n", ch);
 
+    fprintf (stderr, "***** %d %d\n", delta, direction); fflush(stderr);
+    
     return delta;
+}
+
+void Qt3KnobIoctl :: postProcessEvent(void)
+{
+   activate ();
 }
 
 
 
 
-HwKnobWidget :: HwKnobWidget (const char *pszPort, QWidget *parent, const char *pszWidgetName)
+
+HwKnobWidget :: HwKnobWidget (Qt3Knob *pKnob, QWidget *parent, const char *pszWidgetName)
 	: QWidget(parent, pszWidgetName),
-      pQt3Knob(0),
+      pQt3Knob(pKnob),
       pMw(0)
 {
-    pQt3Knob = new Qt3Knob(pszPort);
+    
 }
 
 void HwKnobWidget ::setViewer (Main_Widget *p)
@@ -122,7 +193,7 @@ void HwKnobWidget::hwKnobRotated( void )
    if (pQt3Knob && pMw) {
       int delta = pQt3Knob->processEvent();
 
-      pQt3Knob->activate();
+      pQt3Knob->postProcessEvent();
 
       pMw->tune( delta );
 
