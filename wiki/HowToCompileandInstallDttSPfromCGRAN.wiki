@@ -1,5 +1,18 @@
 #summary How To Compile and Install DttSP from CGRAN repository on Linux Ubuntu 8.04 and Fedora Core 11
 
+= WARNING =
+
+Due to a DNS outage caused by a server renumbering, currently the name _www.cgran.org_ is not resolved by DNS system. The DNS  is going to be fixed as soon as possible.
+
+In the meantime please use the new ip address of the server (128.2.212.19) instead of www.cgran.org.
+
+On `*`nix systems you can insert a static resolution rule in /etc/hosts and use the name as usual. 
+In this case please check the file /etc/host.conf for 
+
+{{{
+order hosts,bind
+}}}
+
 = Introduction =
 
 Note: parts of this memo are excerpted from various DttSP reflector messages written
