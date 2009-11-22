@@ -53,8 +53,10 @@
 #define RXMETERPTS (5)
 #define TXMETERPTS (9)
 
-#define DEFSPEC (4096)
 #define SPECTRUM_HISTORY_SIZE (1000)
+
+#define ONE_OVER_F_GUARD_FREQUENCY (2000)  /*This is for the usbsoftrock which uses 
+only the upper half of the spectrum in order to omit the 1/f noise near DC */
 
 #define NUM_MODES 12
 
@@ -95,6 +97,7 @@ class Main_Widget : public QWidget
 		int cwPitch;
 		QLabel *cfgSlopeLowOffsetLabel;
 		QLabel *cfgSlopeHighOffsetLabel;
+		bool rock_bound;
 
 		Varilabel *NR_label;
 		Varilabel *ANF_label;
@@ -187,7 +190,10 @@ class Main_Widget : public QWidget
 		QFrame *step_10Hz_frame;
 		QFrame *step_100Hz_frame;
 		QFrame *step_1000Hz_frame;
-
+		QFrame *step_10000Hz_frame;
+		QFrame *step_100000Hz_frame;
+		QFrame *step_1000000Hz_frame;
+		
 		WorldMap *worldmap;
 
 		unsigned long long int rx_f,rx_if;
@@ -238,6 +244,7 @@ class Main_Widget : public QWidget
 		DttSPcmd      *pCmd;
 		DttSPspectrum *pSpectrum;
 		DttSPmeter    *pMeter;
+		USBSoftrockCmd *pUSBCmd;
 
 /*	The old FIFO way.
 		FILE *cmdFile;
@@ -344,6 +351,7 @@ class Main_Widget : public QWidget
 		void setAGC ( int );
 		void calibrateSpec ( int );
 		void calibrateMetr ( int );
+		void updateUseUSBsoftrock ( bool );
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

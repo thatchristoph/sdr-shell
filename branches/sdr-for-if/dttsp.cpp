@@ -200,3 +200,20 @@ int  DttSPspectrum :: fetch ( int *tick, int *label, float *data, int npts)
   return 0;
 }
 
+
+int USBSoftrockCmd :: sendCommand ( const char *format, ... )
+{
+	va_list ap;
+	char    szBuf [BUFSIZ];
+	int     rc;
+
+	va_start(ap, format);
+
+	vsprintf ( szBuf, format, ap );
+	rc = send_command (szBuf);
+
+	va_end(ap);
+
+	return rc;
+
+}
