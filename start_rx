@@ -8,7 +8,7 @@ export JACK_BUFFER=1024
 # start jackd (firewire fa-66)
 echo "starting jackd ..."
 #DELTA-44
-/usr/local/bin/jackd -dalsa -dhw:2 -r$SDR_DEFRATE -p${JACK_BUFFER} -n3&
+pasuspender -- /usr/bin/jackd -dalsa -dhw:0 -r$SDR_DEFRATE -p${JACK_BUFFER} -n3&
 
 sleep 5
 
@@ -19,14 +19,14 @@ echo "starting DttSP ${NAME}_RX ..."
 sleep 5
 # connect receiver
 echo "connecting receiver ..."
-/usr/local/bin/jack_connect system:capture_1 ${NAME}_RX:il
+/usr/bin/jack_connect system:capture_1 ${NAME}_RX:il
 sleep 2
-/usr/local/bin/jack_connect system:capture_2 ${NAME}_RX:ir
+/usr/bin/jack_connect system:capture_2 ${NAME}_RX:ir
 sleep 2
-/usr/local/bin/jack_connect ${NAME}_RX:ol system:playback_1
+/usr/bin/jack_connect ${NAME}_RX:ol system:playback_1
 sleep 2
-/usr/local/bin/jack_connect ${NAME}_RX:or system:playback_2
+/usr/bin/jack_connect ${NAME}_RX:or system:playback_2
 sleep 2
 
 # start sdr-shell
-sdr-shell&
+./sdr-shell&
