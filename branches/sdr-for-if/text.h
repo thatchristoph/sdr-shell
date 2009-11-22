@@ -14,7 +14,8 @@ Spectrogram<br> \
 Filter Control<br> \
 Spectrum<br> \
 Virtual VFOs<br> \
-Automatic Gain Control (AGC) \
+Automatic Gain Control (AGC)<br>\
+USB Tuned Softrock \
 </center><br> \
 <center><a name=\"S-Meter\">S-Meter</a><br> \
 ----------------------------------</center><br> \
@@ -119,7 +120,6 @@ The AGC Control is located at the AGC label on the lower Control Frame. The \
 AGC types are long (L), slow (S), medium (M), and fast (F). To select a type, \
 right-click on the type letter.<br> \
 <br> \
-<br> \
 <center>Use as IF for Older Rig<br> \
 ----------------------------------</center><br> \
 With a Softrock, you can connect into the IF of an older rig.   This software \
@@ -131,7 +131,19 @@ arrows change the amount the IF is shifted.  The G key will center the IF again.
 Tuning on the (Kenwood TS-850S anyway with a Softrock on the 455 KHz IF) is compensated \
 for if you select it.  You can adjust \
 the offsets for LSB and USB separately.  Mode selection can be made from the rig or the \
-computer.  \
+computer.  <br> \
+<br> \
+<center>USB Tuned Softrock<br> \
+----------------------------------</center><br> \
+A SoftRock v9.0 Lite+USB Xtall Receiver (or similar receiver using the USB I2C kit \
+to provide control of the Si570 local oscillator) can be controlled from sdr-shell.  To set this up, \
+prior to startding sdr-shell, \
+start usbsoftrock with the -d option to make it respond to UDP commands from \
+sdr-shell.  Then start sdr-shell and select the radio button to use usbsoftrock via \
+UDP on the General Config pannel.\
+<br> <br> USBsoftrock is software by Andrew Nilsson, VK6JBL, to control the USB-I2C controller \
+for the Si570 multi-band softrock receivers. It is available in the Files section of the Yahoo Softrock40 Group \
+under VK6JBL.  The URL at this time is:  http://groups.yahoo.com/group/softrock40/files/VK6JBL/ \
 <br> \
 <br> "
 ;

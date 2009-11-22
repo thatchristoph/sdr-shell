@@ -23,7 +23,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	slopeTuneOffset = 0;
 	loadSettings();
 
-	setCaption ( "SDR-Shell v3d @ " + stationCallsign );
+	setCaption ( "SDR-Shell v3e @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -73,6 +73,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( tune ( int ) ) );
 	connect ( spectrogram, SIGNAL ( plot ( int ) ),
 	          this, SLOT ( plotSpectrum ( int ) ) );
+	connect ( spectrogram, SIGNAL ( movement ( int ) ),
+	          this, SLOT ( f_at_mousepointer ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// Pass Band Filter Scale
@@ -499,7 +501,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	aboutText->setGeometry ( 2, 2, 347, 262 );
 	aboutText->setReadOnly ( true );
 	aboutText->append (
-	    QString ( "<center><br>SDR-Shell Version 2 Alpha<br>" ) +
+	    QString ( "<center><br>SDR-Shell Version 3e Alpha<br>" ) +
 	    "Copyright (c) 2006, 2007 & 2009<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
@@ -2440,7 +2442,7 @@ void Main_Widget::readSpectrum()
 	pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
 	pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
-/*      This appears to be unnecessary for anything at present. Rob 11/18/09
+/*      This below appears to be unnecessary for anything at present. Rob 11/18/09
 	j = 0;
 	for ( k = 1; k < DEFSPEC; k++ )
 	{
@@ -2726,6 +2728,7 @@ void Main_Widget::f_at_mousepointer ( int x )
 	char temp[20];
 
 	f = ( int ) ( ( sample_rate/(float)DEFSPEC ) * ( spectrogram->width() /2 - x ) );
+	if ( !rock_bound ) f = f - sample_rate / 4 ;
 
 	sprintf ( temp, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
 	M_label->setText ( temp );
