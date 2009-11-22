@@ -29,7 +29,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
 	font1Metrics = new QFontMetrics ( *font1 );
 	
-	fontlcdPointSize = 16;
+	fontlcdPointSize = 15;
 	fontlcd = new QFont ( "Andald Mono", fontlcdPointSize, FALSE );
 	fontlcdMetrics = new QFontMetrics ( *fontlcd );
 
@@ -170,13 +170,24 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgLOFreqInput->setGeometry ( 10, 18, 120, 20 );
 	cfgLOFreqInput->setText ( rx_f_string );
 
+
 	QPushButton *updateLOFreqButton = new QPushButton ( cfgLOFreqBox );
 	updateLOFreqButton->setText ( "Update" );
 	updateLOFreqButton->setGeometry ( 140, 18, 70, 20 );
 	connect ( updateLOFreqButton, SIGNAL ( pressed() ),
 	          this, SLOT ( updateLOFreq() ) );
 
+	// Use USBSoftrock
+	QGroupBox *cfgUSBBox = new QGroupBox ( cfgFrame1 );
+	cfgUSBBox->setTitle ( "USBSoftrock Control" );
+	cfgUSBBox->setGeometry ( 5, 101, 340, 45 );
 
+	QRadioButton *cfgUseUSBsoftrock = new QRadioButton ( cfgUSBBox );
+	cfgUseUSBsoftrock->setText ( "Use usbsoftrock via UDP" );
+	cfgUseUSBsoftrock->setGeometry ( 25, 18, 200, 20 );
+	connect ( cfgUseUSBsoftrock, SIGNAL ( toggled ( bool ) ),
+	          this, SLOT ( updateUseUSBsoftrock ( bool ) ) );
+	cfgUseUSBsoftrock->setChecked ( !rock_bound );
 
 	// Spectrum and S-Meter calibration
 	QGroupBox *calibrationBox = new QGroupBox ( cfgFrame1 );
@@ -537,16 +548,26 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	lcd->setFrameStyle ( QFrame::NoFrame );
 
 	step_1Hz_frame = new QFrame ( ctlFrame );
-	step_1Hz_frame->setGeometry ( 321, 29, 11, 1 );
+	step_1Hz_frame->setGeometry ( 318, 29, 11, 1 );
 
 	step_10Hz_frame = new QFrame ( ctlFrame );
-	step_10Hz_frame->setGeometry ( 308, 29, 11, 1 );
+	step_10Hz_frame->setGeometry ( 305, 29, 11, 1 );
 
 	step_100Hz_frame = new QFrame ( ctlFrame );
-	step_100Hz_frame->setGeometry ( 295, 29, 11, 1 );
+	step_100Hz_frame->setGeometry ( 292, 29, 11, 1 );
 
 	step_1000Hz_frame = new QFrame ( ctlFrame );
-	step_1000Hz_frame->setGeometry ( 282, 29, 11, 1 );
+	step_1000Hz_frame->setGeometry ( 279, 29, 11, 1 );
+	
+	step_10000Hz_frame = new QFrame ( ctlFrame );
+	step_10000Hz_frame->setGeometry ( 266, 29, 11, 1 );
+	
+	step_100000Hz_frame = new QFrame ( ctlFrame );
+	step_100000Hz_frame->setGeometry ( 253, 29, 11, 1 );
+	
+	step_1000000Hz_frame = new QFrame ( ctlFrame );
+	step_1000000Hz_frame->setGeometry ( 234, 29, 11, 1 );
+	
 
 	rxPix = new QPixmap ( rx_xpm );
 	txPix = new QPixmap ( tx_xpm );
@@ -924,8 +945,11 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	logoLabel->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
 	setRxFrequency();
-	setDefaultRxFrequency();
-	fprintf(stderr, "Mode is %d \n", (int)mode);
+	if (useIF)
+	{
+	  setDefaultRxFrequency();
+	}
+	//fprintf(stderr, "Mode is %d \n", (int)mode);
 	setIQGain();
 	setIQPhase();
 	set_NR ( NR_state );
@@ -1172,7 +1196,7 @@ void Main_Widget::updateLayout()
 	logoFrame->setGeometry (
 	    557,
 	    1,
-	    ctlFrame->width() - 558,
+	    ctlFrame->width() - 550,//was 558
 	    31 );
 	logoLabel->setGeometry (
 	    logoFrame->width() - 89,
@@ -1266,6 +1290,9 @@ void Main_Widget::loadSettings()
      pMeter = new DttSPmeter ();
 
      pSpectrum = new DttSPspectrum ();
+     
+     pUSBCmd = new USBSoftrockCmd ();
+     
      /*  I will try omitting this and see what happens.  It looks
       *  like it isn't needed.
       * 
@@ -1359,9 +1386,9 @@ The end of the old fifo way. */
 	//sample_rate = settings.readEntry(
 	//	"/sdr-shell/sample_rate", "48000" ).toInt();
 	rx_f = settings.readEntry (
-	           "/sdr-shell/rx_f", "444000" ).toLongLong();
+	           "/sdr-shell/rx_f", "14046000" ).toLongLong();
 	rx_f_string = settings.readEntry (
-	                  "/sdr-shell/rx_f", "4440000" );
+	                  "/sdr-shell/rx_f", "14046000" );
 	useIF = ( bool ) settings.readEntry (
 	            "/sdr-shell/useIF", "1" ).toInt();
 	useSlopeTune = ( bool ) settings.readEntry (
@@ -1484,6 +1511,9 @@ The end of the old fifo way. */
 	                  "/sdr-shell/hamlib_speed", "9600" );
 	speed = speedString.toInt();
 
+	rock_bound = ( bool ) settings.readEntry (
+			  "/sdr-shell/rock_bound", "false" ).toInt();
+
 	map_flag = 1;
 
 	printf ( "::: Configuration loading completed\n" );
@@ -1575,7 +1605,9 @@ void Main_Widget::saveSettings()
 
 	settings.setPath ( "n1vtn.org", ".qt", QSettings::User );
 	//settings.writeEntry( "/sdr-shell/sample_rate", sample_rate );
+	rx_f_string.setNum(rx_f);
 	settings.writeEntry ( "/sdr-shell/rx_f", rx_f_string );
+	rx_if_string.setNum(rx_if);
 	settings.writeEntry ( "/sdr-shell/rx_if", rx_if_string );
 	int intUseIF = ( int ) useIF;
 	settings.writeEntry ( "/sdr-shell/useIF", intUseIF );
@@ -1692,6 +1724,8 @@ void Main_Widget::saveSettings()
 	settings.writeEntry ( "/sdr-shell/lsbOffset", lsbOffset );
 	settings.writeEntry ( "/sdr-shell/slopeLowOffset", slopeLowOffset );
 	settings.writeEntry ( "/sdr-shell/slopeHighOffset", slopeHighOffset );
+
+	settings.writeEntry ( "/sdr-shell/rock_bound", (int) rock_bound );
 }
 
 void Main_Widget::finish()
@@ -1703,6 +1737,7 @@ void Main_Widget::finish()
     delete pSpectrum;
     delete pMeter;
     delete pCmd;
+    delete pUSBCmd;
     fprintf (stderr, "sdr-shell exiting.\n");
 	exit ( 0 );
 }
@@ -1760,10 +1795,32 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
 		case 4114: // Left arrow
 		case 74: // j
-			if ( rx_delta_f < sample_rate / 2 - 2000 )
-				rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
+			//fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
+			if ( rock_bound )
+			{
+				if ( rx_delta_f < sample_rate / 2 - 2000 )  //rx_delta_f > 0 when you tune down!
+					rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
+				else
+				  rx_delta_f =  ( sample_rate / 2 - 2000 );
+			}
 			else
-				rx_delta_f = sample_rate / 2 - 2000;
+			{
+				rx_f = rx_f - (int) pow ( 10, tuneStep );
+				pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 ); 
+			}
+/*
+			{
+				if ( -rx_delta_f > ONE_OVER_F_GUARD_FREQUENCY )
+					rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
+				else	
+				{  // When using the usbsoftrock, we avoid the 1/f noise near DC
+				   // by putting the IF at sample_rate/4.
+					rx_f = rx_f - (rx_delta_f + (int) pow ( 10, tuneStep )) - sample_rate/4;
+					pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
+					rx_delta_f = -sample_rate/4;
+					fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
+				}
+			}*/		
 			setRxFrequency();
 			break;
 		case 4115: // Up arrow
@@ -1773,14 +1830,55 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
 		case 4116: // Right arrow
 		case 75:  // k
-			if ( rx_delta_f > - ( sample_rate / 2 - 2000 ) )
+			fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
+			if ( rock_bound )
+			{
+				if ( rx_delta_f > -( sample_rate / 2 - 2000 ) )  //rx_delta_f < 0 when you tune up!
+					rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep );
+				else
+				  rx_delta_f = - ( sample_rate / 2 - 2000 );
+			}
+			else
+			{
+				rx_delta_f = -sample_rate/4;
+				rx_f = rx_f + (int) pow ( 10, tuneStep );
+				pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 ); 
+			}
+/*
+			{
+				if ( -rx_delta_f < (sample_rate / 2 -2000 ) )  //We are not to the top of our range.
+					rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep ); //Keep tuning up.
+				else  // We are at the top of the tuning range, so step the Si570 up.	
+				{  // When using the usbsoftrock, we avoid the 1/f noise near DC
+				   // by putting the IF at sample_rate/4.
+					rx_f = rx_f - (rx_delta_f + (int) pow ( 10, tuneStep )) - sample_rate/4;
+					pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
+					rx_delta_f = -sample_rate/4;
+					fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
+				}
+			} */	
+			/*fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
+			if ( rx_delta_f > - ( sample_rate / 2 - 2000 ) ) //rx_delta_f < 0 when you tune up!
 				rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep );
 			else
-				rx_delta_f = - ( sample_rate / 2 - 2000 );
+			{
+			        if(rock_bound)
+				  rx_delta_f = - ( sample_rate / 2 - 2000 );
+				else
+				{
+				  rx_f = rx_f - rx_delta_f + ( int ) pow ( 10, tuneStep );
+				  pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
+				  rx_delta_f = 0;
+				  //fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
+				}
+			}*/	
 			setRxFrequency();
 			break;
 		case 71: //g
-			setDefaultRxFrequency();
+			if (useIF)
+			{
+			  setDefaultRxFrequency();
+			}
 			break;
 		case 4096:
 			finish();
@@ -1918,7 +2016,8 @@ void Main_Widget::setRxFrequency()
 	char text[20];
 	if ( !useIF )
 	{
-		sprintf ( text, "%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+		fprintf ( stderr, "Set the frequency.\n");
+		sprintf ( text, "      %11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
 		displayMutex.lock();
 		lcd->setText( ( QString ) text);
 		//lcd->display ( text );
@@ -1966,12 +2065,13 @@ void Main_Widget::setFilter()
 	fprintf ( cmdFile, "setFilter %d %d\n", *filter_l, *filter_h );
 	fflush ( cmdFile ); */
 	pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
+	fprintf ( stderr, "filter_l is: %d and filter_h is: %d \n",*filter_l, *filter_h);
 	drawPassBandScale();
 }
 
 void Main_Widget::setLowerFilterScale ( int x )
 {
-	static float bin_bw = sample_rate/4096.0;
+	static float bin_bw = sample_rate/(float)DEFSPEC;
 	int stop_band;
 
 	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
@@ -1985,7 +2085,7 @@ void Main_Widget::setLowerFilterScale ( int x )
 
 void Main_Widget::setUpperFilterScale ( int x )
 {
-	static float bin_bw = sample_rate/4096.0;
+	static float bin_bw = sample_rate/(float)DEFSPEC;
 	int stop_band;
 
 	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
@@ -2008,8 +2108,16 @@ void Main_Widget::setCA_label()
 
 void Main_Widget::setTuneStep ( int step )
 {
-	if ( tuneStep < 3 && step > 0 ) tuneStep++;
-	else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+        if ( rock_bound ) 
+	{
+	  if ( tuneStep < 3 && step > 0 ) tuneStep++;
+	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+	}
+	else
+	{
+	  if ( tuneStep < 6 && step > 0 ) tuneStep++;
+	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+	}
 
 	switch ( tuneStep )
 	{
@@ -2018,30 +2126,73 @@ void Main_Widget::setTuneStep ( int step )
 			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 1:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
 			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 2:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
 			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 3:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			break;
+		case 4: 
+			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			break;
+		case 5: 
+			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			break;
+		case 6: 
+			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255) );
 			break;
 		default:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 	}
 }
@@ -2157,6 +2308,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 	}
 	setFilter();
 	if ( useIF ) setDefaultRxFrequency();
+	else setRxFrequency();
 }
 
 
@@ -2255,7 +2407,7 @@ void Main_Widget::readMeter()
 //
 void Main_Widget::readSpectrum()
 {
-	int j, k;
+//	int j, k;
 	int label, stamp;
 
 	/* This was the old FIFO way.
@@ -2288,7 +2440,7 @@ void Main_Widget::readSpectrum()
 	pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
 	pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
-
+/*      This appears to be unnecessary for anything at present. Rob 11/18/09
 	j = 0;
 	for ( k = 1; k < DEFSPEC; k++ )
 	{
@@ -2297,7 +2449,7 @@ void Main_Widget::readSpectrum()
 	}
 
 	//printf(" [%d %g]\n", j, spectrum[j] + specCal );
-
+*/
 	drawSpectrogram();
 	if ( SPEC_state ) plotSpectrum ( spectrum_head );
 }
@@ -2339,14 +2491,14 @@ void Main_Widget::drawSpectrogram()
 			// Turn on vertical filter line
 			if ( filterLine &&
 			        ( x - x1 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_l / ( sample_rate/4096.0 ) ) )
+			        ( int ) ( *filter_l / ( sample_rate/(float) DEFSPEC ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
 
 			if ( filterLine &&
 			        ( x - x1 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_h / ( sample_rate/4096.0 ) ) )
+			        ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
@@ -2366,20 +2518,20 @@ void Main_Widget::drawSpectrogram()
 
 	p.setPen ( Qt::yellow );
 	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/4096.0 ) ), y+1,
+	             ( int ) ( *filter_l / ( sample_rate/(float)DEFSPEC ) ), y+1,
 	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/4096.0 ) ), y+1 );
+	             ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ), y+1 );
 	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/4096.0 ) ), y+2,
+	             ( int ) ( *filter_l / ( sample_rate/(float)DEFSPEC ) ), y+2,
 	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/4096.0 ) ), y+2 );
+	             ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ), y+2 );
 
 	p.end();
 }
 
 void Main_Widget::drawPassBandScale()
 {
-	static float bin_bw = sample_rate/4096.0;
+	static float bin_bw = sample_rate/(float)DEFSPEC;
 	char temp[20];
 	int x1, x2;
 
@@ -2420,7 +2572,7 @@ void Main_Widget::drawPassBandScale()
 
 void Main_Widget::plotSpectrum ( int y )
 {
-	static float bin_bw = sample_rate/4096.0;
+	static float bin_bw = sample_rate/(float)DEFSPEC;
 	int x, x1, x2;
 	double kHz_step;
 	int f;
@@ -2436,7 +2588,7 @@ void Main_Widget::plotSpectrum ( int y )
 
 	x1 = DEFSPEC/2 - spectrogram->width() /2;
 	x2 = x1 + spectrogram->width();
-	kHz_step = 1000 / ( sample_rate / 4096.0 );
+	kHz_step = 1000 / ( sample_rate / (float)DEFSPEC );
 
 	QPainter p;
 	p.begin ( &pix );
@@ -2535,14 +2687,35 @@ void Main_Widget::spectrogramClicked ( int x )
 	int f;
 
 	int f_limit = sample_rate/2 - 2000;
-	if ( useIF )  // Disable changing frequency for IF mode.  Add IF shift later.
+	if ( !useIF )  // Disable changing frequency for IF mode.  Use arrows for IF shift.
 	{
-		f = ( int ) ( ( sample_rate/4096.0 ) * ( spectrogram->width() /2 - x ) );
+		f = ( int ) ( ( sample_rate/(float)DEFSPEC ) * ( spectrogram->width() /2 - x ) );
+		
+		fprintf(stderr, "The value of f is %d \n",f);
 
 
-		rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;
-		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+		
+		if ( rock_bound )
+		{
+			if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+			if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+			else 
+			{
+				rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;	
+			}
+		}
+		else
+		{
+		 /* fprintf (stderr,"Before, the rx_f sent to the usb is %f MHz. and rx_delta_f is %f KHz.",rx_f*1e-6, rx_delta_f*1e-3);
+		  rx_f = rx_f - rx_delta_f+8000;
+		  rx_delta_f =  8000; //Make it not tuned to the center
+		  fprintf (stderr,"The rx_f sent to the usb is %f MHz.",rx_f*1e-6); */
+			rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
+			pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
+			fprintf ( stderr, "The frequency sent to USBsoftrock is: %f \n",rx_f*1e-6);
+			fprintf ( stderr, "The center frequency is: %f \n",(rx_f + sample_rate /4.)*1e-6);
+			fprintf ( stderr, "The frequency USBoffset: %d \n",usbOffset);
+		}
 		setRxFrequency();
 	}
 }
@@ -2552,7 +2725,7 @@ void Main_Widget::f_at_mousepointer ( int x )
 	int f;
 	char temp[20];
 
-	f = ( int ) ( ( sample_rate/4096.0 ) * ( spectrogram->width() /2 - x ) );
+	f = ( int ) ( ( sample_rate/(float)DEFSPEC ) * ( spectrogram->width() /2 - x ) );
 
 	sprintf ( temp, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
 	M_label->setText ( temp );
@@ -2714,7 +2887,7 @@ void Main_Widget::displayNCO ( int x )
 {
 	int pb_f;
 	char temp[20];
-	static float bin_bw = sample_rate/4096.0;
+	static float bin_bw = sample_rate/(float)DEFSPEC;
 	pb_f = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
 	sprintf ( temp, "%d", pb_f );
 	M_label->setText ( temp );
@@ -2852,6 +3025,12 @@ void Main_Widget::calibrateMetr ( int value )
 void Main_Widget::setIF ( bool value )
 {
 	useIF =  value;
+}
+
+void Main_Widget::updateUseUSBsoftrock ( bool value )
+{
+	rock_bound =  !value;
+	rx_delta_f = - sample_rate / 4 ;
 }
 
 void Main_Widget::setHamlib ( bool value )

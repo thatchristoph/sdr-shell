@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define DTTSP_PORT_CLIENT_COMMAND  19001
 #define DTTSP_PORT_CLIENT_SPECTRUM 19002
 #define DTTSP_PORT_CLIENT_METER    19003
+#define USBSOFTROCK_CLIENT_COMMAND 19004
 
 #define DTTSP_PORT_CLIENT_BUFSIZE  65536
 
@@ -89,6 +90,19 @@ public:
     ~DttSPspectrum () {}
 
     int fetch ( int *tick, int *label, float *data, int npts) ;
+};
+
+class USBSoftrockCmd: public DttSP {
+
+	public:
+    
+    USBSoftrockCmd (int port = USBSOFTROCK_CLIENT_COMMAND):
+	    DttSP (port, 0)
+	    {}
+
+    ~USBSoftrockCmd () {}
+
+    int sendCommand ( const char *format, ... );
 };
 
 
