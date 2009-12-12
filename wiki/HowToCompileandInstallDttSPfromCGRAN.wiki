@@ -87,6 +87,26 @@ yum install jack-audio-connection-kit  jack-audio-connection-kit-devel qjackctl 
 yum install liblo liblo-devel
 }}}
 
+
+== Mandriva 2010 ==
+
+Get root status with the method you prefer, for example
+
+{{{
+su - root
+}}}
+
+next install the prerequisite packages:
+
+{{{
+urpmi gcc gcc-c++ man-pages autoconf automake subversion make
+urpmi fftw fftw-devel gsl gsl-devel
+urpmi -a fftw fftw-devel gsl gsl-devel
+urpmi jack jack-devel
+urpmi liblo liblo-devel
+}}}
+
+
 = Dowloading DttSP =
 
 DttSP can be downloaded via SVN. The latest source can be downloaded using the SVN:
