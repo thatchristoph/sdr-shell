@@ -102,7 +102,7 @@ next install the prerequisite packages:
 urpmi gcc gcc-c++ man-pages autoconf automake subversion make
 urpmi fftw fftw-devel gsl gsl-devel
 urpmi -a fftw fftw-devel gsl gsl-devel
-urpmi jack jack-devel
+urpmi jack jack-devel jackit-example-clients
 urpmi liblo liblo-devel
 }}}
 
