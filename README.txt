@@ -61,4 +61,42 @@ If you have no audio check the jack connection with
 qjackctl
 
 
+------------------------------------------------------------------
+Mandriva 2010 addendum
+
+Install (as root) the following packages:
+
+urpmi gmessage libqt3-devel kate
+
+(The last package is optional: if you have some Unix expertise you can use vi).
+
+Now you have to do a soft link as follows:
+
+cd /usr/lib/qt3
+mkdir lib
+cd lib
+ln -s /usr/lib/libqt-mt* .
+
+Install and compile sdr-shell:
+
+cd ~
+svn checkout http://sdr-shell.googlecode.com/svn/branches/pmsdr sdr-shell-pmsdr
+cd sdr-shell-pmsdr
+qmake && make clean && export QTDIR=/usr/lib/qt3 ; make
+
+Configure the sdr-shell.conf file according to your local setup.
+
+kate sdr-shell.conf
+
+
+Run
+
+./sdr.shell.sh
+
+If you have no audio check the jack connection with
+
+qjackctl
+
+
+
 
