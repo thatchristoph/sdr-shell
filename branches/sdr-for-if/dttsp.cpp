@@ -75,6 +75,8 @@ DttSP :: DttSP (int port, int inbound):
           }
         } // else no, so sockaddr gets filled in at point of use, not bound by us
 
+	fprintf( stderr, "DttSP port %d\n", port);
+
         // one size fits all
         size = DTTSP_PORT_CLIENT_BUFSIZE;
         memset(buff, 0, size);
@@ -91,7 +93,7 @@ DttSP :: ~DttSP ()
 int DttSP :: send_command ( char *cmdstr ) 
 {
     // are we pointing at the moon?
-    if (!pSa || !cmdstr)
+    if (!pSa || sock == -1 || !cmdstr)
       return -1;
 
     // make local, properly terminated copy of command
@@ -109,7 +111,7 @@ int DttSP :: send_command ( char *cmdstr )
     pSa->sin_port = htons((unsigned short) port);
 
     if (sendto(sock, buff, used, flags, (struct sockaddr *) pSa, clen) != used) {
-        fprintf (stderr, "%s: error in sendto", __FUNCTION__); 
+        fprintf (stderr, "%s: error in sendto\n", __FUNCTION__); 
         return -3;
     }
 
@@ -122,11 +124,17 @@ int DttSP :: send_command ( char *cmdstr )
       FD_SET(sock, &fds);
       tv.tv_sec = 1;
       tv.tv_usec = 0;
-      if (!select(sock + 1, &fds, 0, 0, &tv))
+      if (!select(sock + 1, &fds, 0, 0, &tv)) {
+        fprintf (stderr, "%s: error from select, disabling port\n", __FUNCTION__); 
+	close (sock);
+	sock = -1;
+	delete pSa;
+	pSa = NULL;
         return -4;
+      }
       //if (recvfrom (sock, buff, size, flags, (struct sockaddr *)pSa, &clen) <= 0)
       if (recvfrom(sock, buff, size, flags, (struct sockaddr *) pSa, (socklen_t *)(&clen)) <= 0) {
-          fprintf (stderr, "%s: error in recvfrom", __FUNCTION__); 
+          fprintf (stderr, "%s: error in recvfrom\n", __FUNCTION__); 
           return -5;
       }
 
@@ -217,3 +225,36 @@ int USBSoftrockCmd :: sendCommand ( const char *format, ... )
 	return rc;
 
 }
+
+int DttSPTXcmd :: sendCommand ( const char *format, ... )
+{
+    va_list ap;
+    char    szBuf [BUFSIZ];
+    int     rc;
+
+    va_start(ap, format);
+
+    vsprintf ( szBuf, format, ap );
+    rc = send_command (szBuf);
+
+    va_end(ap);
+
+    return rc;
+
+}
+
+void DttSPTXcmd :: off ( )
+{
+    printf("DttSPTXcmd = off\n");
+    close (sock);
+    sock = -1;
+    delete pSa;
+    pSa = NULL;
+}
+
+void DttSPTXcmd :: setPort ( const int newport )
+{
+    printf("DttSPTXcmd: old port %d new port %d\n", newport);
+    port = newport;
+}
+

@@ -1295,6 +1295,18 @@ void Main_Widget::loadSettings()
      
      pUSBCmd = new USBSoftrockCmd ();
      
+     pTXCmd = new DttSPTXcmd ();
+     /* would like the value to be the transmit port's CMD */
+     if ( ( ep = getenv ( "SDR_TRANSMIT" ) ) )
+     {
+	int port = atoi(ep);
+	if (port)
+		pTXCmd->setPort(port);
+     } else {
+	pTXCmd->off();
+     }
+
+
      /*  I will try omitting this and see what happens.  It looks
       *  like it isn't needed.
       * 
@@ -1971,6 +1983,20 @@ void Main_Widget::process_key ( int key )
 				specApertureHigh = specApertureHigh + 1;
 			setCA_label();
 			break;
+		case 84: //t  toggle transmit
+			if (transmit)
+			{
+				transmit = 0;
+				pUSBCmd->sendCommand("set ptt off\n" );
+			} else
+			{
+				transmit = 1;
+				pUSBCmd->sendCommand("set ptt on\n" );
+			}
+			break;
+		case 32: // space turn transmit off
+			transmit = 0;
+			pUSBCmd->sendCommand("ptt off\n" );
 		default:
 			break;
 	}
@@ -2028,7 +2054,9 @@ void Main_Widget::setRxFrequency()
 	/*  This is the old FIFO way.
 	fprintf ( cmdFile, "setOsc %d\n", rx_delta_f );
 	fflush ( cmdFile );*/
-	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f );
+	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
+	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
+	pTXCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 1 );
 }
 
 void Main_Widget::setFilter_l ( int n )
@@ -2067,7 +2095,8 @@ void Main_Widget::setFilter()
 	fprintf ( cmdFile, "setFilter %d %d\n", *filter_l, *filter_h );
 	fflush ( cmdFile ); */
 	pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
-	fprintf ( stderr, "filter_l is: %d and filter_h is: %d \n",*filter_l, *filter_h);
+	/*fprintf ( stderr, "filter_l is: %d and filter_h is: %d \n",*filter_l, *filter_h);*/
+	fprintf ( stderr, "setFilter %d %d\n", *filter_l, *filter_h );
 	drawPassBandScale();
 }
 
@@ -2223,6 +2252,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			fflush ( cmdFile );
 			*/
 			pCmd->sendCommand ("setMode %d %d\n", USB );
+			pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
+			fprintf ( stderr, "setMode %d\n", USB );
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
 			USB_label->setBackgroundColor ( c_on );
@@ -2235,6 +2266,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			fprintf ( cmdFile, "setMode %d\n", LSB );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", LSB );
+			pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
+			fprintf ( stderr, "setMode %d\n", LSB );
 			filter_l = &LSB_filter_l; //-2400;
 			filter_h = &LSB_filter_h; //-20;
 			LSB_label->setBackgroundColor ( c_on );
@@ -2245,6 +2278,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			/*fprintf ( cmdFile, "setMode %d\n", DSB );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", DSB );
+			pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
+			fprintf ( stderr, "setMode %d\n", DSB );
 			filter_l = &DSB_filter_l; //-2400;
 			filter_h = &DSB_filter_h; //2400;
 			DSB_label->setBackgroundColor ( c_on );
@@ -2256,6 +2291,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			fprintf ( cmdFile, "setMode %d\n", AM );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", AM );
+			pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
+			fprintf ( stderr, "setMode %d\n", AM );
 			filter_l = &AM_filter_l; //-2400;
 			filter_h = &AM_filter_h; //2400;
 			AM_label->setBackgroundColor ( c_on );
@@ -2267,6 +2304,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			fprintf ( cmdFile, "setMode %d\n", CWL );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", CWL );
+			pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
+			fprintf ( stderr, "setMode %d\n", CWL );
 			filter_l = &CWL_filter_l; //-500;
 			filter_h = &CWL_filter_h; //-200;
 			CWL_label->setBackgroundColor ( c_on );
@@ -2278,6 +2317,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			fprintf ( cmdFile, "setMode %d\n", CWU );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", CWU );
+			pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
+			fprintf ( stderr, "setMode %d\n", CWU );
 			filter_l = &CWU_filter_l; //200;
 			filter_h = &CWU_filter_h; //500;
 			CWU_label->setBackgroundColor ( c_on );
@@ -2288,6 +2329,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			/*fprintf ( cmdFile, "setMode %d\n", SAM );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", SAM );
+			pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
+			fprintf ( stderr, "setMode %d\n", SAM );
 			filter_l = &SAM_filter_l; //-2400;
 			filter_h = &SAM_filter_h; //2400;
 			SAM_label->setBackgroundColor ( c_on );
@@ -2298,6 +2341,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			/*fprintf ( cmdFile, "setMode %d\n", FMN );
 			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", FMN );
+			pTXCmd->sendCommand ("setMode %d %d\n", FMN );
+			fprintf ( stderr, "setMode %d\n", FMN );
 			filter_l = &FMN_filter_l; //-4000;
 			filter_h = &FMN_filter_h; //4000;
 			FMN_label->setBackgroundColor ( c_on );
@@ -2319,6 +2364,7 @@ void Main_Widget::setIQGain()
 	/*fprintf ( cmdFile, "setcorrectIQgain %d\n", iqGain );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setcorrectIQgain %d %d\n", iqGain );
+	fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
 	/* Set the  gain as well. */
 	/* The following sets the output gain.*/
 	/*fprintf ( cmdFile, "setGAIN %d %d %d\n",0,1,0 );
@@ -2327,6 +2373,8 @@ void Main_Widget::setIQGain()
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setGain %d %d\n", 0,1,0 );
 	pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
+	fprintf ( stderr, "setGAIN %d %d %d\n",0,1,0 );
+	fprintf ( stderr, "setGAIN %d %d %d\n",0,0,0 );
 	printf ( "Set the RX Gain.\n" );
 }
 
@@ -2335,6 +2383,7 @@ void Main_Widget::setIQPhase()
 	/*fprintf ( cmdFile, "setcorrectIQphase %d\n", iqPhase );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setcorrectIQphase %d %d\n", iqPhase );
+	fprintf ( stderr, "setcorrectIQphase %d\n", iqPhase );
 }
 
 void Main_Widget::readMeter()
@@ -2778,6 +2827,7 @@ void Main_Widget::set_NR ( int state )
 	/*fprintf ( cmdFile, "setNR %d\n", state );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setNR %d\n", state );
+	fprintf ( stderr, "setNR %d\n", state );
 
 }
 
@@ -2795,6 +2845,7 @@ void Main_Widget::set_ANF ( int state )
 	/*fprintf ( cmdFile, "setANF %d\n", ANF_state );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setANF %d\n", ANF_state );
+	fprintf ( stderr, "setANF %d\n", ANF_state );
 }
 
 void Main_Widget::toggle_NB ( int )
@@ -2811,6 +2862,7 @@ void Main_Widget::set_NB ( int state )
 	/*fprintf ( cmdFile, "setNB %d\n", NB_state );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setNB %d\n", NB_state );
+	fprintf ( stderr, "setNB %d\n", NB_state );
 }
 
 void Main_Widget::toggle_BIN ( int )
@@ -2827,6 +2879,7 @@ void Main_Widget::set_BIN ( int state )
 	/*fprintf ( cmdFile, "setBIN %d\n", BIN_state );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setBIN %d\n", BIN_state );
+	fprintf ( stderr, "setBIN %d\n", BIN_state );
 }
 
 void Main_Widget::toggle_MUTE ( int )
@@ -2843,6 +2896,7 @@ void Main_Widget::set_MUTE ( int state )
 	/*fprintf ( cmdFile, "setRunState %d\n", MUTE_state ? 0 : 2 );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setRunState %d\n", MUTE_state ? 0: 2 );
+	fprintf ( stderr, "setRunState %d\n", MUTE_state ? 0 : 2 );
 }
 
 void Main_Widget::toggle_SPEC ( int )
@@ -2944,6 +2998,7 @@ void Main_Widget::setPolyFFT ( int state )
 	/*fprintf ( cmdFile, "setSpectrumPolyphase %d\n", state );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumPolyphase %d\n", state );
+	fprintf ( stderr, "setSpectrumPolyphase %d\n", state );
 }
 
 void Main_Widget::setFFTWindow ( int window )
@@ -2952,6 +3007,7 @@ void Main_Widget::setFFTWindow ( int window )
 	/*fprintf ( cmdFile, "setSpectrumWindow %d\n", window );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumWindow %d\n", window );
+	fprintf ( stderr, "setSpectrumWindow %d\n", window );
 }
 
 void Main_Widget::setSpectrumType ( int type )
@@ -2960,6 +3016,7 @@ void Main_Widget::setSpectrumType ( int type )
 	/*fprintf ( cmdFile, "setSpectrumType %d\n", type + 1 );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumType %d\n", type + 1 );
+	fprintf ( stderr, "setSpectrumType %d\n", type + 1 );
 
 }
 
@@ -2969,6 +3026,7 @@ void Main_Widget::setAGC ( int type )
 	/*fprintf ( cmdFile, "setRXAGC %d\n", type );
 	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setRXAGC %d\n", type );
+	fprintf ( stderr, "setRXAGC %d\n", type );
 
 	QColor on ( 150, 50, 50 );
 	QColor off ( 0, 0, 0 );

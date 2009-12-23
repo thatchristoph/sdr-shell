@@ -228,6 +228,7 @@ class Main_Widget : public QWidget
 		int fftWindow;
 		int spectrumType;
 		int agcType;
+		int transmit;
 
 		float spectrum[DEFSPEC];
 		float oscope[DEFSPEC];
@@ -245,6 +246,7 @@ class Main_Widget : public QWidget
 		DttSPspectrum *pSpectrum;
 		DttSPmeter    *pMeter;
 		USBSoftrockCmd *pUSBCmd;
+		DttSPTXcmd    *pTXCmd;
 
 /*	The old FIFO way.
 		FILE *cmdFile;
