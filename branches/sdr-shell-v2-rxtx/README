@@ -1,0 +1,11 @@
+This file will eventually have instructions for getting started and using SDR-Shell.
+
+Some notes on Glen Overby's modification for transmit with two instances fo dttsp and SDR-Shell:
+- If a reply to a command times out, I close the socket and discontinue sending commands to that socket.  This was my original hack to not hang on every command when I didn't have a transmit process running.
+
+- I look for the environment variable SDR_TRANSMIT and if it is not set I turn off sending commands to the transmit dttsp.  If it's set to a number, that is used as the port number.
+
+- PTT using 'usbsoftrock' is toggled using the 't' command.
+
+- I manually set the output gain in dttsp.
+
