@@ -2,7 +2,7 @@
 
 Spectrogram::Spectrogram(QWidget *parent, const char *name) : QWidget(parent, name)
 {
-  //setMouseTracking( true );
+    setMouseTracking( true );
 
     mouseMoving = 0;
 }
@@ -22,7 +22,7 @@ void Spectrogram::mouseMoveEvent( QMouseEvent *e )
 {
     static int x0 = 0;
     int output;
-
+	
     mouseMoving = true;
 
     if ( x0 - e->x() >= 0 )
@@ -38,6 +38,7 @@ void Spectrogram::mouseMoveEvent( QMouseEvent *e )
         emit tune2( output * 100 );
     else
         emit movement( e->x() );
+
 
     x0 = e->x();
 }
