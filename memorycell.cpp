@@ -67,5 +67,12 @@ void MemoryCell::mouseReleaseEvent ( QMouseEvent *e )
 
 void MemoryCell::enterEvent( QEvent * )
 {
+	//fprintf( stderr, "memory cell mouse enter\n" );
 	emit display( this );
+}
+
+void MemoryCell::leaveEvent( QEvent * )
+{
+	//fprintf( stderr, "memory cell mouse leave\n" );
+	//emit display( this );
 }
