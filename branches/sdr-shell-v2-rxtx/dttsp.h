@@ -117,6 +117,7 @@ public:
 
     int sendCommand ( const char *format, ... );
     void off();
+    void on();
     void setPort ( const int newport );
 };
 

@@ -252,6 +252,28 @@ void DttSPTXcmd :: off ( )
     pSa = NULL;
 }
 
+void DttSPTXcmd :: on ( )
+{
+    printf("DttSPTXcmd = on\n");
+    pSa = new struct sockaddr_in;
+
+    if (pSa) {
+        // create socket 
+        if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+          perror("Couldn't create dttsp_port_client socket");
+          exit(1);
+        }
+
+        flags = 0;
+
+	fprintf( stderr, "DttSP port %d\n", port);
+
+        // one size fits all
+        size = DTTSP_PORT_CLIENT_BUFSIZE;
+        memset(buff, 0, size);
+    }
+}
+
 void DttSPTXcmd :: setPort ( const int newport )
 {
     printf("DttSPTXcmd: old port %d new port %d\n", newport);

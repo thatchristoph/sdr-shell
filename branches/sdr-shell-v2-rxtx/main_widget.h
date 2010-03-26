@@ -70,6 +70,8 @@ class Main_Widget : public QWidget
 		QFont *font;
 		QLineEdit *cfgCallInput, *cfgLOFreqInput, *cfgIFreqInput, *cfgHamlibRigInput, *cfgHamlibSpeedInput, *cfgHamlibPortInput;
 		QSpinBox *cfgIQPhaseInput, *cfgIQGainInput, *cfgUSBOffsetInput;
+		QSpinBox *cfgTxIQPhaseInput, *cfgTxIQGainInput;
+		QSpinBox *cfgTxGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
 		QPixmap *rxPix, *txPix;
@@ -98,13 +100,17 @@ class Main_Widget : public QWidget
 		QLabel *cfgSlopeLowOffsetLabel;
 		QLabel *cfgSlopeHighOffsetLabel;
 		bool rock_bound;
+		bool enableTransmit;
 
+		Varilabel *TRX_label;
 		Varilabel *NR_label;
 		Varilabel *ANF_label;
 		Varilabel *NB_label;
 		Varilabel *BIN_label;
 		Varilabel *MUTE_label;
 		Varilabel *SPEC_label;
+		Varilabel *UP_label;
+		Varilabel *DOWN_label;
 
 		VariModelabel *LSB_label;
 		VariModelabel *USB_label;
@@ -148,6 +154,17 @@ class Main_Widget : public QWidget
 		MemoryCell *f6_cell;
 		MemoryCell *f7_cell;
 		MemoryCell *f8_cell;
+
+		MemoryCell *b1_cell;
+		MemoryCell *b2_cell;
+		MemoryCell *b3_cell;
+		MemoryCell *b4_cell;
+		MemoryCell *b5_cell;
+		MemoryCell *b6_cell;
+		MemoryCell *b7_cell;
+		MemoryCell *b8_cell;
+		MemoryCell *b9_cell;
+		MemoryCell *b10_cell;
 
 		QLabel *af1_label;
 		QLabel *af2_label;
@@ -213,6 +230,7 @@ class Main_Widget : public QWidget
 		int spec_r[120], spec_g[120], spec_b[120];
 		rmode_t mode;
 		int iqGain, iqPhase;
+		int txIQGain, txIQPhase, txGain;
 		int NR_state;
 		int ANF_state;
 		int NB_state;
@@ -229,6 +247,7 @@ class Main_Widget : public QWidget
 		int spectrumType;
 		int agcType;
 		int transmit;
+		int band;
 
 		float spectrum[DEFSPEC];
 		float oscope[DEFSPEC];
@@ -248,9 +267,6 @@ class Main_Widget : public QWidget
 		USBSoftrockCmd *pUSBCmd;
 		DttSPTXcmd    *pTXCmd;
 
-/*	The old FIFO way.
-		FILE *cmdFile;
-		FILE *mtrFile; */
 		FILE *fftFile;
 
 		FILE *loadavg_stream;
@@ -280,6 +296,7 @@ class Main_Widget : public QWidget
 		void rx_cmd ( int );
 		void process_key ( int );
 		void setRxFrequency();
+		void setTxFrequency();
 		void setDefaultRxFrequency();
 		void loadSettings();
 		void saveSettings();
@@ -293,6 +310,9 @@ class Main_Widget : public QWidget
 		void set_SPEC ( int );
 		void setIQGain();
 		void setIQPhase();
+		void setTxIQGain();
+		void setTxIQPhase();
+		void setTxGain();
 		void drawSpectrogram();
 		void drawSpectrogram_2();
 		void drawSpectrumScale();
@@ -322,6 +342,11 @@ class Main_Widget : public QWidget
 		void toggle_BIN ( int );
 		void toggle_MUTE ( int );
 		void toggle_SPEC ( int );
+		void leave_band ( int );
+		void enter_band ( int );
+		void band_UP ( int );
+		void band_DOWN ( int );
+		void toggle_TX ( int );
 
 		void setFilter_l ( int );
 		void setFilter_h ( int );
@@ -347,6 +372,9 @@ class Main_Widget : public QWidget
 		void updateHamlib();
 		void updateIQGain ( int );
 		void updateIQPhase ( int );
+		void updateTxIQGain ( int );
+		void updateTxIQPhase ( int );
+		void updateTxGain ( int );
 		void setPolyFFT ( int );
 		void setFFTWindow ( int );
 		void setSpectrumType ( int );
@@ -354,6 +382,7 @@ class Main_Widget : public QWidget
 		void calibrateSpec ( int );
 		void calibrateMetr ( int );
 		void updateUseUSBsoftrock ( bool );
+		void updateTransmit ( bool );
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

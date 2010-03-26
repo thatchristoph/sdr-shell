@@ -9,6 +9,7 @@ Spectrogram::Spectrogram(QWidget *parent, const char *name) : QWidget(parent, na
 
 void Spectrogram::mouseReleaseEvent( QMouseEvent *e )
 {
+printf("mouseReleaseEvent\n");
     if ( !mouseMoving && e->state() == LeftButton )
         emit tune1( e->x() );
 
@@ -42,3 +43,20 @@ void Spectrogram::mouseMoveEvent( QMouseEvent *e )
 
     x0 = e->x();
 }
+
+void Spectrogram::wheelEvent(QWheelEvent *event)
+{
+    int numDegrees = event->delta() / 8;
+    int numSteps = numDegrees / 15;
+    char orientation = '?';
+    if (event->orientation() == Qt::Horizontal) {
+	orientation = 'h';
+    } else {
+	orientation = 'v';
+    }
+
+    printf("wheelEvent degrees %d steps %d orientation %c\n",
+		numDegrees, numSteps, orientation);
+
+}
+

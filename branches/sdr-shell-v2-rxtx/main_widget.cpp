@@ -191,6 +191,18 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( updateUseUSBsoftrock ( bool ) ) );
 	cfgUseUSBsoftrock->setChecked ( !rock_bound );
 
+	// Transmit Enable
+	QGroupBox *cfgTXBox = new QGroupBox ( cfgFrame1 );
+	cfgTXBox->setTitle ( "Transmit" );
+	cfgTXBox->setGeometry ( 5, 200, 340, 45 );
+
+	QRadioButton *cfgTransmit = new QRadioButton ( cfgTXBox );
+	cfgTransmit->setText ( "Enable transmit" );
+	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
+	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
+	          this, SLOT ( updateTransmit ( bool ) ) );
+	cfgTransmit->setChecked ( enableTransmit );
+
 	// Spectrum and S-Meter calibration
 	QGroupBox *calibrationBox = new QGroupBox ( cfgFrame1 );
 	calibrationBox->setTitle ( "Calibration" );
@@ -224,7 +236,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	// IQ Phase Calibration
 	QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
-	cfgIQCal->setTitle ( "IQ Calibration" );
+	cfgIQCal->setTitle ( "RX IQ Calibration" );
 	cfgIQCal->setGeometry ( 5, 5, 340, 45 );
 
 	QLabel *cfgIQPhaseLabel = new QLabel ( cfgIQCal );
@@ -253,6 +265,56 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgIQGainInput->setValue ( iqGain );
 	connect ( cfgIQGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateIQGain ( int ) ) );
+
+	// Transmit IQgain, IQphase
+	QGroupBox *cfgTxIQCal = new QGroupBox ( cfgFrame2 );
+	cfgTxIQCal->setTitle ( "TX IQ Calibration" );
+	cfgTxIQCal->setGeometry ( 5, 50, 340, 45 );
+
+	QLabel *cfgTxIQPhaseLabel = new QLabel ( cfgTxIQCal );
+	cfgTxIQPhaseLabel->setText ( "IQ Phase: " );
+	cfgTxIQPhaseLabel->setGeometry ( 10, 18, 70, 20 );
+	cfgTxIQPhaseLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxIQPhaseInput = new QSpinBox ( cfgTxIQCal );
+	cfgTxIQPhaseInput->setGeometry ( 80, 18, 70, 20 );
+	cfgTxIQPhaseInput->setMinValue ( -1000 );
+	cfgTxIQPhaseInput->setMaxValue ( 1000 );
+	cfgTxIQPhaseInput->setValue ( txIQPhase );
+	connect ( cfgTxIQPhaseInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxIQPhase ( int ) ) );
+
+	// IQ Gain Calibration
+	QLabel *cfgTxIQGainLabel = new QLabel ( cfgTxIQCal );
+	cfgTxIQGainLabel->setText ( "IQ Gain: " );
+	cfgTxIQGainLabel->setGeometry ( 175, 18, 70, 20 );
+	cfgTxIQGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxIQGainInput = new QSpinBox ( cfgTxIQCal );
+	cfgTxIQGainInput->setGeometry ( 245, 18, 70, 20 );
+	cfgTxIQGainInput->setMinValue ( -1000 );
+	cfgTxIQGainInput->setMaxValue ( 1000 );
+	cfgTxIQGainInput->setValue ( txIQGain );
+	connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxIQGain ( int ) ) );
+	// TX Gain
+	QGroupBox *cfgTxGain = new QGroupBox ( cfgFrame2 );
+	cfgTxGain->setTitle ( "TX Gain" );
+	cfgTxGain->setGeometry ( 5, 100, 340, 45 );
+
+	QLabel *cfgTxGainLabel = new QLabel ( cfgTxGain );
+	cfgTxGainLabel->setText ( "TX Gain: " );
+	cfgTxGainLabel->setGeometry ( 10, 18, 70, 20 );
+	cfgTxGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxGainInput = new QSpinBox ( cfgTxGain );
+	cfgTxGainInput->setGeometry ( 80, 18, 70, 20 );
+	cfgTxGainInput->setMinValue ( -255 );
+	cfgTxGainInput->setMaxValue ( 255 );
+	cfgTxGainInput->setValue ( txGain );
+	connect ( cfgTxGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxGain ( int ) ) );
+
 
 	// Polyphase FFT
 	QButtonGroup *cfgPolyFFTGroup = new QButtonGroup ( cfgFrame3 );
@@ -576,6 +638,10 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	trxFrame = new QFrame ( ctlFrame );
 	trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+	TRX_label = new Varilabel ( trxFrame );
+	TRX_label->setGeometry ( 0, 0, 19, 11 );
+	connect ( TRX_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( toggle_TX ( int ) ) );
 
 	QPixmap *mhz_pix = new QPixmap ( mhz_xpm );
 	QFrame *mhzFrame = new QFrame ( ctlFrame );
@@ -702,6 +768,32 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( toggle_SPEC ( int ) ) );
 
 	// -----------------------------------------------------------------------
+	// Band Frame
+	QFrame *bFrame = new QFrame ( ctlFrame );
+	bFrame->setBackgroundColor ( QColor ( 0, 80, 0 ) );
+
+	QPixmap up_pix ( up_xpm );
+	UP_label = new Varilabel ( bFrame );
+	UP_label->setPixmap ( up_pix );
+	UP_label->setGeometry ( 3, 3, 27, 11 );
+	connect ( UP_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( band_UP ( int ) ) );
+
+	//QPixmap tx_pix ( tx_xpm );
+	//TX_label = new Varilabel ( bFrame );
+	//TX_label->setPixmap ( tx_pix );
+	//TX_label->setGeometry ( 33, 3, 27, 11 );
+	//connect ( TX_label, SIGNAL ( mouseRelease ( int ) ),
+	//          this, SLOT ( toggle_TX ( int ) ) );
+
+	QPixmap down_pix ( down_xpm );
+	DOWN_label = new Varilabel ( bFrame );
+	DOWN_label->setPixmap ( down_pix );
+	DOWN_label->setGeometry ( 3, 17, 27, 11 );
+	connect ( DOWN_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( band_DOWN ( int ) ) );
+
+	// -----------------------------------------------------------------------
 	// Memory Cells
 
 	f1_cell = new MemoryCell ( ctlFrame2 );
@@ -711,6 +803,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f1_cell->setGeometry ( 1, 1, 20, 15 );
 	f1_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f1_cell->setText ( "F1" );
+	f1_cell->setID ( 1 );
 	connect ( f1_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f1_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -827,6 +920,28 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	    15 );
 	M_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
+	b1_cell = new MemoryCell ( );
+	b2_cell = new MemoryCell ( );
+	b3_cell = new MemoryCell ( );
+	b4_cell = new MemoryCell ( );
+	b5_cell = new MemoryCell ( );
+	b6_cell = new MemoryCell ( );
+	b7_cell = new MemoryCell ( );
+	b8_cell = new MemoryCell ( );
+	b9_cell = new MemoryCell ( );
+	b10_cell = new MemoryCell ( );
+	b1_cell->setID ( 1 );
+	b2_cell->setID ( 2 );
+	b3_cell->setID ( 3 );
+	b4_cell->setID ( 4 );
+	b5_cell->setID ( 5 );
+	b6_cell->setID ( 6 );
+	b7_cell->setID ( 7 );
+	b8_cell->setID ( 8 );
+	b9_cell->setID ( 9 );
+	b10_cell->setID ( 10 );
+	band = 1;
+
 	loadMemoryCells();
 
 	// -----------------------------------------------------------------------
@@ -900,7 +1015,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( setAGC ( int ) ) );
 
 	// -----------------------------------------------------------------------
-	// Sapacer for filling up empty space
+	// Spacer for filling up empty space
 
 	Spacer_label = new QLabel ( ctlFrame2 );
 	Spacer_label->setFont ( *font1 );
@@ -935,8 +1050,11 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	trxFrame->setGeometry ( 337, 4, 19, 11 );
 	mhzFrame->setGeometry ( 337, 19, 19, 8 );
 
-	modeFrame->setGeometry ( 363, 1, 99, 31 );
-	swFrame->setGeometry ( 463, 1, 93, 31 );
+	bFrame->setGeometry ( 363, 1, 33, 31 );
+	//modeFrame->setGeometry ( 363, 1, 99, 31 );
+	modeFrame->setGeometry ( 397, 1, 99, 31 );
+	//swFrame->setGeometry ( 463, 1, 93, 31 );
+	swFrame->setGeometry ( 497, 1, 93, 31 );
 
 	logoFrame = new QFrame ( ctlFrame );
 	logoFrame->setBackgroundColor ( QColor ( 0, 0, 0 ) );
@@ -967,6 +1085,9 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	setFFTWindow ( fftWindow );
 	setSpectrumType ( spectrumType );
 	setAGC ( agcType );
+	setTxIQGain();
+	setTxIQPhase();
+	setTxGain();
 	processorLoad();
 	if ( useHamlib )
 	{
@@ -1196,9 +1317,9 @@ void Main_Widget::updateLayout()
 	    width() - 2,
 	    33 );
 	logoFrame->setGeometry (
-	    557,
+	    591,
 	    1,
-	    ctlFrame->width() - 550,//was 558
+	    ctlFrame->width() - 587,
 	    31 );
 	logoLabel->setGeometry (
 	    logoFrame->width() - 89,
@@ -1294,18 +1415,17 @@ void Main_Widget::loadSettings()
      pSpectrum = new DttSPspectrum ();
      
      pUSBCmd = new USBSoftrockCmd ();
+     // USB-Synth turns PTT on when it powers up.  Turn it off.
+     pUSBCmd->sendCommand("set ptt off\n");
      
      pTXCmd = new DttSPTXcmd ();
-     /* would like the value to be the transmit port's CMD */
+     // The value is the transmit port's CMD
      if ( ( ep = getenv ( "SDR_TRANSMIT" ) ) )
      {
 	int port = atoi(ep);
 	if (port)
 		pTXCmd->setPort(port);
-     } else {
-	pTXCmd->off();
      }
-
 
      /*  I will try omitting this and see what happens.  It looks
       *  like it isn't needed.
@@ -1333,69 +1453,6 @@ void Main_Widget::loadSettings()
 	}
 	*/
 	   
-/*  The old fifo way....
-	// Open the command FIFO
-	if ( ( ep = getenv ( "SDR_PARMPATH" ) ) )
-	{
-		cmdFile = fopen ( ep, "r+" );
-		if ( cmdFile == NULL )
-		{
-			perror ( ep );
-			cmdFile = stdout;
-		}
-	}
-	else
-	{
-		printf ( "::: Unable to get SDR_PARMPATH environment variable.\n"
-		         "Using default: %s\n", CMD_FILE );
-		cmdFile = fopen ( CMD_FILE, "r+" );
-		if ( cmdFile == NULL )
-		{
-			perror ( CMD_FILE );
-			cmdFile = stdout;
-		}
-	}
-
-	// Open the meter FIFO
-	if ( ( ep = getenv ( "SDR_METERPATH" ) ) )
-	{
-		mtrFile = fopen ( ep, "r+" );
-		if ( mtrFile == NULL )
-		{
-			perror ( ep );
-		}
-	}
-	else
-	{
-		printf ( "::: Unable to get SDR_METERPATH environment variable.\n"
-		         "Using default: %s\n", MTR_FILE );
-		mtrFile = fopen ( MTR_FILE, "r+" );
-		if ( mtrFile == NULL )
-		{
-			perror ( MTR_FILE );
-		}
-	}
-
-	// Open the spectrum FIFO
-	if ( ( ep = getenv ( "SDR_SPECPATH" ) ) )
-	{
-		fftFile = fopen ( ep, "r+" );
-		if ( fftFile == NULL )
-		{
-			perror ( ep );
-		}
-	}
-	else
-	{
-		printf ( "::: Unable to get SDR_SPECPATH environment variable.\n"
-		         "Using default: %s\n", FFT_FILE );
-		fftFile = fopen ( FFT_FILE, "r+" );
-		if ( fftFile == NULL )
-		{
-			perror ( FFT_FILE );
-		}
-	}
-The end of the old fifo way. */
 	// Read config
 	//sample_rate = settings.readEntry(
 	//	"/sdr-shell/sample_rate", "48000" ).toInt();
@@ -1431,6 +1488,14 @@ The end of the old fifo way. */
 	             "/sdr-shell/iqGain", "0" ).toInt();
 	iqPhase = settings.readEntry (
 	              "/sdr-shell/iqPhase", "0" ).toInt();
+	txIQGain = settings.readEntry (
+	             "/sdr-shell/txIQGain", "0" ).toInt();
+	txIQPhase = settings.readEntry (
+	              "/sdr-shell/txIQPhase", "0" ).toInt();
+	txGain = settings.readEntry (
+	             "/sdr-shell/txGain", "0" ).toInt();
+	enableTransmit = ( bool ) settings.readEntry (
+	             "/sdr-shell/enableTransmit", "0" ).toInt();
 	mode = ( rmode_t ) settings.readEntry (
 	           "/sdr-shell/mode", "1" ).toInt();
 	usbOffset = settings.readEntry (
@@ -1541,7 +1606,7 @@ void Main_Widget::loadMemoryCells()
 	f1_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f1_frequency", "0" ).toInt() );
 	f1_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f1_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f1_mode", "1" ).toInt() );
 	f1_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f1_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f1_filter_h", "2400" ).toInt() );
@@ -1549,7 +1614,7 @@ void Main_Widget::loadMemoryCells()
 	f2_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f2_frequency", "0" ).toInt() );
 	f2_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f2_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f2_mode", "1" ).toInt() );
 	f2_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f2_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f2_filter_h", "2400" ).toInt() );
@@ -1557,7 +1622,7 @@ void Main_Widget::loadMemoryCells()
 	f3_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f3_frequency", "0" ).toInt() );
 	f3_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f3_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f3_mode", "1" ).toInt() );
 	f3_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f3_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f3_filter_h", "2400" ).toInt() );
@@ -1565,7 +1630,7 @@ void Main_Widget::loadMemoryCells()
 	f4_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f4_frequency", "0" ).toInt() );
 	f4_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f4_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f4_mode", "1" ).toInt() );
 	f4_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f4_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f4_filter_h", "2400" ).toInt() );
@@ -1573,15 +1638,15 @@ void Main_Widget::loadMemoryCells()
 	f5_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f5_frequency", "0" ).toInt() );
 	f5_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f5_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f5_mode", "1" ).toInt() );
 	f5_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f5_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f5_filter_h", "2400" ).toInt() );
 
-	f6_cell->setFrequency ( ( rmode_t )
-	                        settings.readEntry ( "/sdr-shell/f6_frequency", "0" ).toInt() );
+	f6_cell->setFrequency ( 
+	    settings.readEntry ( "/sdr-shell/f6_frequency", "0" ).toInt() );
 	f6_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f6_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f6_mode", "1" ).toInt() );
 	f6_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f6_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f6_filter_h", "2400" ).toInt() );
@@ -1589,7 +1654,7 @@ void Main_Widget::loadMemoryCells()
 	f7_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f7_frequency", "0" ).toInt() );
 	f7_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f7_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f7_mode", "1" ).toInt() );
 	f7_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f7_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f7_filter_h", "2400" ).toInt() );
@@ -1597,10 +1662,98 @@ void Main_Widget::loadMemoryCells()
 	f8_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f8_frequency", "0" ).toInt() );
 	f8_cell->setMode ( ( rmode_t )
-	                   settings.readEntry ( "/sdr-shell/f8_mode", "1" ).toInt() );
+	    settings.readEntry ( "/sdr-shell/f8_mode", "1" ).toInt() );
 	f8_cell->setFilter (
 	    settings.readEntry ( "/sdr-shell/f8_filter_l", "20" ).toInt(),
 	    settings.readEntry ( "/sdr-shell/f8_filter_h", "2400" ).toInt() );
+
+	b1_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b1_frequency", "0" ).toInt() );
+	b1_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b1_mode", "1" ).toInt() );
+	b1_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b1_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b1_filter_h", "2400" ).toInt() );
+
+	b2_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b2_frequency", "0" ).toInt() );
+	b2_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b2_mode", "1" ).toInt() );
+	b2_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b2_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b2_filter_h", "2400" ).toInt() );
+
+	b3_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b2_frequency", "0" ).toInt() );
+	b3_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b2_mode", "1" ).toInt() );
+	b3_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b2_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b2_filter_h", "2400" ).toInt() );
+
+	b3_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b3_frequency", "0" ).toInt() );
+	b3_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b3_mode", "1" ).toInt() );
+	b3_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b3_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b3_filter_h", "2400" ).toInt() );
+
+	b4_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b4_frequency", "0" ).toInt() );
+	b4_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b4_mode", "1" ).toInt() );
+	b4_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b4_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b4_filter_h", "2400" ).toInt() );
+
+	b5_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b5_frequency", "0" ).toInt() );
+	b5_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b5_mode", "1" ).toInt() );
+	b5_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b5_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b5_filter_h", "2400" ).toInt() );
+
+	b6_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b6_frequency", "0" ).toInt() );
+	b6_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b6_mode", "1" ).toInt() );
+	b6_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b6_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b6_filter_h", "2400" ).toInt() );
+
+	b7_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b7_frequency", "0" ).toInt() );
+	b7_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b7_mode", "1" ).toInt() );
+	b7_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b7_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b7_filter_h", "2400" ).toInt() );
+
+	b8_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b8_frequency", "0" ).toInt() );
+	b8_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b8_mode", "1" ).toInt() );
+	b8_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b8_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b8_filter_h", "2400" ).toInt() );
+
+	b9_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b9_frequency", "0" ).toInt() );
+	b9_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b9_mode", "1" ).toInt() );
+	b9_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b9_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b9_filter_h", "2400" ).toInt() );
+
+	b10_cell->setFrequency (
+	    settings.readEntry ( "/sdr-shell/b10_frequency", "0" ).toInt() );
+	b10_cell->setMode ( ( rmode_t )
+	    settings.readEntry ( "/sdr-shell/b10_mode", "1" ).toInt() );
+	b10_cell->setFilter (
+	    settings.readEntry ( "/sdr-shell/b10_filter_l", "20" ).toInt(),
+	    settings.readEntry ( "/sdr-shell/b10_filter_h", "2400" ).toInt() );
 
 	printf ( "::: Memory Cells loading completed\n" );
 }
@@ -1638,6 +1791,11 @@ void Main_Widget::saveSettings()
 	settings.writeEntry ( "/sdr-shell/stationQTH", stationQTH );
 	settings.writeEntry ( "/sdr-shell/iqGain", iqGain );
 	settings.writeEntry ( "/sdr-shell/iqPhase", iqPhase );
+	settings.writeEntry ( "/sdr-shell/txIQGain", txIQGain );
+	settings.writeEntry ( "/sdr-shell/txIQPhase", txIQPhase );
+	settings.writeEntry ( "/sdr-shell/txGain", txGain );
+	int intEnableTransmit = ( int ) enableTransmit;
+	settings.writeEntry ( "/sdr-shell/enableTransmit", intEnableTransmit );
 	settings.writeEntry ( "/sdr-shell/mode", ( int ) mode );
 	settings.writeEntry ( "/sdr-shell/NR_state", NR_state );
 	settings.writeEntry ( "/sdr-shell/ANF_state", ANF_state );
@@ -1730,6 +1888,66 @@ void Main_Widget::saveSettings()
 	settings.writeEntry ( "/sdr-shell/f8_filter_l", f8_cell->getFilter_l() );
 	settings.writeEntry ( "/sdr-shell/f8_filter_h", f8_cell->getFilter_h() );
 
+	f_string.sprintf ( "%lld", b1_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b1_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b1_mode", b1_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b1_filter_l", b1_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b1_filter_h", b1_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b2_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b2_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b2_mode", b2_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b2_filter_l", b2_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b2_filter_h", b2_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b3_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b3_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b3_mode", b3_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b3_filter_l", b3_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b3_filter_h", b3_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b4_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b4_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b4_mode", b4_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b4_filter_l", b4_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/fb_filter_h", b4_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b5_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b5_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b5_mode", b5_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b5_filter_l", b5_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b5_filter_h", b5_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b6_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b6_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b6_mode", b6_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b6_filter_l", b6_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b6_filter_h", b6_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b7_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b7_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b7_mode", b7_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b7_filter_l", b7_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b7_filter_h", b7_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b8_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b8_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b8_mode", b8_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b8_filter_l", b8_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b8_filter_h", b8_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b9_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b9_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b9_mode", b9_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b9_filter_l", b9_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b9_filter_h", b9_cell->getFilter_h() );
+
+	f_string.sprintf ( "%lld", b10_cell->getFrequency() );
+	settings.writeEntry ( "/sdr-shell/b10_frequency", f_string );
+	settings.writeEntry ( "/sdr-shell/b10_mode", b10_cell->getMode() );
+	settings.writeEntry ( "/sdr-shell/b10_filter_l", b10_cell->getFilter_l() );
+	settings.writeEntry ( "/sdr-shell/b10_filter_h", b10_cell->getFilter_h() );
+
 	settings.writeEntry ( "/sdr-shell/hamlib_rig", rigString );
 	settings.writeEntry ( "/sdr-shell/useHamlib", (int) useHamlib );
 	settings.writeEntry ( "/sdr-shell/hamlib_port", portString );
@@ -1819,8 +2037,10 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			}
 			else
 			{
+				rx_delta_f = -sample_rate/4;
 				rx_f = rx_f - (int) pow ( 10, tuneStep );
-				pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 ); 
+				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6 ); 
 			}
 /*
 			{
@@ -1856,7 +2076,8 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			{
 				rx_delta_f = -sample_rate/4;
 				rx_f = rx_f + (int) pow ( 10, tuneStep );
-				pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 ); 
+				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
 			}
 /*
 			{
@@ -1913,19 +2134,19 @@ void Main_Widget::process_key ( int key )
 
 	switch ( key )
 	{
-		case 85:
+		case 85: // U
 			setFilter_l ( -1 );
 			break;
-		case 73:
+		case 73: // I
 			setFilter_l ( +1 );
 			break;
-		case 79:
+		case 79: // O
 			setFilter_h ( -1 );
 			break;
-		case 80:
+		case 80: // P
 			setFilter_h ( +1 );
 			break;
-		case 91:
+		case 91: // [
 			if ( *filter_h <= 6000 && *filter_l > step )
 			{
 				*filter_h -= step;
@@ -1933,7 +2154,7 @@ void Main_Widget::process_key ( int key )
 			}
 			setFilter();
 			break;
-		case 93:
+		case 93: // [
 			if ( *filter_h < 6000 && *filter_l >= step )
 			{
 				*filter_h += step;
@@ -1984,19 +2205,33 @@ void Main_Widget::process_key ( int key )
 			setCA_label();
 			break;
 		case 84: //t  toggle transmit
-			if (transmit)
+			if (enableTransmit)
 			{
-				transmit = 0;
-				pUSBCmd->sendCommand("set ptt off\n" );
-			} else
-			{
-				transmit = 1;
-				pUSBCmd->sendCommand("set ptt on\n" );
+				if (transmit)
+				{
+					transmit = 0;
+					pTXCmd->sendCommand ("setTRX 0\n");
+					pUSBCmd->sendCommand("set ptt off\n" );
+					fprintf (stderr, "set ptt off\n");
+					trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+					set_MUTE ( 0 );
+				} else {
+					transmit = 1;
+					pUSBCmd->sendCommand ("set ptt on\n" );
+					pTXCmd->sendCommand ("setTRX 1\n");
+					set_MUTE ( 1 );
+					fprintf (stderr, "set ptt on\n");
+					trxFrame->setPaletteBackgroundPixmap ( *txPix );
+				}
+			} else {
+				fprintf( stderr, "Transmit is not enabled\n");
 			}
 			break;
 		case 32: // space turn transmit off
 			transmit = 0;
-			pUSBCmd->sendCommand("ptt off\n" );
+			pUSBCmd->sendCommand("set ptt off\n" );
+			fprintf (stderr, "set ptt off\n");
+			break;
 		default:
 			break;
 	}
@@ -2041,22 +2276,28 @@ void Main_Widget::setDefaultRxFrequency ( )
 
 void Main_Widget::setRxFrequency()
 {
-	char text[20];
+	char text[32];
 	if ( !useIF )
 	{
-		fprintf ( stderr, "Set the frequency.\n");
-		sprintf ( text, "      %11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+		//sprintf ( text, ".........%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+		sprintf ( text, "......%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+		fprintf ( stderr, "Set the frequency: %lld - %d = %11.6lf '%s'\n",
+			rx_f, rx_delta_f, 
+			( rx_f - rx_delta_f) / 1000000.0, text);
 		displayMutex.lock();
 		lcd->setText( ( QString ) text);
 		//lcd->display ( text );
 		displayMutex.unlock();
 	}
-	/*  This is the old FIFO way.
-	fprintf ( cmdFile, "setOsc %d\n", rx_delta_f );
-	fflush ( cmdFile );*/
 	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
-	pTXCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 1 );
+	pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+}
+
+void Main_Widget::setTxFrequency()
+{
+	pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 }
 
 void Main_Widget::setFilter_l ( int n )
@@ -2091,11 +2332,8 @@ void Main_Widget::setFilter_h ( int n )
 
 void Main_Widget::setFilter()
 {
-	/*  This is the old FIFO way,
-	fprintf ( cmdFile, "setFilter %d %d\n", *filter_l, *filter_h );
-	fflush ( cmdFile ); */
 	pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
-	/*fprintf ( stderr, "filter_l is: %d and filter_h is: %d \n",*filter_l, *filter_h);*/
+	pTXCmd->sendCommand ("setFilter %d %d 1\n", *filter_l, *filter_h );
 	fprintf ( stderr, "setFilter %d %d\n", *filter_l, *filter_h );
 	drawPassBandScale();
 }
@@ -2247,10 +2485,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 	switch ( mode )
 	{
 		case RIG_MODE_USB:
-			/* This was the old FIFO way.
-			fprintf ( cmdFile, "setMode %d\n", USB );
-			fflush ( cmdFile );
-			*/
 			pCmd->sendCommand ("setMode %d %d\n", USB );
 			pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
 			fprintf ( stderr, "setMode %d\n", USB );
@@ -2262,9 +2496,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_USB, 2700 );				
 			break;
 		case RIG_MODE_LSB:
-			/* This was the old FIFO way.
-			fprintf ( cmdFile, "setMode %d\n", LSB );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", LSB );
 			pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
 			fprintf ( stderr, "setMode %d\n", LSB );
@@ -2275,8 +2506,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_LSB, 2700 );
 			break;
 		case RIG_MODE_DSB:
-			/*fprintf ( cmdFile, "setMode %d\n", DSB );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", DSB );
 			pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
 			fprintf ( stderr, "setMode %d\n", DSB );
@@ -2287,9 +2516,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_USB, 6000 );
 			break;
 		case RIG_MODE_AM:
-			/* This was the old FIFO way.
-			fprintf ( cmdFile, "setMode %d\n", AM );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", AM );
 			pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
 			fprintf ( stderr, "setMode %d\n", AM );
@@ -2300,9 +2526,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_AM, 6000 );
 			break;
 		case RIG_MODE_CWR:
-			/* This was the old FIFO way.
-			fprintf ( cmdFile, "setMode %d\n", CWL );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", CWL );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
 			fprintf ( stderr, "setMode %d\n", CWL );
@@ -2313,9 +2536,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_CWR, 500 );
 			break;
 		case RIG_MODE_CW:
-			/* This was the old FIFO way.
-			fprintf ( cmdFile, "setMode %d\n", CWU );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", CWU );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
 			fprintf ( stderr, "setMode %d\n", CWU );
@@ -2326,8 +2546,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_CW, 500 );
 			break;
 		case RIG_MODE_SAM:
-			/*fprintf ( cmdFile, "setMode %d\n", SAM );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", SAM );
 			pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
 			fprintf ( stderr, "setMode %d\n", SAM );
@@ -2338,8 +2556,6 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			emit changeRigMode ( RIG_MODE_AM, 12000 ); */ //Some rigs can do syncronous AM, but not mine.  KL7NA  uncomment this for them.*/
 			break;
 		case RIG_MODE_FM:
-			/*fprintf ( cmdFile, "setMode %d\n", FMN );
-			fflush ( cmdFile );*/
 			pCmd->sendCommand ("setMode %d %d\n", FMN );
 			pTXCmd->sendCommand ("setMode %d %d\n", FMN );
 			fprintf ( stderr, "setMode %d\n", FMN );
@@ -2361,30 +2577,41 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 
 void Main_Widget::setIQGain()
 {
-	/*fprintf ( cmdFile, "setcorrectIQgain %d\n", iqGain );
-	fflush ( cmdFile );*/
-	pCmd->sendCommand ("setcorrectIQgain %d %d\n", iqGain );
+	pCmd->sendCommand ("setcorrectIQgain %d\n", iqGain );
 	fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
 	/* Set the  gain as well. */
 	/* The following sets the output gain.*/
-	/*fprintf ( cmdFile, "setGAIN %d %d %d\n",0,1,0 );
-	fflush ( cmdFile );
-	fprintf ( cmdFile, "setGAIN %d %d %d\n",0,0,0 );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setGain %d %d\n", 0,1,0 );
-	pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
-	fprintf ( stderr, "setGAIN %d %d %d\n",0,1,0 );
-	fprintf ( stderr, "setGAIN %d %d %d\n",0,0,0 );
+	//pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
+	fprintf ( stderr, "setGain %d %d %d\n",0,1,0 );
+	//fprintf ( stderr, "setMode %d %d %d\n",0,0,0 );
 	printf ( "Set the RX Gain.\n" );
 }
 
 void Main_Widget::setIQPhase()
 {
-	/*fprintf ( cmdFile, "setcorrectIQphase %d\n", iqPhase );
-	fflush ( cmdFile );*/
-	pCmd->sendCommand ("setcorrectIQphase %d %d\n", iqPhase );
-	fprintf ( stderr, "setcorrectIQphase %d\n", iqPhase );
+	pTXCmd->sendCommand ("setcorrectIQphase %d\n", iqPhase );
+	fprintf ( stderr, "(TX)setcorrectIQphase %d\n", iqPhase );
 }
+
+void Main_Widget::setTxIQGain()
+{
+	pTXCmd->sendCommand ("setcorrectIQgain %d\n", txIQGain );
+	fprintf ( stderr, "(TX)setcorrectIQgain %d\n", txIQGain );
+}
+
+void Main_Widget::setTxIQPhase()
+{
+	pTXCmd->sendCommand ("setcorrectIQphase %d %d\n", txIQPhase );
+	fprintf ( stderr, "(TX)setcorrectIQphase %d\n", txIQPhase );
+}
+
+void Main_Widget::setTxGain()
+{
+	pTXCmd->sendCommand ("setGain %d %d %d\n", 1, 1, txGain );
+	fprintf ( stderr, "(TX)setGain %d %d %d\n", 1, 1, txGain );
+}
+
 
 void Main_Widget::readMeter()
 {
@@ -2394,23 +2621,6 @@ void Main_Widget::readMeter()
 	static double meter_peak = 0;
 	static int peak_count = 0;
 
-	/* This was the old FIFO way.
-	if ( mtrFile == NULL ) return;
-
-	fprintf ( cmdFile, "reqRXMeter %d\n", getpid() );
-	fflush ( cmdFile );
-
-	if ( fread ( ( char * ) &label, sizeof ( int ), 1, mtrFile ) != 1 )
-	{
-		perror ( "fread meter label" );
-	}
-
-	if ( fread ( ( char * ) rxm, sizeof ( float ), MAXRX * RXMETERPTS, mtrFile )
-	        != MAXRX * RXMETERPTS )
-	{
-		perror ( "fread meter" );
-	}*/
-	
 	pCmd->sendCommand ("reqRXMeter %d\n", getpid() );
 	pMeter->fetch (&label, rxm, MAXRX * RXMETERPTS);
 
@@ -2460,33 +2670,6 @@ void Main_Widget::readSpectrum()
 {
 //	int j, k;
 	int label, stamp;
-
-	/* This was the old FIFO way.
-	if ( fftFile == NULL ) return;
-
-	fprintf ( cmdFile, "reqSpectrum %d\n", getpid() );
-	fflush ( cmdFile );
-
-	if ( fread ( ( char * ) &label, sizeof ( int ), 1, fftFile ) != 1 )
-	{
-		perror ( "fread spectrum label" );
-	}
-	
-	
-	if (fread((char *) &stamp, sizeof(int), 1, fftFile) != 1) {
-		 perror( "fread spectrum stamp" );
-	}
-
-	if ( fread ( ( char * ) spectrum, sizeof ( float ), DEFSPEC, fftFile ) != DEFSPEC )
-	{
-		perror ( "fread spec" );
-	}
-
-	//if (fread((char *) oscope, sizeof(float), DEFSPEC, fftFile) != DEFSPEC) {
-	//    perror( "fread spec" );
-	// }
-
-	//printf("<%d>", label);*/
 
 	pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
@@ -2637,6 +2820,7 @@ void Main_Widget::plotSpectrum ( int y )
 	QPixmap pix ( spectrumFrame->width(), spectrumFrame->height() );
 	pix.fill ( QColor ( 0,0,0 ) );
 
+// add * Scale
 	x1 = DEFSPEC/2 - spectrogram->width() /2;
 	x2 = x1 + spectrogram->width();
 	kHz_step = 1000 / ( sample_rate / (float)DEFSPEC );
@@ -2824,8 +3008,6 @@ void Main_Widget::set_NR ( int state )
 	if ( NR_state ) NR_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
 	else NR_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	/*fprintf ( cmdFile, "setNR %d\n", state );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setNR %d\n", state );
 	fprintf ( stderr, "setNR %d\n", state );
 
@@ -2842,8 +3024,6 @@ void Main_Widget::set_ANF ( int state )
 	if ( ANF_state ) ANF_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
 	else ANF_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	/*fprintf ( cmdFile, "setANF %d\n", ANF_state );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setANF %d\n", ANF_state );
 	fprintf ( stderr, "setANF %d\n", ANF_state );
 }
@@ -2859,8 +3039,6 @@ void Main_Widget::set_NB ( int state )
 	if ( NB_state ) NB_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
 	else NB_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	/*fprintf ( cmdFile, "setNB %d\n", NB_state );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setNB %d\n", NB_state );
 	fprintf ( stderr, "setNB %d\n", NB_state );
 }
@@ -2876,8 +3054,6 @@ void Main_Widget::set_BIN ( int state )
 	if ( BIN_state ) BIN_label->setBackgroundColor ( QColor ( 200, 0, 0 ) );
 	else BIN_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	/*fprintf ( cmdFile, "setBIN %d\n", BIN_state );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setBIN %d\n", BIN_state );
 	fprintf ( stderr, "setBIN %d\n", BIN_state );
 }
@@ -2893,8 +3069,6 @@ void Main_Widget::set_MUTE ( int state )
 	if ( MUTE_state ) MUTE_label->setBackgroundColor ( QColor ( 200, 0, 0 ) );
 	else MUTE_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	/*fprintf ( cmdFile, "setRunState %d\n", MUTE_state ? 0 : 2 );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setRunState %d\n", MUTE_state ? 0: 2 );
 	fprintf ( stderr, "setRunState %d\n", MUTE_state ? 0 : 2 );
 }
@@ -2911,13 +3085,94 @@ void Main_Widget::set_SPEC ( int state )
 	else SPEC_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 }
 
+void Main_Widget::leave_band( int band )
+{
+	fprintf( stderr, "leave band %d\n", band );
+	switch( band ) {
+	case 1:	writeMem ( b1_cell );		break;
+	case 2:	writeMem ( b2_cell );		break;
+	case 3:	writeMem ( b3_cell );		break;
+	case 4:	writeMem ( b4_cell );		break;
+	case 5:	writeMem ( b5_cell );		break;
+	case 6:	writeMem ( b6_cell );		break;
+	case 7:	writeMem ( b7_cell );		break;
+	case 8:	writeMem ( b8_cell );		break;
+	case 9:	writeMem ( b9_cell );		break;
+	case 10: writeMem ( b10_cell );		break;
+	}
+}
+
+void Main_Widget::enter_band(int band)
+{
+	fprintf( stderr, "enter band %d\n", band );
+	switch( band ) {
+	case 1:	readMem ( b1_cell );		break;
+	case 2:	readMem ( b2_cell );		break;
+	case 3:	readMem ( b3_cell );		break;
+	case 4:	readMem ( b4_cell );		break;
+	case 5:	readMem ( b5_cell );		break;
+	case 6:	readMem ( b6_cell );		break;
+	case 7:	readMem ( b7_cell );		break;
+	case 8:	readMem ( b8_cell );		break;
+	case 9:	readMem ( b9_cell );		break;
+	case 10: readMem ( b10_cell );		break;
+	}
+}
+
+void Main_Widget::band_UP ( int )
+{
+	fprintf( stderr, "Band UP\n");
+	leave_band( band );
+	band++;
+	if (band > 10)
+		band = 1;
+	enter_band( band );
+}
+
+void Main_Widget::band_DOWN ( int )
+{
+	fprintf( stderr, "Band DOWN\n");
+	leave_band( band );
+	band--;
+	if (band < 1)
+		band = 10;
+	enter_band( band );
+}
+
 void Main_Widget::setCfg ( int )
 {
 	cfgFrame->show();
 }
 
+void Main_Widget::toggle_TX ( int )
+{
+	fprintf( stderr, "Toggle TX\n");
+	if (enableTransmit)
+	{
+		if (transmit)
+		{
+			transmit = 0;
+			pTXCmd->sendCommand ("setTRX 0\n");
+			pUSBCmd->sendCommand("set ptt off\n" );
+			fprintf (stderr, "set ptt off\n");
+			trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+			set_MUTE ( 0 );
+		} else {
+			transmit = 1;
+			pUSBCmd->sendCommand ("set ptt on\n" );
+			pTXCmd->sendCommand ("setTRX 1\n");
+			set_MUTE ( 1 );
+			fprintf (stderr, "set ptt on\n");
+			trxFrame->setPaletteBackgroundPixmap ( *txPix );
+		}
+	} else {
+		fprintf( stderr, "Transmit is not enabled\n");
+	}
+}
+
 void Main_Widget::readMem ( MemoryCell *m )
 {
+printf("readMem %d\n", m->getID());
 	setMode ( ( rmode_t ) m->getMode(), FALSE );
 	rx_delta_f = m->getFrequency();
 	setRxFrequency();
@@ -2928,6 +3183,7 @@ void Main_Widget::readMem ( MemoryCell *m )
 
 void Main_Widget::writeMem ( MemoryCell *m )
 {
+printf("writeMem %d\n", m->getID());
 	m->setFrequency ( rx_delta_f );
 	m->setMode ( mode );
 	m->setFilter ( *filter_l, *filter_h );
@@ -2938,6 +3194,7 @@ void Main_Widget::displayMem ( MemoryCell *m )
 	char temp[20];
 	sprintf ( temp, "%lf", ( double ) ( rx_f - m->getFrequency() ) / 1000000.0 );
 	M_label->setText ( temp );
+printf("displayMem %d\n", m->getID());
 }
 
 void Main_Widget::displayNCO ( int x )
@@ -2992,11 +3249,27 @@ void Main_Widget::updateIQPhase ( int phase )
 	setIQPhase();
 }
 
+void Main_Widget::updateTxIQGain ( int gain )
+{
+	txIQGain = gain;
+	setTxIQGain();
+}
+
+void Main_Widget::updateTxIQPhase ( int phase )
+{
+	txIQPhase = phase;
+	setTxIQPhase();
+}
+
+void Main_Widget::updateTxGain ( int gain )
+{
+	txGain = gain;
+	setTxGain();
+}
+
 void Main_Widget::setPolyFFT ( int state )
 {
 	polyphaseFFT = state;
-	/*fprintf ( cmdFile, "setSpectrumPolyphase %d\n", state );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumPolyphase %d\n", state );
 	fprintf ( stderr, "setSpectrumPolyphase %d\n", state );
 }
@@ -3004,8 +3277,6 @@ void Main_Widget::setPolyFFT ( int state )
 void Main_Widget::setFFTWindow ( int window )
 {
 	fftWindow = window;
-	/*fprintf ( cmdFile, "setSpectrumWindow %d\n", window );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumWindow %d\n", window );
 	fprintf ( stderr, "setSpectrumWindow %d\n", window );
 }
@@ -3013,8 +3284,6 @@ void Main_Widget::setFFTWindow ( int window )
 void Main_Widget::setSpectrumType ( int type )
 {
 	spectrumType = type;
-	/*fprintf ( cmdFile, "setSpectrumType %d\n", type + 1 );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setSpectrumType %d\n", type + 1 );
 	fprintf ( stderr, "setSpectrumType %d\n", type + 1 );
 
@@ -3023,8 +3292,6 @@ void Main_Widget::setSpectrumType ( int type )
 void Main_Widget::setAGC ( int type )
 {
 	agcType = type;
-	/*fprintf ( cmdFile, "setRXAGC %d\n", type );
-	fflush ( cmdFile );*/
 	pCmd->sendCommand ("setRXAGC %d\n", type );
 	fprintf ( stderr, "setRXAGC %d\n", type );
 
@@ -3092,6 +3359,24 @@ void Main_Widget::updateUseUSBsoftrock ( bool value )
 {
 	rock_bound =  !value;
 	rx_delta_f = - sample_rate / 4 ;
+	fprintf ( stderr, "useUSBsoftrock: %s\n", 
+		value ? "enabled" : "disabled");
+}
+
+void Main_Widget::updateTransmit ( bool value )
+{
+	enableTransmit = value;
+	if ( enableTransmit ) {
+		pTXCmd->on();
+		setTxIQGain();
+		setTxIQPhase();
+		setTxGain();
+		setTxFrequency();
+	} else {
+		pTXCmd->off();
+	}
+	fprintf ( stderr, "Transmit: %s\n", 
+		enableTransmit ? "enabled" : "disabled");
 }
 
 void Main_Widget::setHamlib ( bool value )
