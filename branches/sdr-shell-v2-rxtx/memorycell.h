@@ -36,6 +36,7 @@ class MemoryCell : public QLabel
     protected:
         void mouseReleaseEvent ( QMouseEvent * );
         void enterEvent ( QEvent * );
+        void leaveEvent ( QEvent * );
 
     signals:
         void read( MemoryCell * );
