@@ -2,6 +2,10 @@
 
 = sdr-core (from Dttsp) =
 
+==John Melton's "Commentary on DttSP"
+[https://moo.cmcl.cs.cmu.edu/trac/cgran/export/63/projects/dttsp/trunk/sdr-core/base/doc/DTTSP.doc DTTSP.doc]
+== man pages ==
+
 This is a start at a man page for sdr-core.
 
 
