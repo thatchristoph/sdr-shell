@@ -1,0 +1,300 @@
+#summary One-sentence summary of this page.
+
+= sdr-core (from Dttsp) =
+
+This is a start at a man page for sdr-core.
+
+
+= Options =
+
+--verbose
+ -v
+	Turn on verbose mode (echo commands, etc.)
+--spectrum
+ -s
+	Turn on spectrum computation
+--metering
+ -m
+	Turn on meter computation
+--load=<load-file>
+ -l <load-file>
+	Read update commands from <load-file> at startup
+There are a lot of commands that can be put in this file to do a lot of interesting things:  At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely.
+
+PRIVATE REAL INLINE 	dB2lin  (REAL dB)
+ 	private db2lin
+PRIVATE int 	setRXFilter (int n, char **p)
+ 	private setRXFilter
+PRIVATE int 	getRXFilter (int n, char **p)
+PRIVATE int 	setRXFiltCoefs (int n, char **p)
+ 	private setRXFiltCoefs
+PRIVATE int 	setTXFilter (int n, char **p)
+ 	private setTXFilter
+PRIVATE int 	getTXFilter (int n, char **p)
+PRIVATE int 	setTXFiltCoefs (int n, char **p)
+ 	private setTXFiltCoefs
+PRIVATE int 	setFilter (int n, char **p)
+ 	private setFilter
+PRIVATE int 	setMode (int n, char **p)
+ 	private setMode
+PRIVATE int 	getRXMode (int n, char **p)
+PRIVATE int 	getTXMode (int n, char **p)
+PRIVATE int 	setOsc (int n, char **p)
+ 	private setOSC
+PRIVATE int 	getRXOsc (int n, char **p)
+PRIVATE int 	getTXOsc (int n, char **p)
+PRIVATE void 	replay_updates (void)
+ 	private replay_update
+PRIVATE int 	setBlkNR (int n, char **p)
+ 	private setBlkNR
+PRIVATE int 	getBlkNR (int n, char **p)
+PRIVATE int 	setBlkNRval (int n, char **p)
+ 	private setBlkNRval
+PRIVATE int 	setBlkANF (int n, char **p)
+ 	private setBlkANF
+PRIVATE int 	getBlkANF (int n, char **p)
+PRIVATE int 	setBlkANFval (int n, char **p)
+ 	private setBlkANFval
+PRIVATE int 	setNB (int n, char **p)
+ 	private setNB
+PRIVATE int 	getNB (int n, char **p)
+PRIVATE int 	setNBvals (int n, char **p)
+ 	private setNBvals
+PRIVATE int 	setSDROM (int n, char **p)
+ 	private setSDROM
+PRIVATE int 	getSDROM (int n, char **p)
+PRIVATE int 	setSDROMvals (int n, char **p)
+ 	private setSDROMvals
+PRIVATE int 	setBIN (int n, char **p)
+ 	private setBIN
+PRIVATE int 	getBIN (int n, char **p)
+PRIVATE int 	setfixedAGC (int n, char **p)
+ 	private setfixedAGC
+PRIVATE int 	setRXAGCCompression (int n, char **p)
+ 	private setRXAGCCompression
+PRIVATE int 	getRXAGC (int n, char **p)
+PRIVATE int 	setTXLevelerAttack (int n, char **p)
+ 	private setTXLevelerAttack
+PRIVATE int 	getTXLeveler (int n, char **p)
+PRIVATE int 	setTXLevelerSt (int n, char **p)
+ 	private setTXLevelerSt
+PRIVATE int 	setTXLevelerDecay (int n, char **p)
+ 	private setTXLevelerDecay
+PRIVATE int 	setTXLevelerTop (int n, char **p)
+ 	private setTXLevelerTop
+PRIVATE int 	setTXLevelerHang (int n, char **p)
+ 	private setTXLevelerHang
+PRIVATE int 	setRXAGC (int n, char **p)
+ 	private setRXAGC
+PRIVATE int 	setRXAGCAttack (int n, char **p)
+ 	private setRXAGCAttack
+PRIVATE int 	setRXAGCDecay (int n, char **p)
+ 	private setRXAGCDelay
+PRIVATE int 	setRXAGCHang (int n, char **p)
+ 	private setRXAGCHang
+PRIVATE int 	setRXAGCSlope (int n, char **p)
+ 	private setRXAGCSlope
+PRIVATE int 	setRXAGCHangThreshold (int h, char **p)
+ 	private setRXAGCHangThreshold
+PRIVATE int 	setRXAGCLimit (int n, char **p)
+ 	private setRXAGCLimit
+PRIVATE int 	setRXAGCTop (int n, char **p)
+ 	private setRXAGCTop
+PRIVATE int 	setRXAGCFix (int n, char **p)
+ 	private setRXAGCFix
+PRIVATE int 	setTXAGCFF (int n, char **p)
+ 	private setfTXAGCFF
+PRIVATE int 	setTXAGCFFCompression (int n, char **p)
+ 	private setTXAGCFFCompression
+PRIVATE int 	setTXSpeechCompression (int n, char **p)
+ 	private setTXSpeechCompression
+PRIVATE int 	setTXSpeechCompressionGain (int n, char **p)
+ 	private setTXSpeechCompressionGain
+PRIVATE int 	getTXSpeechCompression (int n, char **p)
+PRIVATE REAL 	gmean (REAL x, REAL y)
+ 	private gmean
+PRIVATE int 	setGrphRXEQ3 (int n, char **p)
+ 	private setGrphRXEQ3
+PRIVATE int 	setGrphRXEQ10 (int n, char **p)
+ 	private setGrphRXEQ10
+PRIVATE int 	getGrphRXEQ (int n, char **p)
+PRIVATE int 	setGrphTXEQ3 (int n, char **p)
+ 	private setGrphTXEQ3
+PRIVATE int 	setGrphTXEQ10 (int n, char **p)
+ 	private setGrphTXEQ10
+PRIVATE int 	getGrphTXEQ (int n, char **p)
+PRIVATE int 	setNotch160 (int n, char **p)
+ 	private setNotch160
+PRIVATE int 	setTXCarrierLevel (int n, char **p)
+ 	private setTXCarrierLevel
+PRIVATE int 	getTXCarrierLevel (int n, char **p)
+PRIVATE int 	setANF (int n, char **p)
+ 	private setANF
+PRIVATE int 	setANFvals (int n, char **p)
+ 	private setANFvals
+PRIVATE int 	getANF (int n, char **p)
+PRIVATE int 	setNR (int n, char **p)
+ 	private setNR
+PRIVATE int 	setNRvals (int n, char **p)
+ 	private setNRvals
+PRIVATE int 	getANR (int n, char **p)
+PRIVATE int 	setcorrectIQ (int n, char **p)
+ 	private setcorrectIQ
+PRIVATE int 	getRXIQ (int n, char **p)
+PRIVATE int 	getTXIQ (int n, char **p)
+PRIVATE int 	setcorrectIQphase (int n, char **p)
+ 	private setcorrectIQphase
+PRIVATE int 	setcorrectIQgain (int n, char **p)
+ 	private setcorrectIQgain
+PRIVATE int 	setcorrectTXIQ (int n, char **p)
+ 	private setcorrectTXIQ
+PRIVATE int 	setcorrectTXIQphase (int n, char **p)
+ 	private setcorrectTXIQphase
+PRIVATE int 	setcorrectTXIQgain (int n, char **p)
+ 	private setcorrectTXIQgain
+PRIVATE int 	setSquelch (int n, char **p)
+ 	private setSquelch
+PRIVATE int 	setSquelchSt (int n, char **p)
+ 	private setSquelchSt
+PRIVATE int 	getRXSquelch (int n, char **p)
+PRIVATE int 	setTXSquelch (int n, char **p)
+ 	private setTXSquelch
+PRIVATE int 	setTXSquelchSt (int n, char **p)
+ 	private setTXSquelchSt
+PRIVATE int 	getTXSquelch (int n, char **p)
+PRIVATE int 	setTXWaveShapeFunc (int n, char **p)
+ 	private setTXWaveShapeFunc
+PRIVATE int 	setTXWaveShapeSt (int n, char **p)
+ 	private setTXWaveShapeSt
+PRIVATE int 	getTXWaveShape (int n, char **p)
+PRIVATE int 	setTRX (int n, char **p)
+ 	private setTRX
+PRIVATE int 	getTRX (int n, char **p)
+PRIVATE int 	setRunState (int n, char **p)
+ 	private setNRunState
+PRIVATE int 	setSpotToneVals (int n, char **p)
+ 	private setSpotToneVals
+PRIVATE int 	getSpotTone (int n, char **p)
+PRIVATE int 	setSpotTone (int n, char **p)
+ 	private setSpotTone
+PRIVATE int 	setFinished (int n, char **p)
+ 	private setFinished
+PRIVATE int 	setSWCH (int n, char **p)
+ 	private setSWCH
+PRIVATE int 	setRingBufferOffset (int n, char **p)
+ 	private setRingBufferOffset
+PRIVATE int 	setRingBufferReset (int n, char **p)
+ 	private setRingBufferReset
+PRIVATE int 	setSNDSResetSize (int n, char **p)
+ 	private setSNDResetSize
+PRIVATE int 	setRXListen (int n, char **p)
+ 	private setRXListen
+PRIVATE int 	getRXListen (int n, char **p)
+PRIVATE int 	setRXOn (int n, char **p)
+ 	private setRXOn
+PRIVATE int 	setRXOff (int n, char **p)
+ 	private setRXOff
+PRIVATE int 	getRXCount (int n, char **p)
+PRIVATE int 	setRXPan (int n, char **p)
+ 	private setRXPan
+PRIVATE int 	getRXPan (int n, char **p)
+PRIVATE int 	setGain (int n, char **p)
+ 	private setGain
+PRIVATE int 	getRXGain (int n, char **p)
+PRIVATE int 	getTXGain (int n, char **p)
+PRIVATE int 	setCompandSt (int n, char **p)
+ 	private setCompandSt
+PRIVATE int 	getRXCompand (int n, char **p)
+PRIVATE int 	getTXCompand (int n, char **p)
+PRIVATE int 	setCompand (int n, char **p)
+ 	private setCompand
+PRIVATE int 	setGrphTXEQcmd (int n, char **p)
+ 	private setGrphTXEQcmd
+PRIVATE int 	setGrphRXEQcmd (int n, char **p)
+ 	private setGrphRXEQcmd
+PRIVATE int 	setTXCompandSt (int n, char **p)
+ 	private setTXCompandSt
+PRIVATE int 	setTXCompand (int n, char **p)
+ 	private setTXCompand
+PRIVATE int 	setSpectrumPolyphase (int n, char **p)
+ 	private setSpectrumPolyphase
+PRIVATE int 	setSpectrumWindow (int n, char **p)
+ 	private seSpectrumWindow
+PRIVATE int 	setSpectrumType (int n, char **p)
+ 	private setSpectrumType
+PRIVATE int 	getSpectrumInfo (int n, char **p)
+PRIVATE int 	setDCBlockSt (int n, char **p)
+ 	private setDCBlockSt
+PRIVATE int 	getDCBlock (int n, char **p)
+PRIVATE int 	setDCBlock (int n, char **p)
+ 	private setDCBlock
+PRIVATE int 	setNewBuflen (int n, char **p)
+ 	private setNewBuflen
+PRIVATE int 	getBuflen (int n, char **p)
+PRIVATE int 	setTEST (int n, char **p)
+ 	private setTEST
+PRIVATE int 	setTestTone (int n, char **p)
+ 	private setTestTone
+PRIVATE int 	setTestTwoTone (int n, char **p)
+ 	private setTestTwoTone
+PRIVATE int 	setTestNoise (int n, char **p)
+ 	private setTestNoise
+PRIVATE int 	setTestThru (int n, char **p)
+ 	private setTestThru
+PRIVATE int 	getTEST (int n, char **p)
+PRIVATE int 	setTXMeterMode (int n, char **p)
+PRIVATE int 	getTXMeterMode (int n, char **p)
+PRIVATE int 	reqMeter (int n, char **p)
+ 	private reqMeter
+PRIVATE int 	reqRXMeter (int n, char **p)
+ 	private reqRXMeter
+PRIVATE int 	reqTXMeter (int n, char **p)
+ 	private reqTXMeter
+PRIVATE int 	reqSpectrum (int n, char **p)
+ 	private ReqSpectrum
+PRIVATE int 	reqScope (int n, char **p)
+ 	private reqScope
+PRIVATE int 	reqDump (int n, char **p)
+ 	private reqDump 
+
+--mode=<mode>
+	Start radio in mode <mode>
+--buffsize=<power-of-2>
+	Use <power-of-2> as DSP buffersize
+--ringmult=<num>
+	Use <num> * <buffsize> for ring buffer length
+--spectrum-port=<portnum>
+	Use port <portnum> as conduit for spectrum data
+	Default is 19002
+--meter-port=<portnum>
+	Use port <portnum> as conduit for meter data
+	Default is 19003
+--command-port=<portnum>
+	Use port <portnum> as a conduit for update commands
+	Default is 19001
+--init-path=<init-file>
+	Read update commands from <init-file> at startup. Like -l.
+--replay-path=<path>
+	Write/reread saved update commands to/from <path>
+--wisdom-path=<path>
+	fftw3 wisdom is in <path>
+--echo-path=<path>
+	Write update command processor output to <path>
+--skewoffs=<+/-num>
+	Correct for audio channel skew by <num>
+--help
+ -h
+	Write this message and exit.
+Environment variables:
+	SDR_DEFMODE
+	SDR_DEFRATE
+	SDR_DEFSIZE
+	SDR_RINGMULT
+	SDR_SKEWOFFS
+	SDR_METERPORT
+	SDR_NAME
+	SDR_PARMPORT
+	SDR_RCBASE
+	SDR_REPLAYPATH
+	SDR_SPECPPORT
+	SDR_WISDOMPATH
