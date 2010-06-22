@@ -3,7 +3,7 @@
 = sdr-core (from Dttsp) =
 
 ==John Melton's "Commentary on DttSP"
-[https://moo.cmcl.cs.cmu.edu/trac/cgran/export/63/projects/dttsp/trunk/sdr-core/base/doc/DTTSP.doc DTTSP.doc]
+[https://moo.cmcl.cs.cmu.edu/trac/cgran/export/63/projects/dttsp/trunk/sdr-core/base/doc/DTTSP.doc DTTSP.doc]  This is a little dated, but it provides a helpful overview of the DttSP DLL which is used in Windows.  DttSP is the software engine which is behind PowerSDR, SDR-Shell, Ghpsdr, John Melton's Java GUI, and probably some others.  On Linux, sdr-core is the command that invokes this software defined radio processor.    
 == man pages ==
 
 This is a start at a man page for sdr-core.
