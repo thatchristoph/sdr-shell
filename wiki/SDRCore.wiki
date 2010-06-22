@@ -9,7 +9,7 @@ DttSP is the software engine which is behind PowerSDR, SDR-Shell, Ghpsdr, John M
 This is a start at a man page for sdr-core.
 
 
-= Options =
+== Options ==
 
 --verbose
  -v
