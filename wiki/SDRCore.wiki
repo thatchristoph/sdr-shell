@@ -23,7 +23,27 @@ This is a start at a man page for sdr-core.
 --load=<load-file>
  -l <load-file>
 	Read update commands from <load-file> at startup
-There are a lot of commands that can be put in this file to do a lot of interesting things:  At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely.
+
+
+There are a lot of commands that can be put in this file to do a lot of interesting things:  
+
+You can connect the sdr-core to send udp commands from the command line with:
+
+nc -u 127.0.0.1 19001
+
+where 127.0.0.1 is the IP address of the machine which sdr-core is running and 19001 is the port that was set for the commands to be given on.
+
+====Tested Commands:====
+
+setNB 0  (turns off Noise blanker) setNB 1 (turns on Noise Blanker)
+setFilter fL fH where -sample_rate/2 < fL < fH < sample_rate/2 sets the filter corner frequencies.
+setMode m where m denotes: (LSB is 0, USB is 1, DSB is 2, CWL is 3, CWU is 4, FM is 5, AM is 6, SAM is 10) sets the mode.
+setRunState 0 is mute, setRunState 2 is unmuted
+setOsc f where -sample_rate/2 < f < sample_rate/2 sets the oscillator frequency.
+setRXAGC m (where m is: Long 1, slow 2, medium 3, fast 4)
+
+
+At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
 
 PRIVATE REAL INLINE 	dB2lin  (REAL dB)
  	private db2lin
