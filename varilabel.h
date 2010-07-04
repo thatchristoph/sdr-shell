@@ -41,7 +41,7 @@ class VariModelabel : public Varilabel
 		void mouseReleaseEvent ( QMouseEvent *);
 		
 	signals:
-		void mouseRelease( rmode_t, bool );
+		void mouseRelease( rmode_t, bool, bool );
 
 };
 #endif

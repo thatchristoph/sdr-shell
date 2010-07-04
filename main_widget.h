@@ -71,7 +71,7 @@ class Main_Widget : public QWidget
 		QLineEdit *cfgCallInput, *cfgLOFreqInput, *cfgIFreqInput, *cfgHamlibRigInput, *cfgHamlibSpeedInput, *cfgHamlibPortInput;
 		QSpinBox *cfgIQPhaseInput, *cfgIQGainInput, *cfgUSBOffsetInput;
 		QSpinBox *cfgTxIQPhaseInput, *cfgTxIQGainInput;
-		QSpinBox *cfgTxGainInput;
+		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
 		QPixmap *rxPix, *txPix;
@@ -99,8 +99,11 @@ class Main_Widget : public QWidget
 		int cwPitch;
 		QLabel *cfgSlopeLowOffsetLabel;
 		QLabel *cfgSlopeHighOffsetLabel;
-		bool rock_bound;
+		bool rock_bound;	// True if Crystal, False USBSoftrock
 		bool enableTransmit;
+		bool dualConversion;
+		bool enableRIT;
+		bool enableSPLIT;
 
 		Varilabel *TRX_label;
 		Varilabel *NR_label;
@@ -111,6 +114,8 @@ class Main_Widget : public QWidget
 		Varilabel *SPEC_label;
 		Varilabel *UP_label;
 		Varilabel *DOWN_label;
+		Varilabel *RIT_label;
+		Varilabel *SPLIT_label;
 
 		VariModelabel *LSB_label;
 		VariModelabel *USB_label;
@@ -194,10 +199,11 @@ class Main_Widget : public QWidget
 		QFrame *map;
 		QFrame *filterFrame;
 		QColor *signalColor[34];
-		//QString *modeName[NUM_MODES];
+		QString *modeName[NUM_MODES];
 		QString stationCallsign;
 		QString stationQTH;
 		QLabel *lcd;
+		QLabel *rit;
 		//QLCDNumber *lcd;
 		QTextStream cmdStream;
 		QTextEdit *textFrame;
@@ -210,13 +216,20 @@ class Main_Widget : public QWidget
 		QFrame *step_10000Hz_frame;
 		QFrame *step_100000Hz_frame;
 		QFrame *step_1000000Hz_frame;
+		QFrame *step_10000000Hz_frame;
+		QFrame *step_100000000Hz_frame;
 		
 		WorldMap *worldmap;
 
 		unsigned long long int rx_f,rx_if;
+		unsigned long long int tx_f;
 		QString rx_f_string,rx_if_string;
+		QString tx_f_string;
 		int sample_rate;
-		int rx_delta_f, tuneStep;
+		int spec_width;		// spectrum display width
+		int rx_delta_f;		// relative to center frequeny
+		int tx_delta_f;		// relative to center frequeny
+		int tuneStep;
 		int *filter_l, *filter_h, filter_w;
 		int USB_filter_l, USB_filter_h;
 		int LSB_filter_l, LSB_filter_h;
@@ -230,7 +243,7 @@ class Main_Widget : public QWidget
 		int spec_r[120], spec_g[120], spec_b[120];
 		rmode_t mode;
 		int iqGain, iqPhase;
-		int txIQGain, txIQPhase, txGain;
+		int txIQGain, txIQPhase, txGain, micGain;
 		int NR_state;
 		int ANF_state;
 		int NB_state;
@@ -248,6 +261,11 @@ class Main_Widget : public QWidget
 		int agcType;
 		int transmit;
 		int band;
+		char *sdr_mode;		// mode change script
+		char *sdr_band;		// band change script
+		char *sdr_rxtx;		// rx/tx change script
+
+		int once;
 
 		float spectrum[DEFSPEC];
 		float oscope[DEFSPEC];
@@ -295,7 +313,7 @@ class Main_Widget : public QWidget
 		void initConstants();
 		void rx_cmd ( int );
 		void process_key ( int );
-		void setRxFrequency();
+		void setRxFrequency( int );
 		void setTxFrequency();
 		void setDefaultRxFrequency();
 		void loadSettings();
@@ -303,16 +321,17 @@ class Main_Widget : public QWidget
 		void setScrollBarColors ( QScrollBar * );
 		void setCA_label();
 		void set_NR ( int );
-
 		void set_ANF ( int );
 		void set_NB ( int );
 		void set_BIN ( int );
 		void set_SPEC ( int );
+		void set_RIT ( int );
+		void set_SPLIT ( int );
 		void setIQGain();
 		void setIQPhase();
 		void setTxIQGain();
 		void setTxIQPhase();
-		void setTxGain();
+		void setTxGain( int );
 		void drawSpectrogram();
 		void drawSpectrogram_2();
 		void drawSpectrumScale();
@@ -347,10 +366,12 @@ class Main_Widget : public QWidget
 		void band_UP ( int );
 		void band_DOWN ( int );
 		void toggle_TX ( int );
+		void toggle_RIT ( int );
+		void toggle_SPLIT ( int );
 
 		void setFilter_l ( int );
 		void setFilter_h ( int );
-		void setMode ( rmode_t, bool );
+		void setMode ( rmode_t, bool, bool );
 		void setFilter();
 		void f_at_mousepointer ( int );
 		void setLowerFilterScale ( int );
@@ -374,7 +395,8 @@ class Main_Widget : public QWidget
 		void updateIQPhase ( int );
 		void updateTxIQGain ( int );
 		void updateTxIQPhase ( int );
-		void updateTxGain ( int );
+		void updateTxMicGain ( int );
+		void updateTxOutputGain ( int );
 		void setPolyFFT ( int );
 		void setFFTWindow ( int );
 		void setSpectrumType ( int );
@@ -383,6 +405,7 @@ class Main_Widget : public QWidget
 		void calibrateMetr ( int );
 		void updateUseUSBsoftrock ( bool );
 		void updateTransmit ( bool );
+		void updateDualConversion ( bool );
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

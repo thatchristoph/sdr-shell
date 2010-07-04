@@ -18,10 +18,90 @@ sdr-shell requires:
 
 Building for Linux
 
-I followed the instructions on w3sz's page:
+One place to start is with the instructions on w3sz's page:
 	http://www.nitehawk.com/w3sz/dttspw3sz.htm
 
-I'm running on Fedora 9.
+Below are brief instructions on what is required to install just dttsp,
+usbsoftrock and sdr-shell.
+
+usbsoftrock is available from the softrock40 Yahoo Groups files area,
+under VK6JBL's directory (usbsoftrock-1.0.1.tar.gz).
+
+Fedora 13
+
+(1) Install prerequisite packages with:
+  sudo yum install libtool fftw-devel gsl-devel qt3-devel liblo-devel hamlib
+
+answer 'yes' to the dependencies.  Sorry, but hamlib really does require
+200mb of disk space.
+
+(2) Run 'qmake' to build the Makefile, then 'make' to build sdr-shell.
+
+(3) Add yourself to the jackusers group in /etc/group.
+
+Ubuntu
+
+(1) Install prerequisite packages with:
+sudo apt-get install build-essential
+sudo apt-get install subversion
+sudo apt-get install hamlib-dev
+sudo apt-get install qt3-dev-tools
+sudo apt-get install libsamplerate0-dev
+sudo apt-get install libasound2-dev
+sudo apt-get install libfreebob0-dev
+sudo apt-get install libffado-dev
+sudo apt-get install libsndfile-dev
+sudo apt-get install libcelt-dev
+sudo apt-get install libreadline-dev
+sudo apt-get install autoconf automake
+sudo apt-get install manpages-dev
+sudo apt-get install fftw3 fftw3-dev libgsl0-dev
+sudo apt-get install liblo0ldbl liblo0-dev
+sudo apt-get install linux-rt
+
+(2) Run 'qmake' to build the Makefile, then 'make' to build sdr-shell.
+
+(3) Install jack2
+
+svn co http://subversion.jackaudio.org/jack/jack2/trunk/jackmp
+cd jackmp
+./waf configure --alsa --firewire --freebob
+./waf build
+sudo ./waf install
+
+The following steps are needed to use jack with the real-time kernel scheduler:
+
+sudo su -c 'echo @audio - rtprio 99 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - memlock 250000 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - nice -10 >> /etc/security/limits.conf'
+
+sudo usermod -G audio -a <user>
+
+Replace <user> by your login_id. The system needs to be rebooted for the
+changes to take effect.
+
+All Linux
+
+The following udev rules works well to allow the group softrock to use
+usbsoftrock without root privileges. You can put it in /etc/udev/rules.d
+and call it softrock.rules.
+
+BUS=="usb", ACTION=="add", SSSYSFS{idVendor}=="16c0", SYSFS{idProduct}=="05dc",
+MODE="660", GROUP="softrock"
+
+the group "softrock" must exist in /etc/group, or substitute another group
+name.
+
+Running on Linux
+
+The shell script 'start-delta44' will start jackd, usbsoftrock and sdr-shell.
+You will need to adjust the settings in that script for your si570 oscillator
+(usbsoftrock -x *value*), and your sound card's ports.
+
+
+to send commands to the dttsp command port, use:
+  nc -v -u localhost 19001
+
 
 
 Building for OSX 10.6
@@ -60,59 +140,6 @@ Get usbsoftrock from http://groups.yahoo.com/group/softrock40/files/VK6JBL/
 
 If you need to update the chip on your usb-synth or softrock USB board, see
  http://www.mydarc.de/dg8saq/AVR-USB/
-
-Running on Linux
-
-I don't have a unified script to start everything.  I start pieces with:
-
-1)  usbsoftrock -vvv -x 114.230181 -d
-the -x <value> comes from a usbsoftrock calibrate
-
-2)  /usr/bin/jackd -R -P55 -p128 -t2000 -dalsa -r48000 -D -Chw:2 -Phw:2 -s
-This was using a Delta 44 audio card.
-
-3) RX script
-export SDR_DEFRATE=48000
-export SDR_NAME=sdr
-./sdr-core -s -m&
-PIDS="$PIDS $!"
-sleep 1
-jack_connect sdr:ol alsa_pcm:playback_1 
-jack_connect sdr:or alsa_pcm:playback_2
-jack_connect alsa_pcm:capture_1 sdr:il        
-jack_connect alsa_pcm:capture_2 sdr:ir     
-jack_lsp -c
-echo $PIDS
-echo -n hit return to kill everything:
-read
-kill $PIDS
-
-4) TX script
-PIDS=""
-export SDR_DEFRATE=48000
-export SDR_NAME=sdr-tx
-export SDR_PARMPORT=19005
-export SDR_SPECPORT=19006
-export SDR_METERPORT=19007
-./sdr-core -s -m -v &
-PIDS="$PIDS $!"
-sleep 1
-jack_lsp
-jack_connect sdr-tx:ol alsa_pcm:playback_3
-jack_connect sdr-tx:or alsa_pcm:playback_4
-jack_connect alsa_pcm:capture_1 sdr:il        
-jack_connect alsa_pcm:capture_2 sdr:ir     
-echo $PIDS
-echo -n hit return to kill everything:
-read
-kill $PIDS
-
-5) sdr-shell
-export SDR_DEFRATE=48000
-sdr-shell
-
-to send commands to the dttsp command port, use:
-  nc -v -u localhost 19001
 
 Running on OSX
 
@@ -155,68 +182,12 @@ for me.
 	Virtual Output Channels: 4
 	Auto Connect with physical ports: 4
 
-4) start usbsoftrock
-	usbsoftrock -vvv -x 114.230181 -d
+If you find a way to start jack and midi tool from a shell script, please
+post your solution!
 
-	note that the -x <nnn> value came from a usbsoftrock calibrate.
+4) start usbsoftrock, dttsp and sdr-shell:
 
-5) Start receive
-
-SDR_DEFRATE=${SDR_DEFRATE-48000}
-export SDR_DEFRATE
-export SDR_NAME=sdr
-#./sdr-core -v -s -m &
-./sdr-core -s -m &
-PIDS="$PIDS $!"
-sleep 1
-jack_lsp
-jack_connect sdr:ol system:playback_1 
-jack_connect sdr:or system:playback_2
-jack_connect system:capture_1 sdr:il        
-jack_connect system:capture_2 sdr:ir     
-jack_lsp -c
-
-echo $PIDS
-echo -n hit return to kill everything:
-read
-kill $PIDS
-
-
-6) start transmit
-PIDS=""
-SDR_DEFRATE=${SDR_DEFRATE-48000}
-export SDR_DEFRATE
-export SDR_PARMPORT=19005
-export SDR_SPECPORT=19006
-export SDR_METERPORT=19007
-export SDR_NAME=sdr-tx
-./sdr-core -v -s -m &
-PIDS="$PIDS $!"
-sleep 1
-jack_connect sdr-tx:ol system:playback_3
-jack_connect sdr-tx:or system:playback_4
-case $1 in
-voice )
-jack_connect system:capture_3 sdr-tx:il        
-jack_connect system:capture_4 sdr-tx:ir
-;;
-* )
-jack_metro -A 1 -b 60 -D 990 &
-PIDS="$PIDS $!"
-jack_connect metro:60_bpm sdr-tx:il        
-jack_connect metro:60_bpm sdr-tx:ir
-;;
-esac
-echo $PIDS
-echo -n hit return to kill everything:
-read
-kill $PIDS
-
-
-7) start sdr-shell
-export SDR_DEFRATE=48000
-sdr-shell
-
+start-audigy.sh
 
 
 Use Notes
@@ -306,5 +277,5 @@ I built the dttsp keyers with:
 	gcc  -g -O2   -o iambic-keyer iambic-keyer.o  libDttSP.a -llo \
 		-lpthread -lm -ljack -lfftw3f
 
-Glen Overby, kc0iyt  gpoverby@gmail.com  March, 2010
+Glen Overby, kc0iyt  gpoverby@gmail.com  July, 2010
 

@@ -37,9 +37,14 @@ VariModelabel::VariModelabel(QWidget *parent, const char *name) : Varilabel (par
 {
 }
 
-void VariModelabel::mouseReleaseEvent ( QMouseEvent * )
+void VariModelabel::mouseReleaseEvent ( QMouseEvent *e )
 {
-	emit mouseRelease( label, FALSE );
+    bool force = 0;
+    if (e->state() & ShiftButton) {
+	fprintf( stderr, "VariModelabel mouseReleaseEvent: ShiftButton\n");
+	force = 1;
+    }
+    emit mouseRelease( label, FALSE, force );
 }
 
 void VariModelabel::setLabel( rmode_t l )
