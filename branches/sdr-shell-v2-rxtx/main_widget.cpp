@@ -23,7 +23,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	slopeTuneOffset = 0;
 	loadSettings();
 
-	setCaption ( "SDR-Shell v3e @ " + stationCallsign );
+	setCaption ( "SDR-Shell rxtx.4 @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -53,10 +53,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	}*/
 
 	/*QFont font2 ( "Bitstream Vera Sans", 10, FALSE );
-	QFontMetrics fm2 ( font2 );
-*/
+	QFontMetrics fm2 ( font2 ); */
 	QColor borderColor ( 255, 200, 55 );
-	//QColor borderColor( 200, 200, 100 );
 
 	// -----------------------------------------------------------------------
 	// Spectrogram
@@ -182,7 +180,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Use USBSoftrock
 	QGroupBox *cfgUSBBox = new QGroupBox ( cfgFrame1 );
 	cfgUSBBox->setTitle ( "USBSoftrock Control" );
-	cfgUSBBox->setGeometry ( 5, 101, 340, 45 );
+	cfgUSBBox->setGeometry ( 5, 101, 340, 65 );
 
 	QRadioButton *cfgUseUSBsoftrock = new QRadioButton ( cfgUSBBox );
 	cfgUseUSBsoftrock->setText ( "Use usbsoftrock via UDP" );
@@ -191,22 +189,18 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( updateUseUSBsoftrock ( bool ) ) );
 	cfgUseUSBsoftrock->setChecked ( !rock_bound );
 
-	// Transmit Enable
-	QGroupBox *cfgTXBox = new QGroupBox ( cfgFrame1 );
-	cfgTXBox->setTitle ( "Transmit" );
-	cfgTXBox->setGeometry ( 5, 200, 340, 45 );
-
-	QRadioButton *cfgTransmit = new QRadioButton ( cfgTXBox );
-	cfgTransmit->setText ( "Enable transmit" );
-	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
-	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
-	          this, SLOT ( updateTransmit ( bool ) ) );
-	cfgTransmit->setChecked ( enableTransmit );
+	// USBSoftrock 5/4 tuning for dual-conversion
+	QRadioButton *cfgDualConversion = new QRadioButton ( cfgUSBBox );
+	cfgDualConversion->setText ( "5/4 Tuning" );
+	cfgDualConversion->setGeometry ( 25, 36, 200, 20 );
+	connect ( cfgDualConversion, SIGNAL ( toggled ( bool ) ),
+	          this, SLOT ( updateDualConversion ( bool ) ) );
+	cfgDualConversion->setChecked ( dualConversion );
 
 	// Spectrum and S-Meter calibration
 	QGroupBox *calibrationBox = new QGroupBox ( cfgFrame1 );
 	calibrationBox->setTitle ( "Calibration" );
-	calibrationBox->setGeometry ( 5, 153, 340, 45 );
+	calibrationBox->setGeometry ( 5, 175, 340, 45 );
 
 	QLabel *specCalLabel = new QLabel ( calibrationBox );
 	specCalLabel->setText ( "Spectrum: " );
@@ -233,6 +227,18 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	metrCalSpinBox->setValue ( ( int ) metrCal );
 	connect ( metrCalSpinBox, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( calibrateMetr ( int ) ) );
+
+	// Transmit Enable
+	QGroupBox *cfgTXBox = new QGroupBox ( cfgFrame1 );
+	cfgTXBox->setTitle ( "Transmit" );
+	cfgTXBox->setGeometry ( 5, 225, 340, 45 );
+
+	QRadioButton *cfgTransmit = new QRadioButton ( cfgTXBox );
+	cfgTransmit->setText ( "Enable transmit" );
+	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
+	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
+	          this, SLOT ( updateTransmit ( bool ) ) );
+	cfgTransmit->setChecked ( enableTransmit );
 
 	// IQ Phase Calibration
 	QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
@@ -297,24 +303,37 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgTxIQGainInput->setValue ( txIQGain );
 	connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxIQGain ( int ) ) );
-	// TX Gain
+
+	// TX Microphone Gain and Output Gain
 	QGroupBox *cfgTxGain = new QGroupBox ( cfgFrame2 );
 	cfgTxGain->setTitle ( "TX Gain" );
 	cfgTxGain->setGeometry ( 5, 100, 340, 45 );
 
-	QLabel *cfgTxGainLabel = new QLabel ( cfgTxGain );
-	cfgTxGainLabel->setText ( "TX Gain: " );
-	cfgTxGainLabel->setGeometry ( 10, 18, 70, 20 );
-	cfgTxGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+	QLabel *cfgTxMicGainLabel = new QLabel ( cfgTxGain );
+	cfgTxMicGainLabel->setText ( "Mic Gain: " );
+	cfgTxMicGainLabel->setGeometry ( 10, 18, 70, 20 );
+	cfgTxMicGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
 
-	cfgTxGainInput = new QSpinBox ( cfgTxGain );
-	cfgTxGainInput->setGeometry ( 80, 18, 70, 20 );
-	cfgTxGainInput->setMinValue ( -255 );
-	cfgTxGainInput->setMaxValue ( 255 );
-	cfgTxGainInput->setValue ( txGain );
-	connect ( cfgTxGainInput, SIGNAL ( valueChanged ( int ) ),
-	          this, SLOT ( updateTxGain ( int ) ) );
+	cfgTxMicGainInput = new QSpinBox ( cfgTxGain );
+	cfgTxMicGainInput->setGeometry ( 80, 18, 70, 20 );
+	cfgTxMicGainInput->setMinValue ( -255 );
+	cfgTxMicGainInput->setMaxValue ( 255 );
+	cfgTxMicGainInput->setValue ( micGain );
+	connect ( cfgTxMicGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxMicGain ( int ) ) );
 
+	QLabel *cfgTxOutputGainLabel = new QLabel ( cfgTxGain );
+	cfgTxOutputGainLabel->setText ( "Out Gain: " );
+	cfgTxOutputGainLabel->setGeometry ( 175, 18, 70, 20 );
+	cfgTxOutputGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxOutputGainInput = new QSpinBox ( cfgTxGain );
+	cfgTxOutputGainInput->setGeometry ( 245, 18, 70, 20 );
+	cfgTxOutputGainInput->setMinValue ( -255 );
+	cfgTxOutputGainInput->setMaxValue ( 255 );
+	cfgTxOutputGainInput->setValue ( txGain );
+	connect ( cfgTxOutputGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxOutputGain ( int ) ) );
 
 	// Polyphase FFT
 	QButtonGroup *cfgPolyFFTGroup = new QButtonGroup ( cfgFrame3 );
@@ -563,7 +582,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	aboutText->setGeometry ( 2, 2, 347, 262 );
 	aboutText->setReadOnly ( true );
 	aboutText->append (
-	    QString ( "<center><br>SDR-Shell Version 3e Alpha<br>" ) +
+	    QString ( "<center><br>SDR-Shell Version rxtx.4<br>" ) +
 	    "Copyright (c) 2006, 2007 & 2009<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
@@ -632,6 +651,11 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	step_1000000Hz_frame = new QFrame ( ctlFrame );
 	step_1000000Hz_frame->setGeometry ( 234, 29, 11, 1 );
 	
+	step_10000000Hz_frame = new QFrame ( ctlFrame );
+	step_10000000Hz_frame->setGeometry ( 221, 29, 11, 1 );
+	
+	step_100000000Hz_frame = new QFrame ( ctlFrame );
+	step_100000000Hz_frame->setGeometry ( 208, 29, 11, 1 );
 
 	rxPix = new QPixmap ( rx_xpm );
 	txPix = new QPixmap ( tx_xpm );
@@ -659,64 +683,64 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	LSB_label->setPixmap ( lsb_pix );
 	LSB_label->setLabel ( RIG_MODE_LSB );
 	LSB_label->setGeometry ( 3, 3, 21, 11 );
-	connect ( LSB_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( LSB_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap usb_pix ( usb_xpm );
 	USB_label = new VariModelabel ( modeFrame );
 	USB_label->setPixmap ( usb_pix );
 	USB_label->setLabel ( RIG_MODE_USB );
 	USB_label->setGeometry ( 27, 3, 21, 11 );
-	connect ( USB_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( USB_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap dsb_pix ( dsb_xpm );
 	DSB_label = new VariModelabel ( modeFrame );
 	DSB_label->setPixmap ( dsb_pix );
 	DSB_label->setLabel ( RIG_MODE_DSB );
 	DSB_label->setGeometry ( 51, 3, 21, 11 );
-	connect ( DSB_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( DSB_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap am_pix ( am_xpm );
 	AM_label = new VariModelabel ( modeFrame );
 	AM_label->setPixmap ( am_pix );
 	AM_label->setLabel ( RIG_MODE_AM );
 	AM_label->setGeometry ( 75, 3, 21, 11 );
-	connect ( AM_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( AM_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap cwl_pix ( cwl_xpm );
 	CWL_label = new VariModelabel ( modeFrame );
 	CWL_label->setPixmap ( cwl_pix );
 	CWL_label->setLabel ( RIG_MODE_CWR );
 	CWL_label->setGeometry ( 3, 17, 21, 11 );
-	connect ( CWL_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( CWL_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap cwu_pix ( cwu_xpm );
 	CWU_label = new VariModelabel ( modeFrame );
 	CWU_label->setPixmap ( cwu_pix );
 	CWU_label->setLabel ( RIG_MODE_CW );
 	CWU_label->setGeometry ( 27, 17, 21, 11 );
-	connect ( CWU_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( CWU_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap sam_pix ( sam_xpm );
 	SAM_label = new VariModelabel ( modeFrame );
 	SAM_label->setPixmap ( sam_pix );
 	SAM_label->setLabel ( RIG_MODE_SAM );
 	SAM_label->setGeometry ( 51, 17, 21, 11 );
-	connect ( SAM_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( SAM_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	QPixmap fmn_pix ( fmn_xpm );
 	FMN_label = new VariModelabel ( modeFrame );
 	FMN_label->setPixmap ( fmn_pix );
 	FMN_label->setLabel ( RIG_MODE_FM );
 	FMN_label->setGeometry ( 75, 17, 21, 11 );
-	connect ( FMN_label, SIGNAL ( mouseRelease ( rmode_t, bool ) ),
-	          this, SLOT ( setMode ( rmode_t, bool ) ) );
+	connect ( FMN_label, SIGNAL ( mouseRelease ( rmode_t, bool, bool ) ),
+	          this, SLOT ( setMode ( rmode_t, bool, bool ) ) );
 
 	// -----------------------------------------------------------------------
 	// Noise Reduction Frame
@@ -792,6 +816,33 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	DOWN_label->setGeometry ( 3, 17, 27, 11 );
 	connect ( DOWN_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( band_DOWN ( int ) ) );
+
+	// -----------------------------------------------------------------------
+	// Sub Mode Frame
+	QFrame *subFrame = new QFrame ( ctlFrame );
+	subFrame->setBackgroundColor ( QColor ( 0, 0, 180 ) );
+
+	QPixmap rit_pix ( rit_xpm );
+	RIT_label = new Varilabel ( subFrame );
+	RIT_label->setPixmap ( rit_pix );
+	RIT_label->setGeometry ( 3, 3, 27, 11 );
+	connect ( RIT_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( toggle_RIT ( int ) ) );
+
+	QPixmap split_pix ( split_xpm );
+	SPLIT_label = new Varilabel ( subFrame );
+	SPLIT_label->setPixmap ( split_pix );
+	SPLIT_label->setGeometry ( 3, 17, 27, 11 );
+	connect ( SPLIT_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( toggle_SPLIT ( int ) ) );
+
+	// -----------------------------------------------------------------------
+	// RIT / Split Value
+	rit = new QLabel ( this, "", ctlFrame );
+	rit->setFont ( *fontlcd);
+	rit->setPaletteForegroundColor ( QColor (255, 255, 255 ) );
+	rit->setPaletteBackgroundColor  ( QColor (0, 0, 0 ) );
+	rit->setFrameStyle ( QFrame::NoFrame );
 
 	// -----------------------------------------------------------------------
 	// Memory Cells
@@ -1043,7 +1094,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	CPU_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
 	CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
-	ctlFrame1->setGeometry ( 1, 1, 361, 31 );
+//	ctlFrame1->setGeometry ( 1, 1, 661, 31 );
+	ctlFrame1->setGeometry ( 1, 1, 641, 31 );
 	signalFrame->setGeometry ( 1, 3, 170, 27 );
 	dBmLabel->setGeometry ( 140, 14, 35, 12 );
 	lcd->setGeometry ( 170, 3, 170, 27 );
@@ -1055,6 +1107,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	modeFrame->setGeometry ( 397, 1, 99, 31 );
 	//swFrame->setGeometry ( 463, 1, 93, 31 );
 	swFrame->setGeometry ( 497, 1, 93, 31 );
+	subFrame->setGeometry ( 590, 1, 33, 31 );
+	rit->setGeometry ( 625, 1, 130, 31 );
 
 	logoFrame = new QFrame ( ctlFrame );
 	logoFrame->setBackgroundColor ( QColor ( 0, 0, 0 ) );
@@ -1064,12 +1118,11 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	logoLabel->setPixmap ( logo_pix );
 	logoLabel->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 
-	setRxFrequency();
+	setRxFrequency( 1 );	// >> !rock_bound
 	if (useIF)
 	{
 	  setDefaultRxFrequency();
 	}
-	//fprintf(stderr, "Mode is %d \n", (int)mode);
 	setIQGain();
 	setIQPhase();
 	set_NR ( NR_state );
@@ -1087,16 +1140,14 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	setAGC ( agcType );
 	setTxIQGain();
 	setTxIQPhase();
-	setTxGain();
+	setTxGain( 0 );
+	setTxGain( 1 );
 	processorLoad();
 	if ( useHamlib )
 	{
 		initHamlib();
 	}
-	setMode(mode, FALSE);
-
-	//worldmap->setObserver( my_lat, my_lon );
-	//worldmap->plot();
+	setMode(mode, FALSE, TRUE);
 
 	QTimer *cpuTimer = new QTimer ( this );
 	connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
@@ -1114,7 +1165,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 void Main_Widget::initConstants()
 {
 	// Modes
-	/*modeName[LSB] = new QString ( "LSB" );
+	modeName[LSB] = new QString ( "LSB" );
 	modeName[USB] = new QString ( "USB" );
 	modeName[DSB] = new QString ( "DSB" );
 	modeName[CWL] = new QString ( "CWL" );
@@ -1125,7 +1176,7 @@ void Main_Widget::initConstants()
 	modeName[SPEC] = new QString ( "SPEC" );
 	modeName[DIGL] = new QString ( "DIGL" );
 	modeName[SAM] = new QString ( "SAM" );
-	modeName[DRM] = new QString ( "DRM" );*/
+	modeName[DRM] = new QString ( "DRM" );
 
 	// S meter colors
 	s_dbm[0] = -127; signalColor[0]  = new QColor ( 40, 255, 40 );
@@ -1317,9 +1368,9 @@ void Main_Widget::updateLayout()
 	    width() - 2,
 	    33 );
 	logoFrame->setGeometry (
-	    591,
+	    755,
 	    1,
-	    ctlFrame->width() - 587,
+	    ctlFrame->width() - 755,
 	    31 );
 	logoLabel->setGeometry (
 	    logoFrame->width() - 89,
@@ -1389,14 +1440,6 @@ void Main_Widget::loadSettings()
 		exit ( 1 );
 	}
 
- /* I don't think this is being used.  It was copied from PMSDR branch.
-  *    // Check for Dttsp version with different spectrum format
-	if ((ep = getenv("DTTSP_38"))) {
-        dttsp38 = atoi(ep);
-	} else {
-        dttsp38 = 0;
-    }
- */
      // create the command, spectrum, and meter ports
 
      // this does a blind send to a port that's already bound,
@@ -1427,32 +1470,25 @@ void Main_Widget::loadSettings()
 		pTXCmd->setPort(port);
      }
 
-     /*  I will try omitting this and see what happens.  It looks
-      *  like it isn't needed.
-      * 
-	// Open the command FIFO
-	if ( ( ep = getenv ( "SDR_PARMPATH" ) ) )
+	sdr_mode = NULL;
+	if ( ( ep = getenv ( "SDR_MODE" ) ) )
 	{
-		cmdFile = fopen ( ep, "r+" );
-		if ( cmdFile == NULL )
-		{
-			perror ( ep );
-			cmdFile = stdout;
-		}
+		sdr_mode = ep;
 	}
-	else
+	sdr_band = NULL;
+	if ( ( ep = getenv ( "SDR_BAND" ) ) )
 	{
-		printf ( "::: Unable to get SDR_PARMPATH environment variable.\n"
-		         "Using default: %s\n", CMD_FILE );
-		cmdFile = fopen ( CMD_FILE, "r+" );
-		if ( cmdFile == NULL )
-		{
-			perror ( CMD_FILE );
-			cmdFile = stdout;
-		}
+		sdr_band = ep;
 	}
-	*/
-	   
+	sdr_rxtx = NULL;
+	if ( ( ep = getenv ( "SDR_RXTX" ) ) )
+	{
+		sdr_rxtx = ep;
+	}
+
+	// spectrum scaling
+	spec_width = DEFSPEC;
+
 	// Read config
 	//sample_rate = settings.readEntry(
 	//	"/sdr-shell/sample_rate", "48000" ).toInt();
@@ -1494,6 +1530,8 @@ void Main_Widget::loadSettings()
 	              "/sdr-shell/txIQPhase", "0" ).toInt();
 	txGain = settings.readEntry (
 	             "/sdr-shell/txGain", "0" ).toInt();
+	micGain = settings.readEntry (
+	             "/sdr-shell/micGain", "0" ).toInt();
 	enableTransmit = ( bool ) settings.readEntry (
 	             "/sdr-shell/enableTransmit", "0" ).toInt();
 	mode = ( rmode_t ) settings.readEntry (
@@ -1605,6 +1643,8 @@ void Main_Widget::loadMemoryCells()
 	// Restore memory cells
 	f1_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f1_frequency", "0" ).toInt() );
+	f1_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f1_txfrequency", "0" ).toInt() );
 	f1_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f1_mode", "1" ).toInt() );
 	f1_cell->setFilter (
@@ -1613,6 +1653,8 @@ void Main_Widget::loadMemoryCells()
 
 	f2_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f2_frequency", "0" ).toInt() );
+	f2_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f2_txfrequency", "0" ).toInt() );
 	f2_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f2_mode", "1" ).toInt() );
 	f2_cell->setFilter (
@@ -1621,6 +1663,8 @@ void Main_Widget::loadMemoryCells()
 
 	f3_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f3_frequency", "0" ).toInt() );
+	f3_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f3_txfrequency", "0" ).toInt() );
 	f3_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f3_mode", "1" ).toInt() );
 	f3_cell->setFilter (
@@ -1629,6 +1673,8 @@ void Main_Widget::loadMemoryCells()
 
 	f4_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f4_frequency", "0" ).toInt() );
+	f4_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f4_txfrequency", "0" ).toInt() );
 	f4_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f4_mode", "1" ).toInt() );
 	f4_cell->setFilter (
@@ -1637,6 +1683,8 @@ void Main_Widget::loadMemoryCells()
 
 	f5_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f5_frequency", "0" ).toInt() );
+	f5_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f5_txfrequency", "0" ).toInt() );
 	f5_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f5_mode", "1" ).toInt() );
 	f5_cell->setFilter (
@@ -1645,6 +1693,8 @@ void Main_Widget::loadMemoryCells()
 
 	f6_cell->setFrequency ( 
 	    settings.readEntry ( "/sdr-shell/f6_frequency", "0" ).toInt() );
+	f6_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f6_txfrequency", "0" ).toInt() );
 	f6_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f6_mode", "1" ).toInt() );
 	f6_cell->setFilter (
@@ -1653,6 +1703,8 @@ void Main_Widget::loadMemoryCells()
 
 	f7_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f7_frequency", "0" ).toInt() );
+	f7_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f7_txfrequency", "0" ).toInt() );
 	f7_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f7_mode", "1" ).toInt() );
 	f7_cell->setFilter (
@@ -1661,6 +1713,8 @@ void Main_Widget::loadMemoryCells()
 
 	f8_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/f8_frequency", "0" ).toInt() );
+	f8_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/f8_txfrequency", "0" ).toInt() );
 	f8_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/f8_mode", "1" ).toInt() );
 	f8_cell->setFilter (
@@ -1669,6 +1723,8 @@ void Main_Widget::loadMemoryCells()
 
 	b1_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b1_frequency", "0" ).toInt() );
+	b1_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b1_txfrequency", "0" ).toInt() );
 	b1_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b1_mode", "1" ).toInt() );
 	b1_cell->setFilter (
@@ -1677,6 +1733,8 @@ void Main_Widget::loadMemoryCells()
 
 	b2_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b2_frequency", "0" ).toInt() );
+	b2_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b2_txfrequency", "0" ).toInt() );
 	b2_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b2_mode", "1" ).toInt() );
 	b2_cell->setFilter (
@@ -1684,15 +1742,9 @@ void Main_Widget::loadMemoryCells()
 	    settings.readEntry ( "/sdr-shell/b2_filter_h", "2400" ).toInt() );
 
 	b3_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b2_frequency", "0" ).toInt() );
-	b3_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b2_mode", "1" ).toInt() );
-	b3_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b2_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b2_filter_h", "2400" ).toInt() );
-
-	b3_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b3_frequency", "0" ).toInt() );
+	b3_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b3_txfrequency", "0" ).toInt() );
 	b3_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b3_mode", "1" ).toInt() );
 	b3_cell->setFilter (
@@ -1701,6 +1753,8 @@ void Main_Widget::loadMemoryCells()
 
 	b4_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b4_frequency", "0" ).toInt() );
+	b4_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b4_txfrequency", "0" ).toInt() );
 	b4_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b4_mode", "1" ).toInt() );
 	b4_cell->setFilter (
@@ -1709,6 +1763,8 @@ void Main_Widget::loadMemoryCells()
 
 	b5_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b5_frequency", "0" ).toInt() );
+	b5_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b5_txfrequency", "0" ).toInt() );
 	b5_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b5_mode", "1" ).toInt() );
 	b5_cell->setFilter (
@@ -1717,6 +1773,8 @@ void Main_Widget::loadMemoryCells()
 
 	b6_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b6_frequency", "0" ).toInt() );
+	b6_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b6_txfrequency", "0" ).toInt() );
 	b6_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b6_mode", "1" ).toInt() );
 	b6_cell->setFilter (
@@ -1725,6 +1783,8 @@ void Main_Widget::loadMemoryCells()
 
 	b7_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b7_frequency", "0" ).toInt() );
+	b7_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b7_txfrequency", "0" ).toInt() );
 	b7_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b7_mode", "1" ).toInt() );
 	b7_cell->setFilter (
@@ -1733,6 +1793,8 @@ void Main_Widget::loadMemoryCells()
 
 	b8_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b8_frequency", "0" ).toInt() );
+	b8_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b8_txfrequency", "0" ).toInt() );
 	b8_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b8_mode", "1" ).toInt() );
 	b8_cell->setFilter (
@@ -1741,6 +1803,8 @@ void Main_Widget::loadMemoryCells()
 
 	b9_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b9_frequency", "0" ).toInt() );
+	b9_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b9_txfrequency", "0" ).toInt() );
 	b9_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b9_mode", "1" ).toInt() );
 	b9_cell->setFilter (
@@ -1749,6 +1813,8 @@ void Main_Widget::loadMemoryCells()
 
 	b10_cell->setFrequency (
 	    settings.readEntry ( "/sdr-shell/b10_frequency", "0" ).toInt() );
+	b10_cell->setTxFrequency (
+	    settings.readEntry ( "/sdr-shell/b10_txfrequency", "0" ).toInt() );
 	b10_cell->setMode ( ( rmode_t )
 	    settings.readEntry ( "/sdr-shell/b10_mode", "1" ).toInt() );
 	b10_cell->setFilter (
@@ -1794,6 +1860,7 @@ void Main_Widget::saveSettings()
 	settings.writeEntry ( "/sdr-shell/txIQGain", txIQGain );
 	settings.writeEntry ( "/sdr-shell/txIQPhase", txIQPhase );
 	settings.writeEntry ( "/sdr-shell/txGain", txGain );
+	settings.writeEntry ( "/sdr-shell/micGain", micGain );
 	int intEnableTransmit = ( int ) enableTransmit;
 	settings.writeEntry ( "/sdr-shell/enableTransmit", intEnableTransmit );
 	settings.writeEntry ( "/sdr-shell/mode", ( int ) mode );
@@ -1890,6 +1957,10 @@ void Main_Widget::saveSettings()
 
 	f_string.sprintf ( "%lld", b1_cell->getFrequency() );
 	settings.writeEntry ( "/sdr-shell/b1_frequency", f_string );
+	if (b1_cell->getTxFrequency() != 0) {
+		f_string.sprintf ( "%lld", b1_cell->getTxFrequency() );
+		settings.writeEntry ( "/sdr-shell/b1_txfrequency", f_string );
+	}
 	settings.writeEntry ( "/sdr-shell/b1_mode", b1_cell->getMode() );
 	settings.writeEntry ( "/sdr-shell/b1_filter_l", b1_cell->getFilter_l() );
 	settings.writeEntry ( "/sdr-shell/b1_filter_h", b1_cell->getFilter_h() );
@@ -1995,9 +2066,9 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 		case Qt::AltButton:
 			switch ( e->key() )
 			{
-				case 65: setMode ( RIG_MODE_AM , FALSE ); break; // a
-				case 76: setMode ( RIG_MODE_LSB , FALSE ); break; // l
-				case 85: setMode ( RIG_MODE_USB, FALSE ); break; // u
+				case 65: setMode ( RIG_MODE_AM , FALSE, FALSE ); break; // a
+				case 76: setMode ( RIG_MODE_LSB , FALSE, FALSE ); break; // l
+				case 85: setMode ( RIG_MODE_USB, FALSE, FALSE ); break; // u
 				default: break;
 			}
 			break;
@@ -2012,8 +2083,6 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 		case RX_F: rx_cmd ( e->key() ); break;
 		default: break;
 	}
-
-
 }
 
 void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
@@ -2027,7 +2096,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
 		case 4114: // Left arrow
 		case 74: // j
-			//fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
+			fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
 			if ( rock_bound )
 			{
 				if ( rx_delta_f < sample_rate / 2 - 2000 )  //rx_delta_f > 0 when you tune down!
@@ -2037,25 +2106,24 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			}
 			else
 			{
+				rx_f -= rx_delta_f;
 				rx_delta_f = -sample_rate/4;
 				rx_f = rx_f - (int) pow ( 10, tuneStep );
+				rx_f += rx_delta_f;
+
+				// Round to tuneStep
+				//rx_f = (rx_f-rx_delta_f) / (int) pow ( 10, tuneStep );
+				//rx_f = rx_f * (int) pow ( 10, tuneStep ) + rx_delta_f;
+
+				// disable RIT
+				if (enableRIT)
+					set_RIT( 0 );
+			/*
 				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
 				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6 ); 
+			*/
 			}
-/*
-			{
-				if ( -rx_delta_f > ONE_OVER_F_GUARD_FREQUENCY )
-					rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
-				else	
-				{  // When using the usbsoftrock, we avoid the 1/f noise near DC
-				   // by putting the IF at sample_rate/4.
-					rx_f = rx_f - (rx_delta_f + (int) pow ( 10, tuneStep )) - sample_rate/4;
-					pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
-					rx_delta_f = -sample_rate/4;
-					fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
-				}
-			}*/		
-			setRxFrequency();
+			setRxFrequency( 1 );	// >> !rock_bound
 			break;
 		case 4115: // Up arrow
 		case 76: // l
@@ -2074,40 +2142,31 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			}
 			else
 			{
+				rx_f -= rx_delta_f;
 				rx_delta_f = -sample_rate/4;
 				rx_f = rx_f + (int) pow ( 10, tuneStep );
+				rx_f += rx_delta_f;
+
+				// Round to tuneStep
+				//rx_f = (rx_f-rx_delta_f) / (int) pow ( 10, tuneStep );
+				//rx_f = rx_f * (int) pow ( 10, tuneStep ) + rx_delta_f;
+
+				// disable RIT
+				if (enableRIT)
+					set_RIT( 0 );
+			/*
 				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
 				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+			*/
 			}
-/*
-			{
-				if ( -rx_delta_f < (sample_rate / 2 -2000 ) )  //We are not to the top of our range.
-					rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep ); //Keep tuning up.
-				else  // We are at the top of the tuning range, so step the Si570 up.	
-				{  // When using the usbsoftrock, we avoid the 1/f noise near DC
-				   // by putting the IF at sample_rate/4.
-					rx_f = rx_f - (rx_delta_f + (int) pow ( 10, tuneStep )) - sample_rate/4;
-					pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
-					rx_delta_f = -sample_rate/4;
-					fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
-				}
-			} */	
-			/*fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
-			if ( rx_delta_f > - ( sample_rate / 2 - 2000 ) ) //rx_delta_f < 0 when you tune up!
-				rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep );
-			else
-			{
-			        if(rock_bound)
-				  rx_delta_f = - ( sample_rate / 2 - 2000 );
-				else
-				{
-				  rx_f = rx_f - rx_delta_f + ( int ) pow ( 10, tuneStep );
-				  pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
-				  rx_delta_f = 0;
-				  //fprintf (stderr, "Sent usbsoftrock a new frequency, %f\n",rx_f*1e-6);
-				}
-			}*/	
-			setRxFrequency();
+			setRxFrequency( 1 );	// >> !rock_bound
+			break;
+		case 4118:	// Page Up
+			// ^F = 4129 (ctl) 70
+		case 4119:	// Page Down
+			// ^B = 4129 (ctl) 66
+			// spectrogram->width()
+			fprintf(stderr, "width = %d\n", width());
 			break;
 		case 71: //g
 			if (useIF)
@@ -2115,10 +2174,25 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			  setDefaultRxFrequency();
 			}
 			break;
+		case '1':
+			spec_width = DEFSPEC;
+			once = 1;
+			break;
+		case '2':
+			spec_width = DEFSPEC/2;
+			once = 1;
+			fprintf(stderr, "spec_width=%d\n", spec_width);
+			break;
+		case '4':
+			spec_width = DEFSPEC/4;
+			once = 1;
+			fprintf(stderr, "spec_width=%d\n", spec_width);
+			break;
 		case 4096:
 			finish();
 			break;
 		default:
+			//printf("k %d\n", key);
 			break;
 	}
 }
@@ -2211,12 +2285,14 @@ void Main_Widget::process_key ( int key )
 				{
 					transmit = 0;
 					pTXCmd->sendCommand ("setTRX 0\n");
+					pTXCmd->sendCommand ("setRunState 0\n");
 					pUSBCmd->sendCommand("set ptt off\n" );
 					fprintf (stderr, "set ptt off\n");
 					trxFrame->setPaletteBackgroundPixmap ( *rxPix );
 					set_MUTE ( 0 );
 				} else {
 					transmit = 1;
+					pTXCmd->sendCommand ("setRunState 2\n");
 					pUSBCmd->sendCommand ("set ptt on\n" );
 					pTXCmd->sendCommand ("setTRX 1\n");
 					set_MUTE ( 1 );
@@ -2271,27 +2347,51 @@ void Main_Widget::setDefaultRxFrequency ( )
 			rx_delta_f = rx_if - rx_f + slopeTuneOffset;
 			break;
 	}
-	setRxFrequency();
+	setRxFrequency( 1 );	// >> !rock_bound
 }
 
-void Main_Widget::setRxFrequency()
+//
+// synth flag means set the external synth (usbsoftrock) also
+//
+void Main_Widget::setRxFrequency( int synth )
 {
 	char text[32];
 	if ( !useIF )
 	{
-		//sprintf ( text, ".........%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
-		sprintf ( text, "......%11.6lf", ( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+		sprintf ( text, "......%11.6lf",
+			( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
 		fprintf ( stderr, "Set the frequency: %lld - %d = %11.6lf '%s'\n",
 			rx_f, rx_delta_f, 
 			( rx_f - rx_delta_f) / 1000000.0, text);
 		displayMutex.lock();
 		lcd->setText( ( QString ) text);
 		//lcd->display ( text );
+
+		if (enableRIT) {
+			tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
+			rit->setText( tx_f_string );
+			fprintf ( stderr, "RIT %s\n", tx_f_string.ascii());
+		}
 		displayMutex.unlock();
 	}
 	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
-	pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+	if (!enableRIT && !enableSPLIT) {
+		pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+	if ( synth ) {
+		if (dualConversion) {
+			fprintf (stderr, "set freq dual conversion %f %f %f\n",
+				(rx_f)*1e-6, 
+				((rx_f)*1e-6)/1.25,
+				((rx_f)*1e-6)/1.25/4); 
+			pUSBCmd->sendCommand("set freq %f\n", 
+				((rx_f)*1e-6)/1.25/4);
+		} else {
+			fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
+			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+		}
+	}
+	}
 }
 
 void Main_Widget::setTxFrequency()
@@ -2340,7 +2440,7 @@ void Main_Widget::setFilter()
 
 void Main_Widget::setLowerFilterScale ( int x )
 {
-	static float bin_bw = sample_rate/(float)DEFSPEC;
+	float bin_bw = sample_rate/(float)spec_width;
 	int stop_band;
 
 	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
@@ -2354,7 +2454,7 @@ void Main_Widget::setLowerFilterScale ( int x )
 
 void Main_Widget::setUpperFilterScale ( int x )
 {
-	static float bin_bw = sample_rate/(float)DEFSPEC;
+	float bin_bw = sample_rate/(float)spec_width;
 	int stop_band;
 
 	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
@@ -2384,7 +2484,7 @@ void Main_Widget::setTuneStep ( int step )
 	}
 	else
 	{
-	  if ( tuneStep < 6 && step > 0 ) tuneStep++;
+	  if ( tuneStep < 8 && step > 0 ) tuneStep++;
 	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
 	}
 
@@ -2398,6 +2498,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 1:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2407,6 +2509,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 2:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2416,6 +2520,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 3:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2425,6 +2531,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 4: 
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2434,6 +2542,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 5: 
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2443,6 +2553,8 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 		case 6: 
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2453,6 +2565,32 @@ void Main_Widget::setTuneStep ( int step )
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			break;
+		case 7: 
+			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			break;
+		case 8: 
+			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 100 ) );
 			break;
 		default:
 			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
@@ -2462,12 +2600,21 @@ void Main_Widget::setTuneStep ( int step )
 			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 	}
 }
 
-void Main_Widget::setMode ( rmode_t m, bool displayOnly )
+void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 {
+	QString	modeStr;
+
+	if (mode == m && ! force) {
+		fprintf(stderr, "set mode: no mode change\n");
+		return;
+	}
+	
 	mode = m;
 
 	QColor c_off ( 0, 0, 0 );
@@ -2485,6 +2632,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 	switch ( mode )
 	{
 		case RIG_MODE_USB:
+			modeStr = "USB";
 			pCmd->sendCommand ("setMode %d %d\n", USB );
 			pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
 			fprintf ( stderr, "setMode %d\n", USB );
@@ -2496,6 +2644,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_USB, 2700 );				
 			break;
 		case RIG_MODE_LSB:
+			modeStr = "LSB";
 			pCmd->sendCommand ("setMode %d %d\n", LSB );
 			pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
 			fprintf ( stderr, "setMode %d\n", LSB );
@@ -2506,6 +2655,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_LSB, 2700 );
 			break;
 		case RIG_MODE_DSB:
+			modeStr = "DSB";
 			pCmd->sendCommand ("setMode %d %d\n", DSB );
 			pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
 			fprintf ( stderr, "setMode %d\n", DSB );
@@ -2516,6 +2666,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_USB, 6000 );
 			break;
 		case RIG_MODE_AM:
+			modeStr = "AM";
 			pCmd->sendCommand ("setMode %d %d\n", AM );
 			pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
 			fprintf ( stderr, "setMode %d\n", AM );
@@ -2526,6 +2677,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_AM, 6000 );
 			break;
 		case RIG_MODE_CWR:
+			modeStr = "CWR";
 			pCmd->sendCommand ("setMode %d %d\n", CWL );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
 			fprintf ( stderr, "setMode %d\n", CWL );
@@ -2536,6 +2688,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_CWR, 500 );
 			break;
 		case RIG_MODE_CW:
+			modeStr = "CW";
 			pCmd->sendCommand ("setMode %d %d\n", CWU );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
 			fprintf ( stderr, "setMode %d\n", CWU );
@@ -2546,6 +2699,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_CW, 500 );
 			break;
 		case RIG_MODE_SAM:
+			modeStr = "SAM";
 			pCmd->sendCommand ("setMode %d %d\n", SAM );
 			pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
 			fprintf ( stderr, "setMode %d\n", SAM );
@@ -2556,6 +2710,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 			emit changeRigMode ( RIG_MODE_AM, 12000 ); */ //Some rigs can do syncronous AM, but not mine.  KL7NA  uncomment this for them.*/
 			break;
 		case RIG_MODE_FM:
+			modeStr = "FM";
 			pCmd->sendCommand ("setMode %d %d\n", FMN );
 			pTXCmd->sendCommand ("setMode %d %d\n", FMN );
 			fprintf ( stderr, "setMode %d\n", FMN );
@@ -2566,12 +2721,23 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly )
 				emit changeRigMode ( RIG_MODE_FM, 12000 );
 			break;
 		default:
+			modeStr = "Unknown";
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
 	}
+	fprintf( stderr, "Set mode: %s\n", modeStr.ascii());
+
+	// call external mode setting hook.
+	if (sdr_mode != NULL) {
+		QString cmd = sdr_mode;
+		cmd += " ";
+		cmd += modeStr;
+		fprintf( stderr, "Set mode: %s\n", cmd.ascii());
+		system(cmd.ascii());
+	}
 	setFilter();
 	if ( useIF ) setDefaultRxFrequency();
-	else setRxFrequency();
+	else setRxFrequency( 1 );	// >> !rock_bound
 }
 
 
@@ -2579,8 +2745,7 @@ void Main_Widget::setIQGain()
 {
 	pCmd->sendCommand ("setcorrectIQgain %d\n", iqGain );
 	fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
-	/* Set the  gain as well. */
-	/* The following sets the output gain.*/
+	// The following sets the output gain.
 	pCmd->sendCommand ("setGain %d %d\n", 0,1,0 );
 	//pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
 	fprintf ( stderr, "setGain %d %d %d\n",0,1,0 );
@@ -2606,10 +2771,13 @@ void Main_Widget::setTxIQPhase()
 	fprintf ( stderr, "(TX)setcorrectIQphase %d\n", txIQPhase );
 }
 
-void Main_Widget::setTxGain()
+void Main_Widget::setTxGain( int inout )
 {
-	pTXCmd->sendCommand ("setGain %d %d %d\n", 1, 1, txGain );
-	fprintf ( stderr, "(TX)setGain %d %d %d\n", 1, 1, txGain );
+	int gain = inout ? txGain : micGain;
+	pTXCmd->sendCommand ("setGain %d %d %d\n", 1, inout, gain );
+	fprintf ( stderr, "(TX)set%sGain %d %d %d\n", 
+		inout ? "Output" : "Mic",
+		1, inout, gain );
 }
 
 
@@ -2668,22 +2836,39 @@ void Main_Widget::readMeter()
 //
 void Main_Widget::readSpectrum()
 {
-//	int j, k;
+	int j, k, l, m, n;
 	int label, stamp;
+	float raw_spectrum[DEFSPEC];
+	float a;
 
 	pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
-	pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
-/*      This below appears to be unnecessary for anything at present. Rob 11/18/09
-	j = 0;
-	for ( k = 1; k < DEFSPEC; k++ )
-	{
-		if ( spectrum[k] > spectrum[j] ) j = k;
-		//printf(" [%d %g] %g\n", j, oscope[k], oscope[k] * 50000);
+	if (spec_width == DEFSPEC) {
+		pSpectrum->fetch (&stamp, &label, spectrum, DEFSPEC);
+	} else {
+		pSpectrum->fetch (&stamp, &label, raw_spectrum, DEFSPEC);
+
+		// resample spectrum to be smaller
+		// use the max value of N samples
+		// j = raw sample index
+		// k = downsampled index
+		n = DEFSPEC / spec_width;
+		for (j = k = 0; j < DEFSPEC; j += n, k++) {
+			a = raw_spectrum[j];
+
+			for (l = j+1, m=1; m < n; l++, m++) {
+				if (raw_spectrum[l] > a) {
+					a = raw_spectrum[l];
+				}
+			}
+
+			spectrum[k] = a;
+		}
+		for ( ; k < DEFSPEC; k++) {
+			spectrum[k] = 0;
+		}
 	}
 
-	//printf(" [%d %g]\n", j, spectrum[j] + specCal );
-*/
 	drawSpectrogram();
 	if ( SPEC_state ) plotSpectrum ( spectrum_head );
 }
@@ -2699,10 +2884,24 @@ void Main_Widget::drawSpectrogram()
 
 	QImage spectrogramLine ( spectrogram->width(), 1 , 32 );
 
-	x1 = DEFSPEC/2 - spectrogram->width() /2;
+	x1 = spec_width/2 - spectrogram->width() /2;
 	x2 = x1 + spectrogram->width();
+//	if (once) {
+//		fprintf(stderr, "x1=%d x2=%d w1=%d w2=%d\n", x1, x2,
+//			spectrogram->width(), spec_width);
+//		once = 0;
+//	}
 
-	for ( x = 0; x < DEFSPEC; x++ )
+	if (spectrogram->width() > spec_width) {
+		x2 = spec_width;
+		uint rgb = qRgb ( spec_r[0], spec_g[0], spec_b[0] );
+		for ( x = 0; x < spectrogram->width(); x++ ) {
+			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x );
+			*p = rgb;
+		}
+	}
+
+	for ( x = 0; x < spec_width; x++ )
 	{
 		// Compute the power (magnified)
 		pwr = ( int ) ( ( spectrum[ x ] + specCal - specApertureLow ) *
@@ -2725,14 +2924,14 @@ void Main_Widget::drawSpectrogram()
 			// Turn on vertical filter line
 			if ( filterLine &&
 			        ( x - x1 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_l / ( sample_rate/(float) DEFSPEC ) ) )
+			        ( int ) ( *filter_l / ( sample_rate/(float) spec_width ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
 
 			if ( filterLine &&
 			        ( x - x1 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ) )
+			        ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
@@ -2752,20 +2951,20 @@ void Main_Widget::drawSpectrogram()
 
 	p.setPen ( Qt::yellow );
 	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/(float)DEFSPEC ) ), y+1,
+	             ( int ) ( *filter_l / ( sample_rate/(float)spec_width ) ), y+1,
 	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ), y+1 );
+	             ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ), y+1 );
 	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/(float)DEFSPEC ) ), y+2,
+	             ( int ) ( *filter_l / ( sample_rate/(float)spec_width ) ), y+2,
 	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/(float)DEFSPEC ) ), y+2 );
+	             ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ), y+2 );
 
 	p.end();
 }
 
 void Main_Widget::drawPassBandScale()
 {
-	static float bin_bw = sample_rate/(float)DEFSPEC;
+	float bin_bw = sample_rate/(float)spec_width;
 	char temp[20];
 	int x1, x2;
 
@@ -2806,11 +3005,12 @@ void Main_Widget::drawPassBandScale()
 
 void Main_Widget::plotSpectrum ( int y )
 {
-	static float bin_bw = sample_rate/(float)DEFSPEC;
+	float bin_bw = sample_rate/(float)spec_width;
 	int x, x1, x2;
 	double kHz_step;
 	int f;
 	char f_text[10];
+	char nlabel;
 
 	int f1, f2;
 
@@ -2820,20 +3020,28 @@ void Main_Widget::plotSpectrum ( int y )
 	QPixmap pix ( spectrumFrame->width(), spectrumFrame->height() );
 	pix.fill ( QColor ( 0,0,0 ) );
 
-// add * Scale
-	x1 = DEFSPEC/2 - spectrogram->width() /2;
+	x1 = spec_width/2 - spectrogram->width() /2;
 	x2 = x1 + spectrogram->width();
-	kHz_step = 1000 / ( sample_rate / (float)DEFSPEC );
+	if (x2 > spec_width)
+		x2 = spec_width;
+	kHz_step = 1000 / ( sample_rate / (float)spec_width );
+	if (once) {
+		fprintf(stderr, "bin_bw=%4.4f f1=%d f2=%d x1=%d x2=%d\n", bin_bw, f1, f2, x1, x2);
+		once = 0;
+	}
 
 	QPainter p;
 	p.begin ( &pix );
 	p.setFont ( *font1 );
 
+	// Draw Passband
 	p.fillRect ( f1, 0, f2-f1+1, 120, QColor ( 0, 50, 0 ) );
 
 	// Draw Spectrum
 	for ( x = 0; x < spectrumFrame->width(); x++ )
 	{
+		if (x + x1 < 0 || x > x2)
+			continue;
 		p.setPen ( QColor ( 0, 200, 0 ) );
 		p.drawLine ( x, spectrumFrame->height() -
 		             spectrum_history[y][x + x1],
@@ -2842,6 +3050,7 @@ void Main_Widget::plotSpectrum ( int y )
 	}
 
 	// Draw the 1 kHz positive marks
+	nlabel = DEFSPEC / spec_width;
 	f = 0;
 	for ( double dx = spectrumFrame->width() /2;
 	        dx <= spectrumFrame->width();
@@ -2853,12 +3062,14 @@ void Main_Widget::plotSpectrum ( int y )
 		             ( int ) rint ( dx ),
 		             spectrumFrame->height() );
 		//sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
-		sprintf ( f_text, "%d", f );
-		p.setPen ( QColor ( 255, 255, 255 ) );
-		p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
+		if ((f/1000) % nlabel == 0) {
+			sprintf ( f_text, "%d", f );
+			p.setPen ( QColor ( 255, 255, 255 ) );
+			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
 		                                     strlen ( f_text ) ) / 2,
-		             10,
-		             f_text );
+		        		10,
+					f_text );
+		}
 		f = f + 1000;
 	}
 
@@ -2874,13 +3085,15 @@ void Main_Widget::plotSpectrum ( int y )
 		             ( int ) rint ( dx ),
 		             spectrumFrame->height() );
 		//sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
-		sprintf ( f_text, "%d", f );
-		p.setPen ( QColor ( 255, 255, 255 ) );
-		//p.drawText( (int)rint(dx) + 2, 10, f_text );
-		p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
+		if ((f/1000) % nlabel == 0) {
+			sprintf ( f_text, "%d", f );
+			p.setPen ( QColor ( 255, 255, 255 ) );
+			//p.drawText( (int)rint(dx) + 2, 10, f_text );
+			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
 		                                     ( strlen ( f_text ) + 1 ) ) / 2,
-		             10,
-		             f_text );
+		             		10,
+		             		f_text );
+		}
 		f = f - 1000;
 	}
 
@@ -2924,12 +3137,10 @@ void Main_Widget::spectrogramClicked ( int x )
 	int f_limit = sample_rate/2 - 2000;
 	if ( !useIF )  // Disable changing frequency for IF mode.  Use arrows for IF shift.
 	{
-		f = ( int ) ( ( sample_rate/(float)DEFSPEC ) * ( spectrogram->width() /2 - x ) );
+		f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
 		
-		fprintf(stderr, "The value of f is %d \n",f);
+		fprintf(stderr, "The value of f is %d x is %d\n",f, x);
 
-
-		
 		if ( rock_bound )
 		{
 			if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
@@ -2942,16 +3153,13 @@ void Main_Widget::spectrogramClicked ( int x )
 		else
 		{
 		 /* fprintf (stderr,"Before, the rx_f sent to the usb is %f MHz. and rx_delta_f is %f KHz.",rx_f*1e-6, rx_delta_f*1e-3);
-		  rx_f = rx_f - rx_delta_f+8000;
-		  rx_delta_f =  8000; //Make it not tuned to the center
+		  rx_f = rx_f - rx_delta_f + sample_rate/4;
+		  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
 		  fprintf (stderr,"The rx_f sent to the usb is %f MHz.",rx_f*1e-6); */
-			rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
-			pUSBCmd->sendCommand("set freq %f\n", rx_f*1e-6 );
-			fprintf ( stderr, "The frequency sent to USBsoftrock is: %f \n",rx_f*1e-6);
-			fprintf ( stderr, "The center frequency is: %f \n",(rx_f + sample_rate /4.)*1e-6);
-			fprintf ( stderr, "The frequency USBoffset: %d \n",usbOffset);
+
+		  rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
 		}
-		setRxFrequency();
+		setRxFrequency( 1 );	// >> !rock_bound
 	}
 }
 
@@ -2960,7 +3168,7 @@ void Main_Widget::f_at_mousepointer ( int x )
 	int f;
 	char temp[20];
 
-	f = ( int ) ( ( sample_rate/(float)DEFSPEC ) * ( spectrogram->width() /2 - x ) );
+	f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
 	if ( !rock_bound ) f = f - sample_rate / 4 ;
 
 	sprintf ( temp, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
@@ -2971,10 +3179,20 @@ void Main_Widget::tune ( int x )
 {
 	int f_limit = sample_rate/2 - 2000;
 
-	rx_delta_f += x;
-	if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-	if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
-	setRxFrequency();
+	// if (spectrogram->width() < spec_width)
+	// f_limit = sample_rate / 2 - spectrogram->width() / 2
+
+	// use usbsoftrock if the tuning step is large enough
+	if ( x > 10000) {
+		rx_delta_f = -sample_rate/4;
+		rx_f = rx_f + x;
+		setRxFrequency( 1 );	// >> !rock_bound
+	} else {
+		rx_delta_f += x;
+		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+		setRxFrequency( 0 );
+	}
 }
 
 void Main_Widget::focusInEvent ( QFocusEvent * )
@@ -3117,6 +3335,20 @@ void Main_Widget::enter_band(int band)
 	case 9:	readMem ( b9_cell );		break;
 	case 10: readMem ( b10_cell );		break;
 	}
+
+	if (sdr_band != NULL) {
+		QString cmd = sdr_band;
+		QString b;
+		b.sprintf ("%d", band);
+		cmd += " ";
+		b += " ";
+		cmd += b;
+		b.sprintf ("%lld", rx_f - rx_delta_f);
+		cmd += " ";
+		cmd += b;
+		fprintf( stderr, "Set band: %s\n", cmd.ascii());
+		system(cmd.ascii());
+	}
 }
 
 void Main_Widget::band_UP ( int )
@@ -3158,6 +3390,7 @@ void Main_Widget::toggle_TX ( int )
 			trxFrame->setPaletteBackgroundPixmap ( *rxPix );
 			set_MUTE ( 0 );
 		} else {
+			// if enableSPLIT   set USBSoftrock frequency
 			transmit = 1;
 			pUSBCmd->sendCommand ("set ptt on\n" );
 			pTXCmd->sendCommand ("setTRX 1\n");
@@ -3170,12 +3403,72 @@ void Main_Widget::toggle_TX ( int )
 	}
 }
 
+void Main_Widget::set_RIT ( int state )
+{
+	enableRIT = state;
+	if ( enableRIT ) {
+		RIT_label->setBackgroundColor ( QColor ( 0, 0, 150 ) );
+		set_SPLIT( 0 );
+		tx_f = rx_f;
+		tx_delta_f = rx_delta_f;
+	} else {
+		RIT_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+		rit->setText( "" );
+	}
+}
+
+void Main_Widget::toggle_RIT ( int )
+{
+	set_RIT(!enableRIT);
+}
+
+void Main_Widget::set_SPLIT ( int state )
+{
+	enableSPLIT = state;
+	if ( enableSPLIT ) {
+		SPLIT_label->setBackgroundColor ( QColor ( 0, 0, 150 ) );
+		set_RIT( 0 );
+		tx_f_string.sprintf ("%11.6lf", 
+			( double ) ( tx_f - tx_delta_f ) / 1000000.0 );
+		fprintf(stderr, "set_SPLIT %s\n", tx_f_string.ascii());
+		rit->setText( tx_f_string );
+	} else {
+		SPLIT_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+		rit->setText( "" );
+	}
+}
+
+void Main_Widget::toggle_SPLIT ( int )
+{
+	tx_f = rx_f;
+	tx_delta_f = rx_delta_f;
+	set_SPLIT(!enableSPLIT);
+}
+
+
 void Main_Widget::readMem ( MemoryCell *m )
 {
-printf("readMem %d\n", m->getID());
-	setMode ( ( rmode_t ) m->getMode(), FALSE );
-	rx_delta_f = m->getFrequency();
-	setRxFrequency();
+	printf("readMem %d = %lld %lld\n", m->getID(), m->getFrequency(), m->getTxFrequency());
+	setMode ( ( rmode_t ) m->getMode(), FALSE, FALSE );
+	if ( rock_bound ) {
+		rx_delta_f = m->getFrequency();
+	} else {
+		rx_delta_f = -sample_rate/4;
+		rx_f = m->getFrequency();
+		rx_f += rx_delta_f;
+		fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
+		pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+		tx_f = m->getTxFrequency();
+		set_RIT( 0 );	// do this before set_SPLIT, as it clears the RIT text
+		if (tx_f != 0) {
+			tx_delta_f = -sample_rate/4;
+			tx_f += tx_delta_f;
+			set_SPLIT ( TRUE );
+		} else {
+			set_SPLIT ( FALSE );
+		}
+	}
+	setRxFrequency( 1 );	// >> !rock_bound
 	*filter_l = m->getFilter_l();
 	*filter_h = m->getFilter_h();
 	setFilter();
@@ -3183,8 +3476,18 @@ printf("readMem %d\n", m->getID());
 
 void Main_Widget::writeMem ( MemoryCell *m )
 {
-printf("writeMem %d\n", m->getID());
-	m->setFrequency ( rx_delta_f );
+	//printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
+	//rx_f - rx_delta_f);
+	if (rock_bound) {
+		m->setFrequency ( rx_delta_f );
+	} else {
+		m->setFrequency ( rx_f - rx_delta_f );
+		if (enableSPLIT) {
+			m->setTxFrequency ( tx_f - tx_delta_f );
+		} else {
+			m->setTxFrequency ( 0 );
+		}
+	}
 	m->setMode ( mode );
 	m->setFilter ( *filter_l, *filter_h );
 }
@@ -3201,7 +3504,7 @@ void Main_Widget::displayNCO ( int x )
 {
 	int pb_f;
 	char temp[20];
-	static float bin_bw = sample_rate/(float)DEFSPEC;
+	float bin_bw = sample_rate/(float)spec_width;
 	pb_f = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
 	sprintf ( temp, "%d", pb_f );
 	M_label->setText ( temp );
@@ -3210,7 +3513,7 @@ void Main_Widget::displayNCO ( int x )
 void Main_Widget::updateCallsign()
 {
 	stationCallsign = cfgCallInput->text();
-	setCaption ( "SDR-Shell v3d @ " + stationCallsign );
+	setCaption ( "SDR-Shell rxtx.4 @ " + stationCallsign );
 }
 
 void Main_Widget::updateLOFreq()
@@ -3218,7 +3521,7 @@ void Main_Widget::updateLOFreq()
 	rx_f = cfgLOFreqInput->text().toLongLong();
 	rx_f_string = cfgLOFreqInput->text();
 	if ( useIF ) setDefaultRxFrequency();
-	else setRxFrequency();
+	else setRxFrequency( 1 );	// >> !rock_bound
 }
 
 void Main_Widget::updateIFreq()
@@ -3261,10 +3564,16 @@ void Main_Widget::updateTxIQPhase ( int phase )
 	setTxIQPhase();
 }
 
-void Main_Widget::updateTxGain ( int gain )
+void Main_Widget::updateTxMicGain ( int gain )
+{
+	micGain = gain;
+	setTxGain( 0 );
+}
+
+void Main_Widget::updateTxOutputGain ( int gain )
 {
 	txGain = gain;
-	setTxGain();
+	setTxGain( 1 );
 }
 
 void Main_Widget::setPolyFFT ( int state )
@@ -3363,6 +3672,13 @@ void Main_Widget::updateUseUSBsoftrock ( bool value )
 		value ? "enabled" : "disabled");
 }
 
+void Main_Widget::updateDualConversion ( bool value )
+{
+	dualConversion =  value;
+	fprintf ( stderr, "DualConversion: %s\n", 
+		value ? "enabled" : "disabled");
+}
+
 void Main_Widget::updateTransmit ( bool value )
 {
 	enableTransmit = value;
@@ -3370,7 +3686,8 @@ void Main_Widget::updateTransmit ( bool value )
 		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
-		setTxGain();
+		setTxGain( 0 );
+		setTxGain( 1 );
 		setTxFrequency();
 	} else {
 		pTXCmd->off();

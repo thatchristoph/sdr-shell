@@ -32,6 +32,11 @@ void MemoryCell::setFrequency( long long int f )
     frequency = f;
 }
 
+void MemoryCell::setTxFrequency( long long int f )
+{
+    txFrequency = f;
+}
+
 int MemoryCell::getID()
 {
     return id;
@@ -57,11 +62,16 @@ long long int MemoryCell::getFrequency()
     return frequency;
 }
 
+long long int MemoryCell::getTxFrequency()
+{
+    return txFrequency;
+}
+
 void MemoryCell::mouseReleaseEvent ( QMouseEvent *e )
 {
     if ( e->state() == LeftButton )
         emit read( this );
-    else if ( e->state() == MidButton )
+    else if ( e->state() == RightButton )
         emit write( this );
 }
 
