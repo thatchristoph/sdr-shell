@@ -56,6 +56,12 @@ On Ubuntu 8.10:
 sudo apt-get install liblo0ldbl  liblo0-dev
 }}}
 
+On Ubuntu 10.04:
+
+{{{
+sudo apt-get install liblo0-dev
+}}}
+
 === Kernel Paramenters ===
 
 The following steps are needed to use jack with the real-time kernel scheduler:
