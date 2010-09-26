@@ -89,6 +89,12 @@ and call it softrock.rules.
 BUS=="usb", ACTION=="add", SSSYSFS{idVendor}=="16c0", SYSFS{idProduct}=="05dc",
 MODE="660", GROUP="softrock"
 
+Fedora 12+ and may be 11, openSUSE 11+, Ubuntu 9.10+ needs below
+SUBSYSTEM=3D=3D"usb", ACTION=3D=3D"add", ATTR{idVendor}=3D=3D"16c0",=20
+ATTR{idProduct}=3D=3D"05dc", MODE=3D"0660", GROUP=3D"admin", SYMLINK=3D"sof=
+trock"
+
+
 the group "softrock" must exist in /etc/group, or substitute another group
 name.
 

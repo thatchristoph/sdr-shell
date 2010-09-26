@@ -16,9 +16,11 @@ class Spectrum : public QWidget
     protected:
         void mouseReleaseEvent( QMouseEvent * );
         void mouseMoveEvent( QMouseEvent * );
+	void wheelEvent(QWheelEvent *event);
 
     signals:
 		void movement( int );
 		void tune( int );
+        	void tune2( int );
 };
 #endif
