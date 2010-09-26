@@ -23,7 +23,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	slopeTuneOffset = 0;
 	loadSettings();
 
-	setCaption ( "SDR-Shell rxtx.4 @ " + stationCallsign );
+	setCaption ( "SDR-Shell rxtx.5 @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -95,6 +95,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	          this, SLOT ( f_at_mousepointer ( int ) ) );
 	connect ( spectrumFrame, SIGNAL ( tune ( int ) ),
 	          this, SLOT ( spectrogramClicked ( int ) ) );
+	connect ( spectrumFrame, SIGNAL ( tune2 ( int ) ),
+	          this, SLOT ( tune ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// Control Frame
@@ -120,9 +122,9 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Configuration Frame
 
 	cfgFrame = new QFrame();
-	cfgFrame->setGeometry ( 50, 50, 360, 400 );
-	cfgFrame->setMinimumWidth ( 360 );
-	cfgFrame->setMaximumWidth ( 360 );
+	cfgFrame->setGeometry ( 50, 50, 380, 400 );
+	cfgFrame->setMinimumWidth ( 380 );
+	cfgFrame->setMaximumWidth ( 380 );
 	cfgFrame->setMinimumHeight ( 500 );
 	cfgFrame->setMaximumHeight ( 500 );
 	cfgFrame->setCaption ( "SDR-Shell : Config" );
@@ -131,6 +133,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	QFrame *cfgFrame2 = new QFrame();
 	QFrame *cfgFrame3 = new QFrame();
 	QFrame *cfgFrame6 = new QFrame();
+	QFrame *cfgFrame7 = new QFrame();
 	QFrame *cfgFrame4 = new QFrame();
 	QFrame *cfgFrame5 = new QFrame();
 
@@ -140,6 +143,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	configTab->addTab ( cfgFrame2, "IQ" );
 	configTab->addTab ( cfgFrame3, "Spectrum" );
 	configTab->addTab ( cfgFrame6, "IF" );
+	configTab->addTab ( cfgFrame7, "TX" );
 	configTab->addTab ( cfgFrame4, "Help" );
 	configTab->addTab ( cfgFrame5, "About" );
 	configTab->setGeometry ( 2, 2,
@@ -228,18 +232,6 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	connect ( metrCalSpinBox, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( calibrateMetr ( int ) ) );
 
-	// Transmit Enable
-	QGroupBox *cfgTXBox = new QGroupBox ( cfgFrame1 );
-	cfgTXBox->setTitle ( "Transmit" );
-	cfgTXBox->setGeometry ( 5, 225, 340, 45 );
-
-	QRadioButton *cfgTransmit = new QRadioButton ( cfgTXBox );
-	cfgTransmit->setText ( "Enable transmit" );
-	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
-	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
-	          this, SLOT ( updateTransmit ( bool ) ) );
-	cfgTransmit->setChecked ( enableTransmit );
-
 	// IQ Phase Calibration
 	QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
 	cfgIQCal->setTitle ( "RX IQ Calibration" );
@@ -303,37 +295,6 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgTxIQGainInput->setValue ( txIQGain );
 	connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxIQGain ( int ) ) );
-
-	// TX Microphone Gain and Output Gain
-	QGroupBox *cfgTxGain = new QGroupBox ( cfgFrame2 );
-	cfgTxGain->setTitle ( "TX Gain" );
-	cfgTxGain->setGeometry ( 5, 100, 340, 45 );
-
-	QLabel *cfgTxMicGainLabel = new QLabel ( cfgTxGain );
-	cfgTxMicGainLabel->setText ( "Mic Gain: " );
-	cfgTxMicGainLabel->setGeometry ( 10, 18, 70, 20 );
-	cfgTxMicGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-
-	cfgTxMicGainInput = new QSpinBox ( cfgTxGain );
-	cfgTxMicGainInput->setGeometry ( 80, 18, 70, 20 );
-	cfgTxMicGainInput->setMinValue ( -255 );
-	cfgTxMicGainInput->setMaxValue ( 255 );
-	cfgTxMicGainInput->setValue ( micGain );
-	connect ( cfgTxMicGainInput, SIGNAL ( valueChanged ( int ) ),
-	          this, SLOT ( updateTxMicGain ( int ) ) );
-
-	QLabel *cfgTxOutputGainLabel = new QLabel ( cfgTxGain );
-	cfgTxOutputGainLabel->setText ( "Out Gain: " );
-	cfgTxOutputGainLabel->setGeometry ( 175, 18, 70, 20 );
-	cfgTxOutputGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-
-	cfgTxOutputGainInput = new QSpinBox ( cfgTxGain );
-	cfgTxOutputGainInput->setGeometry ( 245, 18, 70, 20 );
-	cfgTxOutputGainInput->setMinValue ( -255 );
-	cfgTxOutputGainInput->setMaxValue ( 255 );
-	cfgTxOutputGainInput->setValue ( txGain );
-	connect ( cfgTxOutputGainInput, SIGNAL ( valueChanged ( int ) ),
-	          this, SLOT ( updateTxOutputGain ( int ) ) );
 
 	// Polyphase FFT
 	QButtonGroup *cfgPolyFFTGroup = new QButtonGroup ( cfgFrame3 );
@@ -570,6 +531,51 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgMuteXmitHamlib->setChecked ( useHamlib );
 	connect ( cfgMuteXmitHamlib, SIGNAL ( toggled ( bool ) ),
 		  this, SLOT ( setMuteXmit ( bool ) ) );
+
+	// Transmit Tab
+	// Transmit Enable
+	QGroupBox *cfgTXBox = new QGroupBox ( cfgFrame7 );
+	cfgTXBox->setTitle ( "Transmit" );
+	cfgTXBox->setGeometry ( 5, 5, 340, 45 );
+
+	QRadioButton *cfgTransmit = new QRadioButton ( cfgTXBox );
+	cfgTransmit->setText ( "Enable transmit" );
+	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
+	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
+	          this, SLOT ( updateTransmit ( bool ) ) );
+	cfgTransmit->setChecked ( enableTransmit );
+
+	// TX Microphone Gain and Output Gain
+	QGroupBox *cfgTxGain = new QGroupBox ( cfgFrame7 );
+	cfgTxGain->setTitle ( "TX Gain" );
+	cfgTxGain->setGeometry ( 5, 50, 340, 45 );
+
+	QLabel *cfgTxMicGainLabel = new QLabel ( cfgTxGain );
+	cfgTxMicGainLabel->setText ( "Mic Gain: " );
+	cfgTxMicGainLabel->setGeometry ( 10, 18, 70, 20 );
+	cfgTxMicGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxMicGainInput = new QSpinBox ( cfgTxGain );
+	cfgTxMicGainInput->setGeometry ( 80, 18, 70, 20 );
+	cfgTxMicGainInput->setMinValue ( -255 );
+	cfgTxMicGainInput->setMaxValue ( 255 );
+	cfgTxMicGainInput->setValue ( micGain );
+	connect ( cfgTxMicGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxMicGain ( int ) ) );
+
+	QLabel *cfgTxOutputGainLabel = new QLabel ( cfgTxGain );
+	cfgTxOutputGainLabel->setText ( "Out Gain: " );
+	cfgTxOutputGainLabel->setGeometry ( 175, 18, 70, 20 );
+	cfgTxOutputGainLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+
+	cfgTxOutputGainInput = new QSpinBox ( cfgTxGain );
+	cfgTxOutputGainInput->setGeometry ( 245, 18, 70, 20 );
+	cfgTxOutputGainInput->setMinValue ( -255 );
+	cfgTxOutputGainInput->setMaxValue ( 255 );
+	cfgTxOutputGainInput->setValue ( txGain );
+	connect ( cfgTxOutputGainInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateTxOutputGain ( int ) ) );
+
 	
 	// About
 	QTextEdit *helpText = new QTextEdit ( cfgFrame4 );
@@ -869,6 +875,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f2_cell->setGeometry ( 22, 1, 20, 15 );
 	f2_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f2_cell->setText ( "F2" );
+	f1_cell->setID ( 2 );
 	connect ( f2_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f2_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -883,6 +890,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f3_cell->setGeometry ( 43, 1, 20, 15 );
 	f3_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f3_cell->setText ( "F3" );
+	f1_cell->setID ( 3 );
 	connect ( f3_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f3_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -897,6 +905,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f4_cell->setGeometry ( 64, 1, 20, 15 );
 	f4_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f4_cell->setText ( "F4" );
+	f1_cell->setID ( 4 );
 	connect ( f4_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f4_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -911,6 +920,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f5_cell->setGeometry ( 85, 1, 20, 15 );
 	f5_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f5_cell->setText ( "F5" );
+	f1_cell->setID ( 5 );
 	connect ( f5_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f5_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -925,6 +935,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f6_cell->setGeometry ( 106, 1, 20, 15 );
 	f6_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f6_cell->setText ( "F6" );
+	f1_cell->setID ( 6 );
 	connect ( f6_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f6_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -939,6 +950,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f7_cell->setGeometry ( 127, 1, 20, 15 );
 	f7_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f7_cell->setText ( "F7" );
+	f1_cell->setID ( 7 );
 	connect ( f7_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f7_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -953,6 +965,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	f8_cell->setGeometry ( 148, 1, 20, 15 );
 	f8_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	f8_cell->setText ( "F8" );
+	f1_cell->setID ( 8 );
 	connect ( f8_cell, SIGNAL ( read ( MemoryCell * ) ),
 	          this, SLOT ( readMem ( MemoryCell * ) ) );
 	connect ( f8_cell, SIGNAL ( write ( MemoryCell * ) ),
@@ -1082,7 +1095,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	CFG_label = new Varilabel ( ctlFrame2 );
 	CFG_label->setFont ( *font1 );
-	CFG_label->setText ( "CFG" );
+	CFG_label->setText ( "Help & CFG" );
 	CFG_label->setPaletteForegroundColor ( QColor ( 255,255,255 ) );
 	CFG_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
 	CFG_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
@@ -1094,7 +1107,6 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	CPU_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
 	CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
-//	ctlFrame1->setGeometry ( 1, 1, 661, 31 );
 	ctlFrame1->setGeometry ( 1, 1, 641, 31 );
 	signalFrame->setGeometry ( 1, 3, 170, 27 );
 	dBmLabel->setGeometry ( 140, 14, 35, 12 );
@@ -1409,9 +1421,9 @@ void Main_Widget::updateLayout()
 	    15 );
 	CFG_label->setGeometry (
 	    ctlFrame2->width() - CPU_label->width() -
-	    font1Metrics->maxWidth() * 4 - 2,
+	    font1Metrics->maxWidth() * 11 - 2,
 	    1,
-	    font1Metrics->maxWidth() * 4,
+	    font1Metrics->maxWidth() * 11,
 	    15 );
 	Spacer_label->setGeometry (
 	    AGC_label->x() + AGC_label->width() + 1,
@@ -2188,6 +2200,11 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			once = 1;
 			fprintf(stderr, "spec_width=%d\n", spec_width);
 			break;
+		case '8':
+			spec_width = DEFSPEC/8;
+			once = 1;
+			fprintf(stderr, "spec_width=%d\n", spec_width);
+			break;
 		case 4096:
 			finish();
 			break;
@@ -2848,6 +2865,23 @@ void Main_Widget::readSpectrum()
 	} else {
 		pSpectrum->fetch (&stamp, &label, raw_spectrum, DEFSPEC);
 
+		// spectrum from dttsp is centered at Osc.
+		// if Osc != 0, then some bins on one end are wrapped data.  Zero them.
+		// this is only a visible problem when scaling the data...
+#if 0
+		if (rx_delta_f < 0) {
+			float bin_bw = sample_rate/(float)DEFSPEC;
+			a = abs(rx_delta_f) / bin_bw;
+			j = DEFSPEC - (int)a;
+			if (once)
+				printf("Osc=%d bins=%.1f j=%d\n",
+					rx_delta_f, a, j);
+			for(; j < DEFSPEC; j++) {
+				raw_spectrum[j] = 0;
+			}
+		}
+#endif
+
 		// resample spectrum to be smaller
 		// use the max value of N samples
 		// j = raw sample index
@@ -2867,6 +2901,8 @@ void Main_Widget::readSpectrum()
 		for ( ; k < DEFSPEC; k++) {
 			spectrum[k] = 0;
 		}
+		// if the dttsp Osc frequency is not zero, one end or the other has
+		// wrapped data.
 	}
 
 	drawSpectrogram();
@@ -2875,22 +2911,24 @@ void Main_Widget::readSpectrum()
 
 void Main_Widget::drawSpectrogram()
 {
-	int x, x1, x2;
+	int x, x1, x2, x3, x4;
 	static int y = 0;
 	int pwr;
 	float pwr_range;
+	float bin_bw = sample_rate/(float)spec_width;
 
 	pwr_range = specApertureHigh - specApertureLow;
 
 	QImage spectrogramLine ( spectrogram->width(), 1 , 32 );
 
+	x3 = 0;
 	x1 = spec_width/2 - spectrogram->width() /2;
+	if (x1 < 0) {
+		x3 = abs(x1);
+		x1 = 0;
+	}
 	x2 = x1 + spectrogram->width();
-//	if (once) {
-//		fprintf(stderr, "x1=%d x2=%d w1=%d w2=%d\n", x1, x2,
-//			spectrogram->width(), spec_width);
-//		once = 0;
-//	}
+	x4 = spec_width;
 
 	if (spectrogram->width() > spec_width) {
 		x2 = spec_width;
@@ -2898,6 +2936,12 @@ void Main_Widget::drawSpectrogram()
 		for ( x = 0; x < spectrogram->width(); x++ ) {
 			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x );
 			*p = rgb;
+		}
+		// spectrum from dttsp is centered at Osc.  When Osc is not zero, some of
+		// the spectrum will be above the width or below zero.  dttps returns
+		// sort of mirrored data.  Don't show it.
+		if (rx_delta_f < 0) {
+			x4 = spec_width - (abs(rx_delta_f) / bin_bw);
 		}
 	}
 
@@ -2918,28 +2962,40 @@ void Main_Widget::drawSpectrogram()
 		if ( x >= x1 && x < x2 )
 		{
 			// Set the pixel color
-			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x - x1 );
+			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x - x1 + x3 );
 			*p = qRgb ( spec_r[pwr], spec_g[pwr], spec_b[pwr] );
 
 			// Turn on vertical filter line
 			if ( filterLine &&
-			        ( x - x1 ) == spectrogram->width() / 2 +
+			        ( x - x1 + x3 ) == spectrogram->width() / 2 +
 			        ( int ) ( *filter_l / ( sample_rate/(float) spec_width ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
 
 			if ( filterLine &&
-			        ( x - x1 ) == spectrogram->width() / 2 +
+			        ( x - x1 + x3 ) == spectrogram->width() / 2 +
 			        ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ) )
 			{
 				*p = qRgb ( 100, 255, 100 );
 			}
 
 			// Set the center mark
-			if ( ( x - x1 ) == spectrogram->width() / 2 )
+			if ( ( x - x1 + x3 ) == spectrogram->width() / 2 )
 				*p = qRgb ( 255,0,0 );
+			if ( x == x4 )
+				*p = qRgb (0, 255, 0);
 		}
+	}
+
+	if (once) {
+		fprintf(stderr, "width=%d wwidth=%d x1=%d x2=%d x3=%d bin_bw=%f\n",
+			spec_width, spectrogram->width(), x1, x2, x3, bin_bw);
+		fprintf(stderr, "  Osc=%d bins=%.1f stop=%d x4=%d\n",
+			rx_delta_f, 
+			rx_delta_f / bin_bw,
+			(int)(spec_width - (abs(rx_delta_f) / bin_bw)),
+			x4);
 	}
 
 	spectrum_head = y;
@@ -3021,12 +3077,15 @@ void Main_Widget::plotSpectrum ( int y )
 	pix.fill ( QColor ( 0,0,0 ) );
 
 	x1 = spec_width/2 - spectrogram->width() /2;
-	x2 = x1 + spectrogram->width();
-	if (x2 > spec_width)
-		x2 = spec_width;
+	if (x1 >= 0) {
+		x2 = x1 + spectrogram->width();
+	} else {
+		x2 = spec_width + abs(x1);
+	}
 	kHz_step = 1000 / ( sample_rate / (float)spec_width );
 	if (once) {
-		fprintf(stderr, "bin_bw=%4.4f f1=%d f2=%d x1=%d x2=%d\n", bin_bw, f1, f2, x1, x2);
+		fprintf(stderr, "bin_bw=%4.4f width=%d f1=%d f2=%d x1=%d x2=%d\n",
+			bin_bw, spectrogram->width(), f1, f2, x1, x2);
 		once = 0;
 	}
 
@@ -3152,12 +3211,16 @@ void Main_Widget::spectrogramClicked ( int x )
 		}
 		else
 		{
-		 /* fprintf (stderr,"Before, the rx_f sent to the usb is %f MHz. and rx_delta_f is %f KHz.",rx_f*1e-6, rx_delta_f*1e-3);
-		  rx_f = rx_f - rx_delta_f + sample_rate/4;
-		  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
-		  fprintf (stderr,"The rx_f sent to the usb is %f MHz.",rx_f*1e-6); */
+	 /*	  fprintf (stderr,"Before, the rx_f sent to the usb is %f MHz. and rx_delta_f is %f KHz.",rx_f*1e-6, rx_delta_f*1e-3);
+	  *	  rx_f = rx_f - rx_delta_f + sample_rate/4;
+	  *	  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
+	  *	  fprintf (stderr,"The rx_f sent to the usb is %f MHz.",rx_f*1e-6); */
 
+		  // Clicking re-tunes the synth and osc.  Set osc to center.
+		  rx_f -= rx_delta_f;
+		  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
 		  rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
+		  rx_f += rx_delta_f;
 		}
 		setRxFrequency( 1 );	// >> !rock_bound
 	}
@@ -3183,7 +3246,7 @@ void Main_Widget::tune ( int x )
 	// f_limit = sample_rate / 2 - spectrogram->width() / 2
 
 	// use usbsoftrock if the tuning step is large enough
-	if ( x > 10000) {
+	if ( x > 10000 || x < -10000 ) {
 		rx_delta_f = -sample_rate/4;
 		rx_f = rx_f + x;
 		setRxFrequency( 1 );	// >> !rock_bound
@@ -3476,8 +3539,8 @@ void Main_Widget::readMem ( MemoryCell *m )
 
 void Main_Widget::writeMem ( MemoryCell *m )
 {
-	//printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
-	//rx_f - rx_delta_f);
+	printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
+		rx_f - rx_delta_f);
 	if (rock_bound) {
 		m->setFrequency ( rx_delta_f );
 	} else {
@@ -3495,9 +3558,9 @@ void Main_Widget::writeMem ( MemoryCell *m )
 void Main_Widget::displayMem ( MemoryCell *m )
 {
 	char temp[20];
-	sprintf ( temp, "%lf", ( double ) ( rx_f - m->getFrequency() ) / 1000000.0 );
+	sprintf ( temp, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
 	M_label->setText ( temp );
-printf("displayMem %d\n", m->getID());
+printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 }
 
 void Main_Widget::displayNCO ( int x )

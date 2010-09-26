@@ -1,0 +1,111 @@
+Installation Instructions for sdr-shell-v2 RXTX branch.
+
+Distribution Specific Instructions
+
+Fedora 13
+
+(1) Install prerequisite packages with:
+
+  sudo yum install libtool fftw-devel gsl-devel qt3-devel liblo-devel hamlib
+
+answer 'yes' to the dependencies.  Sorry, but hamlib really does require
+200mb of disk space.
+
+(2) Run 'qmake' to build the Makefile, then 'make' to build sdr-shell.
+
+(3) Add yourself to the jackusers group in /etc/group.
+
+
+Ubuntu
+
+(1) Install prerequisite packages with:
+
+sudo apt-get install build-essential
+sudo apt-get install subversion
+sudo apt-get install hamlib-dev
+sudo apt-get install qt3-dev-tools
+sudo apt-get install libsamplerate0-dev
+sudo apt-get install libasound2-dev
+sudo apt-get install libfreebob0-dev
+sudo apt-get install libffado-dev
+sudo apt-get install libsndfile-dev
+sudo apt-get install libcelt-dev
+sudo apt-get install libreadline-dev
+sudo apt-get install autoconf automake
+sudo apt-get install manpages-dev
+sudo apt-get install fftw3 fftw3-dev libgsl0-dev
+sudo apt-get install liblo0ldbl liblo0-dev
+sudo apt-get install linux-rt
+
+(2) Run 'qmake' to build the Makefile, then 'make' to build sdr-shell.
+
+(3) Install jack2
+
+svn co http://subversion.jackaudio.org/jack/jack2/trunk/jackmp
+cd jackmp
+./waf configure --alsa --firewire --freebob
+./waf build
+sudo ./waf install
+
+The following steps are needed to use jack with the real-time kernel scheduler:
+
+sudo su -c 'echo @audio - rtprio 99 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - memlock 250000 >> /etc/security/limits.conf'
+sudo su -c 'echo @audio - nice -10 >> /etc/security/limits.conf'
+
+sudo usermod -G audio -a <user>
+
+Replace <user> by your login_id. The system needs to be rebooted for the
+changes to take effect.
+
+
+All Linux Systems
+
+The following udev rules works well to allow the group softrock to use
+usbsoftrock without root privileges. You can put it in /etc/udev/rules.d
+and call it softrock.rules.
+
+BUS=="usb", ACTION=="add", SSSYSFS{idVendor}=="16c0", SYSFS{idProduct}=="05dc",
+MODE="660", GROUP="softrock"
+
+Fedora 12+ and may be 11, openSUSE 11+, Ubuntu 9.10+ needs below
+SUBSYSTEM=3D=3D"usb", ACTION=3D=3D"add", ATTR{idVendor}=3D=3D"16c0",=20
+ATTR{idProduct}=3D=3D"05dc", MODE=3D"0660", GROUP=3D"admin", SYMLINK=3D"sof=
+trock"
+
+the group "softrock" must exist in /etc/group, or substitute another group
+name.
+
+
+Building for OSX 10.6
+
+When setting up to build for OSX, I wanted to use the fink and macports tools
+to get the prerequisite packages.  I had very limited success in getting usable
+prerequisites.  Both fink and macports build their packages in 32-bit (x86)
+mode, while the compiler default on 10.6 is now 64 bit (x86_64) mode.  In order
+to build against its packages requires setting:
+
+	PATH=/sw/var/lib/fink/path-prefix-10.6:$PATH
+
+Note that qt3mac from both package systems does not build on OSX 10.6 (it did
+build on 10.5) and there doesn't appear to be anyone working on it.  Instead, I
+selected 'qt3', which uses x11.
+
+In all, I believe these packages were for building dttsp and sdr-shell:
+  fink:
+	qt3
+  mac ports:
+ 	fftw-3 @3.2.2_0+i386 (active)
+	fftw-3-single @3.2.2_0+i386 (active)
+	gsl @1.13_1+darwin_i386 (active)
+
+The more packages were built from source using the instructions in:
+
+  http://groups.yahoo.com/group/dttsp-linux/files/build-dttsp.sh 
+
+I also had to build hamlib-1.2.9 (I recall having to do something ugly to
+hamlib to get it to compile -- it probably doesn't work).
+
+Get the JACK Audio Connection Kit from from jackosx.com.  I've never
+gotten the JACK in fink or macports to work.
+
