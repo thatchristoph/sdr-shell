@@ -861,7 +861,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	  f_cell[i]->setPaletteBackgroundColor (QColor(0, 0, 0));
 	  f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
 	  f_cell[i]->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
-	  sprintf(buffer, "F%d", (i+1));
+	  snprintf(buffer, 256, "F%d", (i+1));
 	  f_cell[i]->setText (buffer);
 	  f_cell[i]->setID (i+1);
 	  connect(f_cell[i], SIGNAL(read(MemoryCell *)),
@@ -1392,7 +1392,7 @@ void Main_Widget::loadSettings()
 	rx_f_string = settings.readEntry (
 	                  "/sdr-shell/rx_f", "14046000" );
 	useIF = ( bool ) settings.readEntry (
-	            "/sdr-shell/useIF", "1" ).toInt();
+	            "/sdr-shell/useIF", "0" ).toInt();
 	useSlopeTune = ( bool ) settings.readEntry (
 		  "/sdr-shell/useSlopeTune", "0" ).toInt();
 	muteXmit = ( bool ) settings.readEntry (
@@ -1538,28 +1538,28 @@ void Main_Widget::loadMemoryCells()
 	// Restore memory cells
 	for(int i=0; i<NUM_MEMS; i++) {
 	  char buffer[256], buffer2[256];
-	  sprintf(buffer, "/sdr-shell/f%d_frequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
 	  f_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
-	  sprintf(buffer, "/sdr-shell/f%d_txfrequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_txfrequency", i+1);
 	  f_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
-	  sprintf(buffer, "/sdr-shell/f%d_mode", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
 	  f_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
-	  sprintf(buffer, "/sdr-shell/f%d_filter_l", i+1);
-	  sprintf(buffer2, "/sdr-shell/f%d_filter_h", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
+	  snprintf(buffer2, 256, "/sdr-shell/f%d_filter_h", i+1);
 	  f_cell[i]->setFilter(settings.readEntry(buffer, "20").toInt(),
 			       settings.readEntry(buffer2, "2400").toInt());
 	}
 
 	for (int i=0; i<NUM_BANDMEMS; i++) {
 	  char buffer[256], buffer2[256];
-	  sprintf(buffer, "/sdr-shell/b%d_frequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
 	  band_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
-	  sprintf(buffer, "/sdr-shell/b%d_txfrequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
 	  band_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
-	  sprintf(buffer, "/sdr-shell/b%d_mode", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
 	  band_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
-	  sprintf(buffer, "/sdr-shell/b%d_filter_l", i+1);
-	  sprintf(buffer2, "/sdr-shell/b%d_filter_h", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
+	  snprintf(buffer2, 256, "/sdr-shell/b%d_filter_h", i+1);
 	  band_cell[i]->setFilter(settings.readEntry(buffer, "20" ).toInt(),
 			      settings.readEntry(buffer2, "2400" ).toInt() );
 	}
@@ -1653,41 +1653,41 @@ void Main_Widget::saveSettings()
 	for (int i=0; i<NUM_MEMS; i++) {
 	  char buffer[256];
 
-	  sprintf(buffer, "/sdr-shell/f%d_frequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
 	  f_string.sprintf("%lld", f_cell[i]->getFrequency());
 	  settings.writeEntry (buffer, f_string);
 
-	  sprintf(buffer, "/sdr-shell/f%d_mode", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
 	  settings.writeEntry(buffer, f_cell[i]->getMode());
 
-	  sprintf(buffer, "/sdr-shell/f%d_filter_l", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
 	  settings.writeEntry(buffer, f_cell[i]->getFilter_l());
 
-	  sprintf(buffer, "/sdr-shell/f%d_filter_h", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_h", i+1);
 	  settings.writeEntry(buffer, f_cell[i]->getFilter_h());
 	}
 
 	for (int i=0; i<NUM_BANDMEMS; i++) {
 	  char buffer[256];
 
-	  sprintf(buffer, "/sdr-shell/b%d_frequency", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
 	  f_string.sprintf("%lld", band_cell[i]->getFrequency());
 	  settings.writeEntry (buffer, f_string );
 
 	  if (band_cell[i]->getTxFrequency() != 0) {
-	    sprintf(buffer, "/sdr-shell/b%d_txfrequency", i+1);
+	    snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
 	    f_string.sprintf("%lld", band_cell[i]->getTxFrequency());
 	    settings.writeEntry(buffer, f_string );
 	  }
 
-	  sprintf(buffer, "/sdr-shell/b%d_mode", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
 	  settings.writeEntry (buffer, band_cell[i]->getMode() );
 
 
-	  sprintf(buffer, "/sdr-shell/b%d_filter_l", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
 	  settings.writeEntry(buffer, band_cell[i]->getFilter_l() );
 
-	  sprintf(buffer, "/sdr-shell/b%d_filter_h", i+1);
+	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_h", i+1);
 	  settings.writeEntry(buffer, band_cell[i]->getFilter_h() );
 	}
 
@@ -1992,8 +1992,8 @@ void Main_Widget::process_key ( int key )
 
 void Main_Widget::setOurRxFrequency ( double frequency )
 {
-	char text[20];
-	sprintf ( text, "%11.6lf", ( double ) ( frequency ) / 1000000.0 );
+	char text[32];
+	snprintf ( text, 32, "%11.6lf", ( double ) ( frequency ) / 1000000.0 );
 	displayMutex.lock();
 	lcd->setText(text);
 //	lcd->display ( text );	
@@ -2035,7 +2035,7 @@ void Main_Widget::setRxFrequency( int synth )
 	char text[32];
 	if ( !useIF )
 	{
-		sprintf ( text, "......%11.6lf",
+		snprintf ( text, 32, "......%11.6lf",
 			( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
 		fprintf ( stderr, "Set the frequency: %lld - %d = %11.6lf '%s'\n",
 			rx_f, rx_delta_f, 
@@ -2146,7 +2146,7 @@ void Main_Widget::setUpperFilterScale ( int x )
 void Main_Widget::setCA_label()
 {
 	char text[20];
-	sprintf ( text, "CA: %4d : %4d",
+	snprintf ( text, 20, "CA: %4d : %4d",
 	          ( int ) specApertureLow - 140,
 	          ( int ) specApertureHigh - 140 );
 	CA_label->setText ( text );
@@ -2473,7 +2473,7 @@ void Main_Widget::readMeter()
 	{
 		peak_count = 0;
 		meter_peak = rxm[0];
-		sprintf ( text, "%4d", ( int ) ( rxm[0] - metrCal ) );
+		snprintf ( text, 10, "%4d", ( int ) ( rxm[0] - metrCal ) );
 		signal_dBm->setText ( text );
 	}
 	else
@@ -2693,7 +2693,7 @@ void Main_Widget::drawPassBandScale()
 
 	p.eraseRect ( 0, 0, pbscale->width(), pbscale->height() );
 
-	sprintf ( temp, "%5d", *filter_l );
+	snprintf ( temp, 20, "%5d", *filter_l );
 	p.setPen ( Qt::cyan );
 	p.drawText ( x1 - 11 - font1Metrics->maxWidth() * 5,
 	             font1Metrics->ascent() + 1, temp );
@@ -2705,7 +2705,7 @@ void Main_Widget::drawPassBandScale()
 	p.drawLine ( x1 - 4, 10, x1 - 1, 7 );
 	p.drawLine ( x1, 0, x1, 15 );
 
-	sprintf ( temp, "%-5d", *filter_h );
+	snprintf ( temp, 20, "%-5d", *filter_h );
 	p.setPen ( Qt::cyan );
 	p.drawText ( x2 + 12, font1Metrics->ascent() + 1, temp );
 
@@ -2780,9 +2780,9 @@ void Main_Widget::plotSpectrum ( int y )
 		             font1Metrics->ascent(),
 		             ( int ) rint ( dx ),
 		             spectrumFrame->height() );
-		//sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
+		//snprintf( f_text, 10, "%lf", (double)((rx_f + f) / 1000000.0) );
 		if ((f/1000) % nlabel == 0) {
-			sprintf ( f_text, "%d", f );
+			snprintf ( f_text, 10, "%d", f );
 			p.setPen ( QColor ( 255, 255, 255 ) );
 			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
 		                                     strlen ( f_text ) ) / 2,
@@ -2803,9 +2803,9 @@ void Main_Widget::plotSpectrum ( int y )
 		             font1Metrics->ascent(),
 		             ( int ) rint ( dx ),
 		             spectrumFrame->height() );
-		//sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
+		//snprintf( f_text, 10, "%lf", (double)((rx_f + f) / 1000000.0) );
 		if ((f/1000) % nlabel == 0) {
-			sprintf ( f_text, "%d", f );
+			snprintf ( f_text, 10, "%d", f );
 			p.setPen ( QColor ( 255, 255, 255 ) );
 			//p.drawText( (int)rint(dx) + 2, 10, f_text );
 			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
@@ -2836,9 +2836,9 @@ void Main_Widget::plotSpectrum ( int y )
 	for ( int i = 0; i < 120; i += 20 )
 	{
 		p.setPen ( QColor ( 255, 255, 255 ) );
-		sprintf ( f_text, "%d", -i - 40 );
+		snprintf ( f_text, 10, "%d", -i - 40 );
 		p.drawText ( 2, i + 19, f_text );
-		sprintf ( f_text, "%4d", -i - 40 );
+		snprintf ( f_text, 10, "%4d", -i - 40 );
 		p.drawText ( spectrumFrame->width() -
 		             font1Metrics->maxWidth() * 4 - 2, i + 19, f_text );
 	}
@@ -2889,12 +2889,12 @@ void Main_Widget::spectrogramClicked ( int x )
 void Main_Widget::f_at_mousepointer ( int x )
 {
 	int f;
-	char temp[20];
+	char temp[32];
 
 	f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
 	if ( !rock_bound ) f = f - sample_rate / 4 ;
 
-	sprintf ( temp, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
+	snprintf ( temp, 32, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
 	M_label->setText ( temp );
 }
 
@@ -2934,7 +2934,7 @@ void Main_Widget::processorLoad()
 	double loadavg[3];
 
 	getloadavg ( loadavg, sizeof ( loadavg ) / sizeof ( loadavg[0] ) );
-	sprintf ( tmp, "CPU: %5.2f\n", loadavg[0] );
+	snprintf ( tmp, 20, "CPU: %5.2f\n", loadavg[0] );
 	CPU_label->setText ( tmp );
 }
 
@@ -3195,8 +3195,8 @@ void Main_Widget::writeMem ( MemoryCell *m )
 
 void Main_Widget::displayMem ( MemoryCell *m )
 {
-	char temp[20];
-	sprintf ( temp, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
+	char temp[32];
+	snprintf ( temp, 32, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
 	M_label->setText ( temp );
 printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 }
@@ -3204,10 +3204,10 @@ printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 void Main_Widget::displayNCO ( int x )
 {
 	int pb_f;
-	char temp[20];
+	char temp[32];
 	float bin_bw = sample_rate/(float)spec_width;
 	pb_f = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
-	sprintf ( temp, "%d", pb_f );
+	snprintf ( temp, 32, "%d", pb_f );
 	M_label->setText ( temp );
 }
 

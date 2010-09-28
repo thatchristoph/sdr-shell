@@ -276,7 +276,7 @@ void DttSPTXcmd :: on ( )
 
 void DttSPTXcmd :: setPort ( const int newport )
 {
-    printf("DttSPTXcmd: old port %d new port %d\n", newport);
+    printf("DttSPTXcmd: old port %d new port %d\n", port, newport);
     port = newport;
 }
 
