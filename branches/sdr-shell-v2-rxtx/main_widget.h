@@ -60,6 +60,9 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 
 #define NUM_MODES 12
 
+#define NUM_BANDMEMS 10
+#define NUM_MEMS 8
+
 class Main_Widget : public QWidget
 {
 		Q_OBJECT
@@ -151,25 +154,9 @@ class Main_Widget : public QWidget
 
 		QFrame *logoFrame;
 
-		MemoryCell *f1_cell;
-		MemoryCell *f2_cell;
-		MemoryCell *f3_cell;
-		MemoryCell *f4_cell;
-		MemoryCell *f5_cell;
-		MemoryCell *f6_cell;
-		MemoryCell *f7_cell;
-		MemoryCell *f8_cell;
+		MemoryCell *f_cell[NUM_MEMS];
 
-		MemoryCell *b1_cell;
-		MemoryCell *b2_cell;
-		MemoryCell *b3_cell;
-		MemoryCell *b4_cell;
-		MemoryCell *b5_cell;
-		MemoryCell *b6_cell;
-		MemoryCell *b7_cell;
-		MemoryCell *b8_cell;
-		MemoryCell *b9_cell;
-		MemoryCell *b10_cell;
+		MemoryCell *band_cell[NUM_BANDMEMS];
 
 		QLabel *af1_label;
 		QLabel *af2_label;
