@@ -853,125 +853,24 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// -----------------------------------------------------------------------
 	// Memory Cells
 
-	f1_cell = new MemoryCell ( ctlFrame2 );
-	f1_cell->setFont ( *font1 );
-	f1_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f1_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f1_cell->setGeometry ( 1, 1, 20, 15 );
-	f1_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f1_cell->setText ( "F1" );
-	f1_cell->setID ( 1 );
-	connect ( f1_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f1_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f1_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f2_cell = new MemoryCell ( ctlFrame2 );
-	f2_cell->setFont ( *font1 );
-	f2_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f2_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f2_cell->setGeometry ( 22, 1, 20, 15 );
-	f2_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f2_cell->setText ( "F2" );
-	f1_cell->setID ( 2 );
-	connect ( f2_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f2_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f2_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f3_cell = new MemoryCell ( ctlFrame2 );
-	f3_cell->setFont ( *font1 );
-	f3_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f3_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f3_cell->setGeometry ( 43, 1, 20, 15 );
-	f3_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f3_cell->setText ( "F3" );
-	f1_cell->setID ( 3 );
-	connect ( f3_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f3_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f3_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f4_cell = new MemoryCell ( ctlFrame2 );
-	f4_cell->setFont ( *font1 );
-	f4_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f4_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f4_cell->setGeometry ( 64, 1, 20, 15 );
-	f4_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f4_cell->setText ( "F4" );
-	f1_cell->setID ( 4 );
-	connect ( f4_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f4_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f4_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f5_cell = new MemoryCell ( ctlFrame2 );
-	f5_cell->setFont ( *font1 );
-	f5_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f5_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f5_cell->setGeometry ( 85, 1, 20, 15 );
-	f5_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f5_cell->setText ( "F5" );
-	f1_cell->setID ( 5 );
-	connect ( f5_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f5_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f5_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f6_cell = new MemoryCell ( ctlFrame2 );
-	f6_cell->setFont ( *font1 );
-	f6_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f6_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f6_cell->setGeometry ( 106, 1, 20, 15 );
-	f6_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f6_cell->setText ( "F6" );
-	f1_cell->setID ( 6 );
-	connect ( f6_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f6_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f6_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f7_cell = new MemoryCell ( ctlFrame2 );
-	f7_cell->setFont ( *font1 );
-	f7_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f7_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f7_cell->setGeometry ( 127, 1, 20, 15 );
-	f7_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f7_cell->setText ( "F7" );
-	f1_cell->setID ( 7 );
-	connect ( f7_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f7_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f7_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
-
-	f8_cell = new MemoryCell ( ctlFrame2 );
-	f8_cell->setFont ( *font1 );
-	f8_cell->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	f8_cell->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f8_cell->setGeometry ( 148, 1, 20, 15 );
-	f8_cell->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-	f8_cell->setText ( "F8" );
-	f1_cell->setID ( 8 );
-	connect ( f8_cell, SIGNAL ( read ( MemoryCell * ) ),
-	          this, SLOT ( readMem ( MemoryCell * ) ) );
-	connect ( f8_cell, SIGNAL ( write ( MemoryCell * ) ),
-	          this, SLOT ( writeMem ( MemoryCell * ) ) );
-	connect ( f8_cell, SIGNAL ( display ( MemoryCell * ) ),
-	          this, SLOT ( displayMem ( MemoryCell * ) ) );
+	for (int i=0; i<NUM_MEMS; i++) {
+	  char buffer[256];
+	  f_cell[i] = new MemoryCell(ctlFrame2);
+	  f_cell[i]->setFont(*font1);
+	  f_cell[i]->setPaletteForegroundColor(QColor(255, 255, 255));
+	  f_cell[i]->setPaletteBackgroundColor (QColor(0, 0, 0));
+	  f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
+	  f_cell[i]->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
+	  sprintf(buffer, "F%d", (i+1));
+	  f_cell[i]->setText (buffer);
+	  f_cell[i]->setID (i+1);
+	  connect(f_cell[i], SIGNAL(read(MemoryCell *)),
+		    this, SLOT(readMem(MemoryCell *)));
+	  connect(f_cell[i],SIGNAL(write(MemoryCell *)),
+		    this, SLOT(writeMem(MemoryCell *)));
+	  connect (f_cell[i], SIGNAL(display(MemoryCell *)),
+		    this, SLOT(displayMem(MemoryCell *)));
+	}
 
 	M_label = new QLabel ( ctlFrame2 );
 	M_label->setFont ( *font1 );
@@ -984,26 +883,10 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	    15 );
 	M_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
-	b1_cell = new MemoryCell ( );
-	b2_cell = new MemoryCell ( );
-	b3_cell = new MemoryCell ( );
-	b4_cell = new MemoryCell ( );
-	b5_cell = new MemoryCell ( );
-	b6_cell = new MemoryCell ( );
-	b7_cell = new MemoryCell ( );
-	b8_cell = new MemoryCell ( );
-	b9_cell = new MemoryCell ( );
-	b10_cell = new MemoryCell ( );
-	b1_cell->setID ( 1 );
-	b2_cell->setID ( 2 );
-	b3_cell->setID ( 3 );
-	b4_cell->setID ( 4 );
-	b5_cell->setID ( 5 );
-	b6_cell->setID ( 6 );
-	b7_cell->setID ( 7 );
-	b8_cell->setID ( 8 );
-	b9_cell->setID ( 9 );
-	b10_cell->setID ( 10 );
+	for (int i=0; i<NUM_BANDMEMS; i++) {
+	  band_cell[i] = new MemoryCell();
+	  band_cell[i]->setID(i+1);
+	}
 	band = 1;
 
 	loadMemoryCells();
@@ -1653,185 +1536,33 @@ void Main_Widget::loadMemoryCells()
 	QSettings settings;
 
 	// Restore memory cells
-	f1_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f1_frequency", "0" ).toInt() );
-	f1_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f1_txfrequency", "0" ).toInt() );
-	f1_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f1_mode", "1" ).toInt() );
-	f1_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f1_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f1_filter_h", "2400" ).toInt() );
+	for(int i=0; i<NUM_MEMS; i++) {
+	  char buffer[256], buffer2[256];
+	  sprintf(buffer, "/sdr-shell/f%d_frequency", i+1);
+	  f_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
+	  sprintf(buffer, "/sdr-shell/f%d_txfrequency", i+1);
+	  f_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
+	  sprintf(buffer, "/sdr-shell/f%d_mode", i+1);
+	  f_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
+	  sprintf(buffer, "/sdr-shell/f%d_filter_l", i+1);
+	  sprintf(buffer2, "/sdr-shell/f%d_filter_h", i+1);
+	  f_cell[i]->setFilter(settings.readEntry(buffer, "20").toInt(),
+			       settings.readEntry(buffer2, "2400").toInt());
+	}
 
-	f2_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f2_frequency", "0" ).toInt() );
-	f2_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f2_txfrequency", "0" ).toInt() );
-	f2_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f2_mode", "1" ).toInt() );
-	f2_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f2_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f2_filter_h", "2400" ).toInt() );
-
-	f3_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f3_frequency", "0" ).toInt() );
-	f3_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f3_txfrequency", "0" ).toInt() );
-	f3_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f3_mode", "1" ).toInt() );
-	f3_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f3_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f3_filter_h", "2400" ).toInt() );
-
-	f4_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f4_frequency", "0" ).toInt() );
-	f4_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f4_txfrequency", "0" ).toInt() );
-	f4_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f4_mode", "1" ).toInt() );
-	f4_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f4_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f4_filter_h", "2400" ).toInt() );
-
-	f5_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f5_frequency", "0" ).toInt() );
-	f5_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f5_txfrequency", "0" ).toInt() );
-	f5_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f5_mode", "1" ).toInt() );
-	f5_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f5_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f5_filter_h", "2400" ).toInt() );
-
-	f6_cell->setFrequency ( 
-	    settings.readEntry ( "/sdr-shell/f6_frequency", "0" ).toInt() );
-	f6_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f6_txfrequency", "0" ).toInt() );
-	f6_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f6_mode", "1" ).toInt() );
-	f6_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f6_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f6_filter_h", "2400" ).toInt() );
-
-	f7_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f7_frequency", "0" ).toInt() );
-	f7_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f7_txfrequency", "0" ).toInt() );
-	f7_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f7_mode", "1" ).toInt() );
-	f7_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f7_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f7_filter_h", "2400" ).toInt() );
-
-	f8_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/f8_frequency", "0" ).toInt() );
-	f8_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/f8_txfrequency", "0" ).toInt() );
-	f8_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/f8_mode", "1" ).toInt() );
-	f8_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/f8_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/f8_filter_h", "2400" ).toInt() );
-
-	b1_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b1_frequency", "0" ).toInt() );
-	b1_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b1_txfrequency", "0" ).toInt() );
-	b1_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b1_mode", "1" ).toInt() );
-	b1_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b1_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b1_filter_h", "2400" ).toInt() );
-
-	b2_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b2_frequency", "0" ).toInt() );
-	b2_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b2_txfrequency", "0" ).toInt() );
-	b2_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b2_mode", "1" ).toInt() );
-	b2_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b2_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b2_filter_h", "2400" ).toInt() );
-
-	b3_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b3_frequency", "0" ).toInt() );
-	b3_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b3_txfrequency", "0" ).toInt() );
-	b3_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b3_mode", "1" ).toInt() );
-	b3_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b3_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b3_filter_h", "2400" ).toInt() );
-
-	b4_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b4_frequency", "0" ).toInt() );
-	b4_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b4_txfrequency", "0" ).toInt() );
-	b4_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b4_mode", "1" ).toInt() );
-	b4_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b4_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b4_filter_h", "2400" ).toInt() );
-
-	b5_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b5_frequency", "0" ).toInt() );
-	b5_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b5_txfrequency", "0" ).toInt() );
-	b5_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b5_mode", "1" ).toInt() );
-	b5_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b5_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b5_filter_h", "2400" ).toInt() );
-
-	b6_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b6_frequency", "0" ).toInt() );
-	b6_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b6_txfrequency", "0" ).toInt() );
-	b6_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b6_mode", "1" ).toInt() );
-	b6_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b6_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b6_filter_h", "2400" ).toInt() );
-
-	b7_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b7_frequency", "0" ).toInt() );
-	b7_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b7_txfrequency", "0" ).toInt() );
-	b7_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b7_mode", "1" ).toInt() );
-	b7_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b7_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b7_filter_h", "2400" ).toInt() );
-
-	b8_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b8_frequency", "0" ).toInt() );
-	b8_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b8_txfrequency", "0" ).toInt() );
-	b8_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b8_mode", "1" ).toInt() );
-	b8_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b8_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b8_filter_h", "2400" ).toInt() );
-
-	b9_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b9_frequency", "0" ).toInt() );
-	b9_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b9_txfrequency", "0" ).toInt() );
-	b9_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b9_mode", "1" ).toInt() );
-	b9_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b9_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b9_filter_h", "2400" ).toInt() );
-
-	b10_cell->setFrequency (
-	    settings.readEntry ( "/sdr-shell/b10_frequency", "0" ).toInt() );
-	b10_cell->setTxFrequency (
-	    settings.readEntry ( "/sdr-shell/b10_txfrequency", "0" ).toInt() );
-	b10_cell->setMode ( ( rmode_t )
-	    settings.readEntry ( "/sdr-shell/b10_mode", "1" ).toInt() );
-	b10_cell->setFilter (
-	    settings.readEntry ( "/sdr-shell/b10_filter_l", "20" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/b10_filter_h", "2400" ).toInt() );
+	for (int i=0; i<NUM_BANDMEMS; i++) {
+	  char buffer[256], buffer2[256];
+	  sprintf(buffer, "/sdr-shell/b%d_frequency", i+1);
+	  band_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
+	  sprintf(buffer, "/sdr-shell/b%d_txfrequency", i+1);
+	  band_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
+	  sprintf(buffer, "/sdr-shell/b%d_mode", i+1);
+	  band_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
+	  sprintf(buffer, "/sdr-shell/b%d_filter_l", i+1);
+	  sprintf(buffer2, "/sdr-shell/b%d_filter_h", i+1);
+	  band_cell[i]->setFilter(settings.readEntry(buffer, "20" ).toInt(),
+			      settings.readEntry(buffer2, "2400" ).toInt() );
+	}
 
 	printf ( "::: Memory Cells loading completed\n" );
 }
@@ -1919,117 +1650,46 @@ void Main_Widget::saveSettings()
 	// Save memory cells
 	QString f_string;
 
-	f_string.sprintf ( "%lld", f1_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f1_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f1_mode", f1_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f1_filter_l", f1_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f1_filter_h", f1_cell->getFilter_h() );
+	for (int i=0; i<NUM_MEMS; i++) {
+	  char buffer[256];
 
-	f_string.sprintf ( "%lld", f2_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f2_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f2_mode", f2_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f2_filter_l", f2_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f2_filter_h", f2_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/f%d_frequency", i+1);
+	  f_string.sprintf("%lld", f_cell[i]->getFrequency());
+	  settings.writeEntry (buffer, f_string);
 
-	f_string.sprintf ( "%lld", f3_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f3_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f3_mode", f3_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f3_filter_l", f3_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f3_filter_h", f3_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/f%d_mode", i+1);
+	  settings.writeEntry(buffer, f_cell[i]->getMode());
 
-	f_string.sprintf ( "%lld", f4_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f4_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f4_mode", f4_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f4_filter_l", f4_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f4_filter_h", f4_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/f%d_filter_l", i+1);
+	  settings.writeEntry(buffer, f_cell[i]->getFilter_l());
 
-	f_string.sprintf ( "%lld", f5_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f5_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f5_mode", f5_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f5_filter_l", f5_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f5_filter_h", f5_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", f6_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f6_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f6_mode", f6_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f6_filter_l", f6_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f6_filter_h", f6_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", f7_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f7_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f7_mode", f7_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f7_filter_l", f7_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f7_filter_h", f7_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", f8_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/f8_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/f8_mode", f8_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/f8_filter_l", f8_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/f8_filter_h", f8_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", b1_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b1_frequency", f_string );
-	if (b1_cell->getTxFrequency() != 0) {
-		f_string.sprintf ( "%lld", b1_cell->getTxFrequency() );
-		settings.writeEntry ( "/sdr-shell/b1_txfrequency", f_string );
+	  sprintf(buffer, "/sdr-shell/f%d_filter_h", i+1);
+	  settings.writeEntry(buffer, f_cell[i]->getFilter_h());
 	}
-	settings.writeEntry ( "/sdr-shell/b1_mode", b1_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b1_filter_l", b1_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b1_filter_h", b1_cell->getFilter_h() );
 
-	f_string.sprintf ( "%lld", b2_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b2_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b2_mode", b2_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b2_filter_l", b2_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b2_filter_h", b2_cell->getFilter_h() );
+	for (int i=0; i<NUM_BANDMEMS; i++) {
+	  char buffer[256];
 
-	f_string.sprintf ( "%lld", b3_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b3_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b3_mode", b3_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b3_filter_l", b3_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b3_filter_h", b3_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/b%d_frequency", i+1);
+	  f_string.sprintf("%lld", band_cell[i]->getFrequency());
+	  settings.writeEntry (buffer, f_string );
 
-	f_string.sprintf ( "%lld", b4_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b4_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b4_mode", b4_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b4_filter_l", b4_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/fb_filter_h", b4_cell->getFilter_h() );
+	  if (band_cell[i]->getTxFrequency() != 0) {
+	    sprintf(buffer, "/sdr-shell/b%d_txfrequency", i+1);
+	    f_string.sprintf("%lld", band_cell[i]->getTxFrequency());
+	    settings.writeEntry(buffer, f_string );
+	  }
 
-	f_string.sprintf ( "%lld", b5_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b5_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b5_mode", b5_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b5_filter_l", b5_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b5_filter_h", b5_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/b%d_mode", i+1);
+	  settings.writeEntry (buffer, band_cell[i]->getMode() );
 
-	f_string.sprintf ( "%lld", b6_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b6_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b6_mode", b6_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b6_filter_l", b6_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b6_filter_h", b6_cell->getFilter_h() );
 
-	f_string.sprintf ( "%lld", b7_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b7_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b7_mode", b7_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b7_filter_l", b7_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b7_filter_h", b7_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/b%d_filter_l", i+1);
+	  settings.writeEntry(buffer, band_cell[i]->getFilter_l() );
 
-	f_string.sprintf ( "%lld", b8_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b8_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b8_mode", b8_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b8_filter_l", b8_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b8_filter_h", b8_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", b9_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b9_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b9_mode", b9_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b9_filter_l", b9_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b9_filter_h", b9_cell->getFilter_h() );
-
-	f_string.sprintf ( "%lld", b10_cell->getFrequency() );
-	settings.writeEntry ( "/sdr-shell/b10_frequency", f_string );
-	settings.writeEntry ( "/sdr-shell/b10_mode", b10_cell->getMode() );
-	settings.writeEntry ( "/sdr-shell/b10_filter_l", b10_cell->getFilter_l() );
-	settings.writeEntry ( "/sdr-shell/b10_filter_h", b10_cell->getFilter_h() );
+	  sprintf(buffer, "/sdr-shell/b%d_filter_h", i+1);
+	  settings.writeEntry(buffer, band_cell[i]->getFilter_h() );
+	}
 
 	settings.writeEntry ( "/sdr-shell/hamlib_rig", rigString );
 	settings.writeEntry ( "/sdr-shell/useHamlib", (int) useHamlib );
@@ -3369,35 +3029,13 @@ void Main_Widget::set_SPEC ( int state )
 void Main_Widget::leave_band( int band )
 {
 	fprintf( stderr, "leave band %d\n", band );
-	switch( band ) {
-	case 1:	writeMem ( b1_cell );		break;
-	case 2:	writeMem ( b2_cell );		break;
-	case 3:	writeMem ( b3_cell );		break;
-	case 4:	writeMem ( b4_cell );		break;
-	case 5:	writeMem ( b5_cell );		break;
-	case 6:	writeMem ( b6_cell );		break;
-	case 7:	writeMem ( b7_cell );		break;
-	case 8:	writeMem ( b8_cell );		break;
-	case 9:	writeMem ( b9_cell );		break;
-	case 10: writeMem ( b10_cell );		break;
-	}
+	writeMem( band_cell[band-1] );
 }
 
 void Main_Widget::enter_band(int band)
 {
 	fprintf( stderr, "enter band %d\n", band );
-	switch( band ) {
-	case 1:	readMem ( b1_cell );		break;
-	case 2:	readMem ( b2_cell );		break;
-	case 3:	readMem ( b3_cell );		break;
-	case 4:	readMem ( b4_cell );		break;
-	case 5:	readMem ( b5_cell );		break;
-	case 6:	readMem ( b6_cell );		break;
-	case 7:	readMem ( b7_cell );		break;
-	case 8:	readMem ( b8_cell );		break;
-	case 9:	readMem ( b9_cell );		break;
-	case 10: readMem ( b10_cell );		break;
-	}
+	readMem( band_cell[band-1] );
 
 	if (sdr_band != NULL) {
 		QString cmd = sdr_band;
