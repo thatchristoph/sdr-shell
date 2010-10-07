@@ -306,6 +306,8 @@ PRIVATE int 	reqDump (int n, char **p)
 	Write update command processor output to <path>
 --skewoffs=<+/-num>
 	Correct for audio channel skew by <num>
+--client-name=<Jack Client Name>
+        Set the client name that shows up in Jack.
 --help
  -h
 	Write this message and exit.
