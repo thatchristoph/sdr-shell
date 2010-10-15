@@ -1,6 +1,6 @@
 #include "varilabel.h"
 
-Varilabel::Varilabel(QWidget *parent, const char *name) : QLabel(parent, name)
+Varilabel::Varilabel(QWidget *parent) : QLabel(parent)
 {
 }
 
@@ -28,22 +28,21 @@ void Varilabel::setLabel( int l )
 {
   label = l;
 }
-//
 
 
-
-
-VariModelabel::VariModelabel(QWidget *parent, const char *name) : Varilabel (parent, name)
+VariModelabel::VariModelabel(QWidget *parent) : Varilabel (parent)
 {
 }
 
 void VariModelabel::mouseReleaseEvent ( QMouseEvent *e )
 {
     bool force = 0;
+#if 0
     if (e->state() & ShiftButton) {
 	fprintf( stderr, "VariModelabel mouseReleaseEvent: ShiftButton\n");
 	force = 1;
     }
+#endif
     emit mouseRelease( label, FALSE, force );
 }
 

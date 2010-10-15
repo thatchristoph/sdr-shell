@@ -1,6 +1,6 @@
 #include "memorycell.h"
 
-MemoryCell::MemoryCell(QWidget *parent, const char *name) : QLabel(parent, name)
+MemoryCell::MemoryCell(QWidget *parent) : QLabel(parent)
 {
     id = 0;
     frequency = 0;
@@ -69,9 +69,9 @@ long long int MemoryCell::getTxFrequency()
 
 void MemoryCell::mouseReleaseEvent ( QMouseEvent *e )
 {
-    if ( e->state() == LeftButton )
+    if ( e->button() == Qt::LeftButton )
         emit read( this );
-    else if ( e->state() == RightButton )
+    else if ( e->button() == Qt::MidButton )
         emit write( this );
 }
 

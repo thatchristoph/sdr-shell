@@ -2,14 +2,15 @@
 #define SDXCVR_SPECTROGRAM_H
 
 #include <qwidget.h>
+#include <QMouseEvent>
 
 class Spectrogram : public QWidget
 {
     Q_OBJECT
     
     public:
-        Spectrogram(QWidget *parent = 0, const char *name = 0);
-
+//        Spectrogram(QWidget *parent = 0, const char *name = 0);
+        Spectrogram(QWidget *parent = 0);
     private:
         int mouseMoving;
 

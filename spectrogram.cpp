@@ -1,6 +1,8 @@
+#include <cstdio>
 #include "spectrogram.h"
 
-Spectrogram::Spectrogram(QWidget *parent, const char *name) : QWidget(parent, name)
+//Spectrogram::Spectrogram(QWidget *parent, const char *name) : QWidget(parent, name)
+Spectrogram::Spectrogram(QWidget *parent) : QWidget(parent)
 {
     setMouseTracking( true );
 
@@ -9,11 +11,17 @@ Spectrogram::Spectrogram(QWidget *parent, const char *name) : QWidget(parent, na
 
 void Spectrogram::mouseReleaseEvent( QMouseEvent *e )
 {
-printf("mouseReleaseEvent\n");
-    if ( !mouseMoving && e->state() == LeftButton )
+//printf("spectrogram mouseReleaseEvent \n");
+    if ( !mouseMoving && e->button() == Qt::LeftButton )
+    {
+//     printf("e->x() = %d\n", e->x());
+//     printf("e->gloabalX() = %d\n", e->globalX());     
+//     printf("e->y() = %d\n", e->y());
+//     printf("e->globalY() = %d\n", e->globalY());     
         emit tune1( e->x() );
+        }
 
-    if ( !mouseMoving && e->state() == RightButton )
+    if ( !mouseMoving && e->button() == Qt::RightButton )
         emit plot( e->y() );    
 
     mouseMoving = false;
@@ -21,6 +29,7 @@ printf("mouseReleaseEvent\n");
 
 void Spectrogram::mouseMoveEvent( QMouseEvent *e )
 {
+//printf("spectrogram mouseMoveEvent \n");
     static int x0 = 0;
     int output;
 	
@@ -31,11 +40,11 @@ void Spectrogram::mouseMoveEvent( QMouseEvent *e )
     else
         output = -1;
 
-    if ( e->state() == LeftButton ) 
+    if ( e->buttons() == Qt::LeftButton ) 
         emit tune2( output );
-    else if ( e->state() == RightButton )
+    else if ( e->buttons() == Qt::RightButton )
         emit tune2( output * 10 );
-    else if ( e->state() == MidButton )
+    else if ( e->buttons() == Qt::MidButton )
         emit tune2( output * 100 );
     else
         emit movement( e->x() );
@@ -59,12 +68,14 @@ void Spectrogram::wheelEvent(QWheelEvent *event)
 	orient = 1000;
     }
 
+#if 0
    if (event->state() & Qt::ShiftButton)
 	shift = 1;
    if (event->state() & Qt::AltButton)
 	alt = 1;
    if (event->state() & Qt::ControlButton)
 	ctl = 1;
+#endif
 
     printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
 		numDegrees, numSteps, orientation, shift, ctl, alt);

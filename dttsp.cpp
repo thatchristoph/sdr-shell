@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>  
+#include <netdb.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -51,6 +52,7 @@ DttSP :: DttSP (int port, int inbound):
     port(port)
 {
     pSa = new struct sockaddr_in;
+	address = NULL;
 
     if (pSa) {
         // create socket 
@@ -75,7 +77,7 @@ DttSP :: DttSP (int port, int inbound):
           }
         } // else no, so sockaddr gets filled in at point of use, not bound by us
 
-	fprintf( stderr, "DttSP port %d\n", port);
+		fprintf( stderr, "DttSP port %d\n", port);
 
         // one size fits all
         size = DTTSP_PORT_CLIENT_BUFSIZE;
@@ -83,17 +85,84 @@ DttSP :: DttSP (int port, int inbound):
     }
 }
 
+DttSP :: DttSP (int port, int inbound, char *host):
+    port(port)
+{
+	struct addrinfo		hints;
+	int					rc;
+	char				porttxt[32];
+
+    if (inbound) {
+		sethostent(0);
+		memset(&hints, 0, sizeof(struct addrinfo));
+		snprintf(porttxt, 32, "%d", port);
+		hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_DGRAM;
+		hints.ai_protocol = IPPROTO_UDP;	//PF_INET;
+		if ( (rc = getaddrinfo(NULL, porttxt, &hints, &address)) != 0 ) {
+			fprintf( stderr, "getaddrinfo for inbound %s %d failed %s\n", host, port, gai_strerror(rc));
+			return;
+		}
+
+        // create socket 
+        if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+			perror("Couldn't create dttsp_port_client socket");
+			exit(1);
+        }
+
+        flags = 0;
+        if (bind(sock, address->ai_addr, address->ai_addrlen) < 0) {
+            perror("Failed to bind socket");
+            exit(1);
+        }
+		fprintf( stderr, "DttSP inbound host %s port %d addrlen %d\n", host, port, address->ai_addrlen);
+	} else {
+		sethostent(0);
+		memset(&hints, 0, sizeof(struct addrinfo));
+		snprintf(porttxt, 32, "%d", port);
+		//hints.ai_flags = AI_PASSIVE | ;
+		hints.ai_flags = AI_NUMERICSERV;
+		hints.ai_family = AF_INET;
+		hints.ai_socktype = SOCK_DGRAM;
+		hints.ai_protocol = IPPROTO_UDP;	//PF_INET;
+		if ( (rc = getaddrinfo(host, porttxt, &hints, &address)) != 0 ) {
+			fprintf( stderr, "getaddrinfo for outbound %s %d failed %s\n", host, port, gai_strerror(rc));
+			return;
+		}
+
+        // create socket 
+        if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+          perror("Couldn't create dttsp_port_client socket");
+          exit(1);
+        }
+
+        flags = 0;
+
+		fprintf( stderr, "DttSP outbound host %s port %d\n", host, port);
+
+	}
+    // one size fits all
+    size = DTTSP_PORT_CLIENT_BUFSIZE;
+    memset(buff, 0, size);
+}
+
 DttSP :: ~DttSP ()
 {
     close (sock);
-    delete pSa;
+	if (address == NULL)
+    	delete pSa;
+	else
+		delete address;
 }
 
 
 int DttSP :: send_command ( char *cmdstr ) 
 {
+   	fd_set fds;
+    struct timeval tv;
     // are we pointing at the moon?
-    if (!pSa || sock == -1 || !cmdstr)
+    if ((!pSa && !address) || sock == -1 || !cmdstr)
       return -1;
 
     // make local, properly terminated copy of command
@@ -104,45 +173,52 @@ int DttSP :: send_command ( char *cmdstr )
     used = strlen (buff);
 
     // blast it
-    clen = sizeof(*pSa);
-    memset((char *) pSa, 0, clen);
-    pSa->sin_family = AF_INET;
-    pSa->sin_addr.s_addr = htonl(INADDR_ANY);
-    pSa->sin_port = htons((unsigned short) port);
-
-    if (sendto(sock, buff, used, flags, (struct sockaddr *) pSa, clen) != used) {
-        fprintf (stderr, "%s: error in sendto\n", __FUNCTION__); 
-        return -3;
+    if (address == NULL) {
+		clen = sizeof(*pSa);
+    	memset((char *) pSa, 0, clen);
+    	pSa->sin_family = AF_INET;
+    	pSa->sin_addr.s_addr = htonl(INADDR_ANY);
+    	pSa->sin_port = htons((unsigned short) port);
+    	if (sendto(sock, buff, used, flags, (struct sockaddr *) pSa, clen) != used) {
+			fprintf (stderr, "%s: error in sendto\n", __FUNCTION__); 
+			return -3;
+		}
+    } else {
+		
+    	if (sendto(sock, buff, used, flags, address->ai_addr, address->ai_addrlen) != used) {
+        	fprintf (stderr, "%s: error in sendto\n", __FUNCTION__); 
+        	return -3;
+    	}
     }
 
     // wait a little for ack
-    {
-      fd_set fds;
-      struct timeval tv;
+   	FD_ZERO(&fds);
+   	FD_SET(sock, &fds);
+   	tv.tv_sec = 1;
+   	tv.tv_usec = 0;
+	
+   	if (!select(sock + 1, &fds, 0, 0, &tv)) {
+      	fprintf (stderr, "%s: error from select, disabling port\n", __FUNCTION__); 
+		close (sock);
+		sock = -1;
+		delete pSa;
+		pSa = NULL;
+       	return -4;
+   	}
+	if (address == NULL) {
+   		if (recvfrom(sock, buff, size, flags, (struct sockaddr *) pSa, (socklen_t *)(&clen)) <= 0) {
+       		fprintf (stderr, "%s: error in recvfrom\n", __FUNCTION__); 
+       		return -5;
+   		}
+	} else {
+   		if (recvfrom(sock, buff, size, flags, address->ai_addr, &address->ai_addrlen) <= 0) {
+       		fprintf (stderr, "%s: error in recvfrom\n", __FUNCTION__); 
+     	  	return -5;
+		}
+	}
 
-      FD_ZERO(&fds);
-      FD_SET(sock, &fds);
-      tv.tv_sec = 1;
-      tv.tv_usec = 0;
-      if (!select(sock + 1, &fds, 0, 0, &tv)) {
-        fprintf (stderr, "%s: error from select, disabling port\n", __FUNCTION__); 
-	close (sock);
-	sock = -1;
-	delete pSa;
-	pSa = NULL;
-        return -4;
-      }
-      //if (recvfrom (sock, buff, size, flags, (struct sockaddr *)pSa, &clen) <= 0)
-      if (recvfrom(sock, buff, size, flags, (struct sockaddr *) pSa, (socklen_t *)(&clen)) <= 0) {
-          fprintf (stderr, "%s: error in recvfrom\n", __FUNCTION__); 
-          return -5;
-      }
-
-      if (buff[0] != 'o' || buff[1] != 'k') return -6;
-    }
-
+   	if (buff[0] != 'o' || buff[1] != 'k') return -6;
     return 0;
-
 }
 
 int DttSPcmd :: sendCommand ( const char *format, ... )

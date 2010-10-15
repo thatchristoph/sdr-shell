@@ -4,13 +4,14 @@
 #include <qlabel.h>
 #include <qstring.h>
 #include <hamlib/rig.h>
+#include <QMouseEvent>
 
 class MemoryCell : public QLabel
 {
     Q_OBJECT
     
     public:
-        MemoryCell(QWidget *parent = 0, const char *name = 0);
+        MemoryCell(QWidget *parent = 0);
 
         void setID( int );
         void setMemo( QString );

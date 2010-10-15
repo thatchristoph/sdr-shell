@@ -1,10 +1,13 @@
+#include <cstdio>
 #include "spectrum.h"
 
-Spectrum::Spectrum( QWidget *parent, const char *name, WFlags f ) 
-	: QWidget( parent, name, f )
+//Spectrum::Spectrum( QWidget *parent, const char *name, WFlags f ) 
+//	: QWidget( parent, name, f )
+Spectrum::Spectrum( QWidget *parent) 
+	: QWidget( parent)
 {
 	setMouseTracking( true );
-    mouseMoving = 0;
+        mouseMoving = 0;
 }
 
 void Spectrum::mouseReleaseEvent( QMouseEvent *e )
@@ -32,12 +35,14 @@ void Spectrum::wheelEvent(QWheelEvent *event)
 	orient = 1000;
     }
 
+#if 0
    if (event->state() & Qt::ShiftButton)
 	shift = 1;
    if (event->state() & Qt::AltButton)
 	alt = 1;
    if (event->state() & Qt::ControlButton)
 	ctl = 1;
+#endif
 
     printf("wheelEvent degrees %d steps %d orientation %c %c %c %c\n",
 		numDegrees, numSteps, orientation, shift, ctl, alt);

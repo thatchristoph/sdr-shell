@@ -6,17 +6,17 @@ Fedora 13
 
 (1) Install prerequisite packages with:
 
-  sudo yum install libtool fftw-devel gsl-devel qt3-devel liblo-devel hamlib
+  sudo yum install libtool fftw-devel gsl-devel qt-devel liblo-devel hamlib
 
 answer 'yes' to the dependencies.  Sorry, but hamlib really does require
 200mb of disk space.
 
-(2) Run 'qmake' to build the Makefile, then 'make' to build sdr-shell.
+(2) Run 'qmake-qt4' to build the Makefile, then 'make' to build sdr-shell.
 
 (3) Add yourself to the jackusers group in /etc/group.
 
 
-Ubuntu
+Ubuntu  * not updated for qt4 *
 
 (1) Install prerequisite packages with:
 
@@ -77,7 +77,7 @@ the group "softrock" must exist in /etc/group, or substitute another group
 name.
 
 
-Building for OSX 10.6
+Building for OSX 10.6 * not updated for qt4 *
 
 When setting up to build for OSX, I wanted to use the fink and macports tools
 to get the prerequisite packages.  I had very limited success in getting usable

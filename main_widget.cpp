@@ -11,19 +11,27 @@
 #include "text.h"
 #include "dttsp.h"
 
-Main_Widget::Main_Widget ( QWidget *parent, const char *name )
-		: QWidget ( parent, name )
+/* formatting note: in vi :set tab=4 */
+
+Main_Widget::Main_Widget(QWidget *parent)
+        : QWidget(parent)
 {
-	setFocusPolicy ( QWidget::TabFocus );
-	setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+	setFocusPolicy ( Qt::TabFocus );
 	setMinimumWidth ( 650 );
 	setMinimumHeight ( 300 );
 
+	//setAttribute( Qt::WA_OpaquePaintEvent, true);
+	setAttribute( Qt::WA_NoSystemBackground, true);
+    setPalette(QPalette(QColor(0, 0, 0)));
+    setAutoFillBackground(true);
+    setMinimumWidth( 650 );
+    setMinimumHeight( 300 );
 	initConstants();
 	slopeTuneOffset = 0;
 	loadSettings();
+	bin_bw = sample_rate / 4096.0;
 
-	setCaption ( "SDR-Shell rxtx.5 @ " + stationCallsign );
+	setWindowTitle("SDR-Shell 4.15 @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -52,33 +60,28 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 		fontlcdMetrics = new QFontMetrics ( *fontlcd );
 	}*/
 
-	/*QFont font2 ( "Bitstream Vera Sans", 10, FALSE );
-	QFontMetrics fm2 ( font2 ); */
+	font2PointSize = 16;
+	font2 = new QFont( "Andale Mono", font2PointSize, FALSE);
+    font2Metrics = new QFontMetrics( *font2 );
 	QColor borderColor ( 255, 200, 55 );
 
 	// -----------------------------------------------------------------------
 	// Spectrogram
 
 	spectrogramFrame = new QFrame ( this );
-	spectrogramFrame->setFrameStyle ( QFrame::StyledPanel | QFrame::Plain );
-	spectrogramFrame->setPaletteForegroundColor ( borderColor );
 
 	spectrogram = new Spectrogram ( spectrogramFrame );
-	spectrogram->setPaletteBackgroundColor ( QColor ( 20, 20, 50 ) );
 	connect ( spectrogram, SIGNAL ( tune1 ( int ) ),
 	          this, SLOT ( spectrogramClicked ( int ) ) );
+        //This seems to occasionally cause a seg fault (just above).  Rob 10/3/10
 	connect ( spectrogram, SIGNAL ( tune2 ( int ) ),
 	          this, SLOT ( tune ( int ) ) );
-	connect ( spectrogram, SIGNAL ( plot ( int ) ),
-	          this, SLOT ( plotSpectrum ( int ) ) );
 	connect ( spectrogram, SIGNAL ( movement ( int ) ),
 	          this, SLOT ( f_at_mousepointer ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// Pass Band Filter Scale
-	pbscale = new PassBandScale ( spectrogramFrame,
-	                              "pbscale", Qt::WResizeNoErase );
-	pbscale->setPaletteBackgroundColor ( QColor ( 100, 0, 0 ) );
+	pbscale = new PassBandScale( spectrogramFrame );
 	connect ( pbscale, SIGNAL ( set_lower_pb ( int ) ),
 	          this, SLOT ( setLowerFilterScale ( int ) ) );
 	connect ( pbscale, SIGNAL ( set_upper_pb ( int ) ),
@@ -88,9 +91,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	// -----------------------------------------------------------------------
 	// Spectrum
-	spectrumFrame = new Spectrum ( spectrogramFrame, "SpectrumFrame",
-	                               Qt::WResizeNoErase );
-	spectrumFrame->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+	spectrumFrame = new Spectrum( spectrogramFrame );
 	connect ( spectrumFrame, SIGNAL ( movement ( int ) ),
 	          this, SLOT ( f_at_mousepointer ( int ) ) );
 	connect ( spectrumFrame, SIGNAL ( tune ( int ) ),
@@ -102,21 +103,16 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Control Frame
 
 	// Top
-	ctlFrame = new QFrame ( this );
+	ctlFrame = new QFrame ( this, Qt::Widget );
 	ctlFrame->setFrameStyle ( QFrame::StyledPanel | QFrame::Plain );
-	ctlFrame->setPaletteForegroundColor ( borderColor );
-	ctlFrame->setBackgroundColor ( QColor ( 0, 15, 150 ) );
-
-	// Top Filler
-	QFrame *ctlFrame1 = new QFrame ( ctlFrame );
-	ctlFrame1->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	ctlFrame1->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    ctlFrame->setPalette(QColor(0, 255, 0) );
+    ctlFrame->setAutoFillBackground(true);
 
 	// Bottom
-	ctlFrame2 = new QFrame ( this );
+	ctlFrame2 = new QFrame ( this, Qt::Widget );
 	ctlFrame2->setFrameStyle ( QFrame::StyledPanel | QFrame::Plain );
-	ctlFrame2->setPaletteForegroundColor ( borderColor );
-	ctlFrame2->setPaletteBackgroundColor ( QColor ( 255, 200, 0 ) );
+    ctlFrame2->setPalette(QPalette(QColor(0, 255, 0)));
+    ctlFrame2->setAutoFillBackground(true);
 
 	// -----------------------------------------------------------------------
 	// Configuration Frame
@@ -127,15 +123,15 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgFrame->setMaximumWidth ( 380 );
 	cfgFrame->setMinimumHeight ( 500 );
 	cfgFrame->setMaximumHeight ( 500 );
-	cfgFrame->setCaption ( "SDR-Shell : Config" );
+    cfgFrame->setWindowTitle("SDR-Shell : Config ");
 
-	QFrame *cfgFrame1 = new QFrame();
-	QFrame *cfgFrame2 = new QFrame();
-	QFrame *cfgFrame3 = new QFrame();
-	QFrame *cfgFrame6 = new QFrame();
-	QFrame *cfgFrame7 = new QFrame();
-	QFrame *cfgFrame4 = new QFrame();
-	QFrame *cfgFrame5 = new QFrame();
+	QFrame *cfgFrame1 = new QFrame( cfgFrame );
+	QFrame *cfgFrame2 = new QFrame( cfgFrame );
+	QFrame *cfgFrame3 = new QFrame( cfgFrame );
+	QFrame *cfgFrame6 = new QFrame( cfgFrame );
+	QFrame *cfgFrame7 = new QFrame( cfgFrame );
+	QFrame *cfgFrame4 = new QFrame( cfgFrame );
+	QFrame *cfgFrame5 = new QFrame( cfgFrame );
 
 	QTabWidget *configTab = new QTabWidget ( cfgFrame );
 	configTab->setFont ( *font1 );
@@ -153,7 +149,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Station Callsign
 	QGroupBox *cfgCallBox = new QGroupBox ( cfgFrame1 );
 	cfgCallBox->setTitle ( "Station Callsign" );
-	cfgCallBox->setGeometry ( 5, 5, 340, 45 );
+	cfgCallBox->setGeometry( 5, 5, 330, 45 );
 
 	cfgCallInput = new QLineEdit ( cfgCallBox );
 	cfgCallInput->setGeometry ( 10, 18, 120, 20 );
@@ -168,43 +164,64 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Local Oscilator Frequency in Hertz
 	QGroupBox *cfgLOFreqBox = new QGroupBox ( cfgFrame1 );
 	cfgLOFreqBox->setTitle ( "LO Frequency (Hz)" );
-	cfgLOFreqBox->setGeometry ( 5, 53, 340, 45 );
+	cfgLOFreqBox->setGeometry( 5, 53, 330, 90 );
 
 	cfgLOFreqInput = new QLineEdit ( cfgLOFreqBox );
-	cfgLOFreqInput->setGeometry ( 10, 18, 120, 20 );
+	cfgLOFreqInput->setGeometry( 10, 37, 120, 20 );
 	cfgLOFreqInput->setText ( rx_f_string );
+    cfgLOFreqInput->setEnabled(true);
 
-
-	QPushButton *updateLOFreqButton = new QPushButton ( cfgLOFreqBox );
+	updateLOFreqButton = new QPushButton( cfgLOFreqBox );
 	updateLOFreqButton->setText ( "Update" );
-	updateLOFreqButton->setGeometry ( 140, 18, 70, 20 );
+	updateLOFreqButton->setGeometry( 140, 37, 70, 20 );
+    updateLOFreqButton->setEnabled(true);
 	connect ( updateLOFreqButton, SIGNAL ( pressed() ),
 	          this, SLOT ( updateLOFreq() ) );
 
 	// Use USBSoftrock
 	QGroupBox *cfgUSBBox = new QGroupBox ( cfgFrame1 );
 	cfgUSBBox->setTitle ( "USBSoftrock Control" );
-	cfgUSBBox->setGeometry ( 5, 101, 340, 65 );
+    cfgUSBBox->setGeometry ( 5, 143, 330, 90 );
 
 	QRadioButton *cfgUseUSBsoftrock = new QRadioButton ( cfgUSBBox );
 	cfgUseUSBsoftrock->setText ( "Use usbsoftrock via UDP" );
 	cfgUseUSBsoftrock->setGeometry ( 25, 18, 200, 20 );
+    cfgUseUSBsoftrock->setAutoExclusive(false);
 	connect ( cfgUseUSBsoftrock, SIGNAL ( toggled ( bool ) ),
 	          this, SLOT ( updateUseUSBsoftrock ( bool ) ) );
-	cfgUseUSBsoftrock->setChecked ( !rock_bound );
+	if( !rock_bound)
+		cfgUseUSBsoftrock->setChecked (true);
 
 	// USBSoftrock 5/4 tuning for dual-conversion
 	QRadioButton *cfgDualConversion = new QRadioButton ( cfgUSBBox );
 	cfgDualConversion->setText ( "5/4 Tuning" );
 	cfgDualConversion->setGeometry ( 25, 36, 200, 20 );
+    cfgDualConversion->setAutoExclusive(false);
 	connect ( cfgDualConversion, SIGNAL ( toggled ( bool ) ),
 	          this, SLOT ( updateDualConversion ( bool ) ) );
-	cfgDualConversion->setChecked ( dualConversion );
+	if( dualConversion)
+		cfgDualConversion->setChecked (true);
+
+	// USB-tune offset
+	cfgTuneOffsetInput = new QLineEdit ( cfgUSBBox );
+	cfgTuneOffsetInput->setGeometry( 25, 60, 120, 20 );
+	TuneOffset_string.sprintf("%d", tuneCenter);
+	cfgTuneOffsetInput->setText ( TuneOffset_string );
+    cfgTuneOffsetInput->setEnabled(true);
+
+	updateTuneOffsetButton = new QPushButton( cfgUSBBox );
+	updateTuneOffsetButton->setText ( "Update" );
+	updateTuneOffsetButton->setGeometry( 150, 60, 70, 20 );
+    updateTuneOffsetButton->setEnabled(true);
+	connect ( updateTuneOffsetButton, SIGNAL ( pressed() ),
+	          this, SLOT ( updateTuneOffset() ) );
 
 	// Spectrum and S-Meter calibration
 	QGroupBox *calibrationBox = new QGroupBox ( cfgFrame1 );
 	calibrationBox->setTitle ( "Calibration" );
-	calibrationBox->setGeometry ( 5, 175, 340, 45 );
+    //calibrationBox->setGeometry( 5, 209, 330, 45 );
+    calibrationBox->setGeometry( 5, 250, 330, 45 );
+	///calibrationBox->setFrameStyle ( QFrame::StyledPanel | QFrame::Plain );
 
 	QLabel *specCalLabel = new QLabel ( calibrationBox );
 	specCalLabel->setText ( "Spectrum: " );
@@ -213,8 +230,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	specCalSpinBox = new QSpinBox ( calibrationBox );
 	specCalSpinBox->setGeometry ( 80, 18, 70, 20 );
-	specCalSpinBox->setMinValue ( 0 );
-	specCalSpinBox->setMaxValue ( 100 );
+	specCalSpinBox->setMinimum( 0 );
+	specCalSpinBox->setMaximum( 100 );
 	specCalSpinBox->setValue ( ( int ) specCal );
 	connect ( specCalSpinBox, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( calibrateSpec ( int ) ) );
@@ -226,8 +243,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	metrCalSpinBox = new QSpinBox ( calibrationBox );
 	metrCalSpinBox->setGeometry ( 245, 18, 70, 20 );
-	metrCalSpinBox->setMinValue ( 0 );
-	metrCalSpinBox->setMaxValue ( 100 );
+	metrCalSpinBox->setMinimum( 0 );
+	metrCalSpinBox->setMaximum( 100 );
 	metrCalSpinBox->setValue ( ( int ) metrCal );
 	connect ( metrCalSpinBox, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( calibrateMetr ( int ) ) );
@@ -235,8 +252,9 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// IQ Phase Calibration
 	QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
 	cfgIQCal->setTitle ( "RX IQ Calibration" );
-	cfgIQCal->setGeometry ( 5, 5, 340, 45 );
+	cfgIQCal->setGeometry( 5, 5, 330, 45 );
 
+#if 0
 	QLabel *cfgIQPhaseLabel = new QLabel ( cfgIQCal );
 	cfgIQPhaseLabel->setText ( "IQ Phase: " );
 	cfgIQPhaseLabel->setGeometry ( 10, 18, 70, 20 );
@@ -244,11 +262,12 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgIQPhaseInput = new QSpinBox ( cfgIQCal );
 	cfgIQPhaseInput->setGeometry ( 80, 18, 70, 20 );
-	cfgIQPhaseInput->setMinValue ( -1000 );
-	cfgIQPhaseInput->setMaxValue ( 1000 );
+	cfgIQPhaseInput->setMinimum( -1000 );
+	cfgIQPhaseInput->setMaximum( 1000 );
 	cfgIQPhaseInput->setValue ( iqPhase );
 	connect ( cfgIQPhaseInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateIQPhase ( int ) ) );
+#endif
 
 	// IQ Gain Calibration
 	QLabel *cfgIQGainLabel = new QLabel ( cfgIQCal );
@@ -258,8 +277,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgIQGainInput = new QSpinBox ( cfgIQCal );
 	cfgIQGainInput->setGeometry ( 245, 18, 70, 20 );
-	cfgIQGainInput->setMinValue ( -1000 );
-	cfgIQGainInput->setMaxValue ( 1000 );
+	cfgIQGainInput->setMinimum( -1000 );
+	cfgIQGainInput->setMaximum( 1000 );
 	cfgIQGainInput->setValue ( iqGain );
 	connect ( cfgIQGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateIQGain ( int ) ) );
@@ -269,6 +288,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgTxIQCal->setTitle ( "TX IQ Calibration" );
 	cfgTxIQCal->setGeometry ( 5, 50, 340, 45 );
 
+#if 0
 	QLabel *cfgTxIQPhaseLabel = new QLabel ( cfgTxIQCal );
 	cfgTxIQPhaseLabel->setText ( "IQ Phase: " );
 	cfgTxIQPhaseLabel->setGeometry ( 10, 18, 70, 20 );
@@ -276,11 +296,12 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgTxIQPhaseInput = new QSpinBox ( cfgTxIQCal );
 	cfgTxIQPhaseInput->setGeometry ( 80, 18, 70, 20 );
-	cfgTxIQPhaseInput->setMinValue ( -1000 );
-	cfgTxIQPhaseInput->setMaxValue ( 1000 );
+	cfgTxIQPhaseInput->setMinimum ( -1000 );
+	cfgTxIQPhaseInput->setMaximum ( 1000 );
 	cfgTxIQPhaseInput->setValue ( txIQPhase );
 	connect ( cfgTxIQPhaseInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxIQPhase ( int ) ) );
+#endif
 
 	// IQ Gain Calibration
 	QLabel *cfgTxIQGainLabel = new QLabel ( cfgTxIQCal );
@@ -290,117 +311,154 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgTxIQGainInput = new QSpinBox ( cfgTxIQCal );
 	cfgTxIQGainInput->setGeometry ( 245, 18, 70, 20 );
-	cfgTxIQGainInput->setMinValue ( -1000 );
-	cfgTxIQGainInput->setMaxValue ( 1000 );
+	cfgTxIQGainInput->setMinimum ( -1000 );
+	cfgTxIQGainInput->setMaximum ( 1000 );
 	cfgTxIQGainInput->setValue ( txIQGain );
 	connect ( cfgTxIQGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxIQGain ( int ) ) );
 
 	// Polyphase FFT
-	QButtonGroup *cfgPolyFFTGroup = new QButtonGroup ( cfgFrame3 );
-	cfgPolyFFTGroup->setTitle ( "Polyphase FFT" );
-	cfgPolyFFTGroup->setGeometry ( 5, 5, 340, 45 );
-	cfgPolyFFTGroup->setRadioButtonExclusive ( true );
-	connect ( cfgPolyFFTGroup, SIGNAL ( clicked ( int ) ),
-	          this, SLOT ( setPolyFFT ( int ) ) );
+	QGroupBox *cfgPolyFFTGroup = new QGroupBox( cfgFrame3 );
+    cfgPolyFFTGroup->setTitle("Polyphase FFT");	
+	cfgPolyFFTGroup->setGeometry( 5, 5, 330, 45 );
 
-	QRadioButton *polyFFT_off_button = new QRadioButton ( cfgPolyFFTGroup );
-	polyFFT_off_button->setText ( "Off" );
-	polyFFT_off_button->setGeometry ( 10, 18, 70, 20 );
-
-	QRadioButton *polyFFT_on_button = new QRadioButton ( cfgPolyFFTGroup );
-	polyFFT_on_button->setText ( "On" );
-	polyFFT_on_button->setGeometry ( 160, 18, 70, 19 );
-
-	cfgPolyFFTGroup->setButton ( polyphaseFFT );
+    polyFFT_button = new QRadioButton( tr("Use Polyphase FFT"),cfgPolyFFTGroup);
+    polyFFT_button->setGeometry ( 10, 18, 200, 20 );
+    connect( polyFFT_button, SIGNAL(clicked()),
+			 this, SLOT ( setPolyFFT () ) );
+	if (polyphaseFFT)
+    	polyFFT_button->setChecked(true);
 
 	// Spectrum Type
-	QButtonGroup *cfgSpecTypeGroup = new QButtonGroup ( cfgFrame3 );
+	QGroupBox *cfgSpecTypeGroup = new QGroupBox( cfgFrame3 );
 	cfgSpecTypeGroup->setTitle ( "Spectrum Type" );
-	cfgSpecTypeGroup->setGeometry ( 5, 53, 340, 45 );
-	cfgSpecTypeGroup->setRadioButtonExclusive ( true );
-	connect ( cfgSpecTypeGroup, SIGNAL ( clicked ( int ) ),
-	          this, SLOT ( setSpectrumType ( int ) ) );
+	cfgSpecTypeGroup->setGeometry( 5, 53, 330, 45 );
 
-	QRadioButton *preFilter_button = new QRadioButton ( cfgSpecTypeGroup );
-	preFilter_button->setText ( "Pre Filter" );
+	preFilter_button = new QRadioButton( tr("Pre Filter"), cfgSpecTypeGroup );
 	preFilter_button->setGeometry ( 10, 18, 100, 20 );
+	connect( preFilter_button, SIGNAL(clicked()),
+			 this, SLOT(setSpectrumType()) );
+	if (spectrumType == 1)
+        preFilter_button->setChecked(true);	
 
-	QRadioButton *postFilter_button = new QRadioButton ( cfgSpecTypeGroup );
-	postFilter_button->setText ( "Post Filter" );
+	postFilter_button = new QRadioButton( tr("Post Filter"), cfgSpecTypeGroup );
 	postFilter_button->setGeometry ( 160, 18, 100, 20 );
+	connect( postFilter_button, SIGNAL(clicked()),
+			 this, SLOT(setSpectrumType()) );
+	if (spectrumType == 2)
+        postFilter_button->setChecked(true);	
 
-	cfgSpecTypeGroup->setButton ( spectrumType );
 
-	// FFT Windowing Function
-	QButtonGroup *cfgFFTWindowGroup = new QButtonGroup ( cfgFrame3 );
-	cfgFFTWindowGroup->setTitle ( "FFT Windowing Function" );
-	cfgFFTWindowGroup->setGeometry ( 5, 101, 340, 162 );
-	cfgFFTWindowGroup->setRadioButtonExclusive ( true );
-	connect ( cfgFFTWindowGroup, SIGNAL ( clicked ( int ) ),
-	          this, SLOT ( setFFTWindow ( int ) ) );
+	// FFT Windowing Functionplot
+	QGroupBox *cfgFFTWindowGroup = new QGroupBox( cfgFrame3 );
+	cfgFFTWindowGroup->setTitle( "FFT Windowing Function" );
+	cfgFFTWindowGroup->setGeometry( 5, 101, 330, 162 );
 
-	QRadioButton *fftWindow_0 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_0->setText ( "Rectangular" );
-	fftWindow_0->setGeometry ( 10, 18, 140, 19 );
+	fftWindow_0 = new QRadioButton( tr("Rectangular"), cfgFFTWindowGroup );
+	fftWindow_0->setGeometry( 10, 18, 140, 19 );
+	connect( fftWindow_0, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 0)
+        fftWindow_0->setChecked(true);	
+			 
+	fftWindow_1 = new QRadioButton( tr("Hanning"), cfgFFTWindowGroup );
+	fftWindow_1->setGeometry( 10, 38, 140, 19 );
+	connect( fftWindow_1, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );	
+	if (fftWindow == 1)
+        fftWindow_1->setChecked(true);	
 
-	QRadioButton *fftWindow_1 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_1->setText ( "Hanning" );
-	fftWindow_1->setGeometry ( 10, 38, 140, 19 );
+	fftWindow_2 = new QRadioButton( tr("Welch"), cfgFFTWindowGroup );
+	fftWindow_2->setGeometry( 10, 58, 140, 19 );
+	connect( fftWindow_2, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );	
+	if (fftWindow == 2)
+        fftWindow_2->setChecked(true);	
 
-	QRadioButton *fftWindow_2 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_2->setText ( "Welch" );
-	fftWindow_2->setGeometry ( 10, 58, 140, 19 );
+	fftWindow_3 = new QRadioButton( tr("Parzen"), cfgFFTWindowGroup );
+	fftWindow_3->setGeometry( 10, 78, 140, 19 );
+	connect( fftWindow_3, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 3)
+        fftWindow_3->setChecked(true);	
 
-	QRadioButton *fftWindow_3 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_3->setText ( "Parzen" );
-	fftWindow_3->setGeometry ( 10, 78, 140, 19 );
+	fftWindow_4 = new QRadioButton( tr("Bartlett"), cfgFFTWindowGroup );
+	fftWindow_4->setGeometry( 10, 98, 140, 19 );
+	connect( fftWindow_4, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 4)
+        fftWindow_4->setChecked(true);	
 
-	QRadioButton *fftWindow_4 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_4->setText ( "Bartlett" );
-	fftWindow_4->setGeometry ( 10, 98, 140, 19 );
+	fftWindow_5 = new QRadioButton( tr("Hamming"), cfgFFTWindowGroup );
+	fftWindow_5->setGeometry( 10, 118, 140, 19 );
+	connect( fftWindow_5, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 5)
+        fftWindow_5->setChecked(true);	
 
-	QRadioButton *fftWindow_5 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_5->setText ( "Hamming" );
-	fftWindow_5->setGeometry ( 10, 118, 140, 19 );
+	fftWindow_6 = new QRadioButton( tr("Blackman 2"), cfgFFTWindowGroup );
+	fftWindow_6->setGeometry( 10, 138, 140, 19 );
+	connect( fftWindow_6, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 6)
+        fftWindow_6->setChecked(true);	
 
-	QRadioButton *fftWindow_6 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_6->setText ( "Blackman 2" );
-	fftWindow_6->setGeometry ( 10, 138, 140, 19 );
+	fftWindow_7 = new QRadioButton( tr("Blackman 3"), cfgFFTWindowGroup );
+	fftWindow_7->setGeometry( 160, 18, 140, 19 );
+	connect( fftWindow_7, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 7)
+        fftWindow_7->setChecked(true);	
 
-	QRadioButton *fftWindow_7 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_7->setText ( "Blackman 3" );
-	fftWindow_7->setGeometry ( 160, 18, 140, 19 );
+	fftWindow_8 = new QRadioButton( tr("Blackman 4"), cfgFFTWindowGroup );
+	fftWindow_8->setGeometry( 160, 38, 140, 19 );
+	connect( fftWindow_8, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 8)
+        fftWindow_8->setChecked(true);	
 
-	QRadioButton *fftWindow_8 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_8->setText ( "Blackman 4" );
-	fftWindow_8->setGeometry ( 160, 38, 140, 19 );
+	fftWindow_9 = new QRadioButton( tr("Exponential"), cfgFFTWindowGroup );
+	fftWindow_9->setGeometry( 160, 58, 140, 19 );
+	connect( fftWindow_9, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 9)
+        fftWindow_9->setChecked(true);	
 
-	QRadioButton *fftWindow_9 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_9->setText ( "Exponential" );
-	fftWindow_9->setGeometry ( 160, 58, 140, 19 );
+	fftWindow_10 = new QRadioButton( tr("Riemann"), cfgFFTWindowGroup );
+	fftWindow_10->setGeometry( 160, 78, 140, 19 );
+	connect( fftWindow_10, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 10)
+        fftWindow_10->setChecked(true);	
 
-	QRadioButton *fftWindow_10 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_10->setText ( "Riemann" );
-	fftWindow_10->setGeometry ( 160, 78, 140, 19 );
+	fftWindow_11 = new QRadioButton( tr("Blackman-Harris"), cfgFFTWindowGroup );
+	fftWindow_11->setGeometry( 160, 98, 140, 19 );
+	connect( fftWindow_11, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 11)
+        fftWindow_11->setChecked(true);	
 
-	QRadioButton *fftWindow_11 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_11->setText ( "Blackman-Harris" );
-	fftWindow_11->setGeometry ( 160, 98, 140, 19 );
+	fftWindow_12 = new QRadioButton( tr("Nuttall"), cfgFFTWindowGroup );
+	fftWindow_12->setGeometry( 160, 118, 140, 19 );
+	connect( fftWindow_12, SIGNAL(clicked()),
+			 this, SLOT(setFFTWindow()) );
+	if (fftWindow == 12)
+        fftWindow_12->setChecked(true);	
 
-	QRadioButton *fftWindow_12 = new QRadioButton ( cfgFFTWindowGroup );
-	fftWindow_12->setText ( "Nuttall" );
-	fftWindow_12->setGeometry ( 160, 118, 140, 19 );
-
-	cfgFFTWindowGroup->setButton ( fftWindow );
 
 	// IF Settings
-	QRadioButton *cfgIFAligned = new QRadioButton ( cfgFrame6 );
+	QGroupBox *cfgIfBox = new QGroupBox ( cfgFrame6 );
+	cfgIfBox->setTitle ( "IF Setup" );
+	cfgIfBox->setGeometry ( 5, 160, 340, 50 );
+
+	QRadioButton *cfgIFAligned = new QRadioButton ( cfgIfBox );
 	cfgIFAligned->setText ( "Use IF Mode" );
-	cfgIFAligned->setGeometry ( 25, 155, 340, 45 );
+	cfgIFAligned->setGeometry ( 5, 5, 340, 45 );
+    cfgDualConversion->setAutoExclusive(false);
 	connect ( cfgIFAligned, SIGNAL ( toggled ( bool ) ),
 	          this, SLOT ( setIF ( bool ) ) );
-	cfgIFAligned->setChecked ( useIF );
+	if (useIF)
+		cfgIFAligned->setChecked (true);
 
 	QGroupBox *cfgIFreqBox = new QGroupBox ( cfgFrame6 );
 	cfgIFreqBox->setTitle ( "IF Frequencies (Hz)" );
@@ -427,7 +485,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgSlopeLowOffsetInput = new QSpinBox ( cfgSlopeTuneBox );
 	cfgSlopeLowOffsetInput->setGeometry ( 180, 28, 70, 20 );
-	cfgSlopeLowOffsetInput->setMinValue ( 0 );
+	cfgSlopeLowOffsetInput->setMinimum ( 0 );
 	cfgSlopeLowOffsetInput->setMaxValue ( 9999 );
 	cfgSlopeLowOffsetInput->setValue ( slopeLowOffset );
 	connect ( cfgSlopeLowOffsetInput, SIGNAL ( valueChanged ( int ) ),
@@ -440,7 +498,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgSlopeHighOffsetInput = new QSpinBox ( cfgSlopeTuneBox );
 	cfgSlopeHighOffsetInput->setGeometry ( 180, 58, 70, 20 );
-	cfgSlopeHighOffsetInput->setMinValue ( 0 );
+	cfgSlopeHighOffsetInput->setMinimum ( 0 );
 	cfgSlopeHighOffsetInput->setMaxValue ( 9999 );
 	cfgSlopeHighOffsetInput->setValue ( slopeHighOffset );
 	connect ( cfgSlopeHighOffsetInput, SIGNAL ( valueChanged ( int ) ),
@@ -452,7 +510,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	cfgUseSlopeTune->setChecked ( useSlopeTune );
 	connect ( cfgUseSlopeTune, SIGNAL ( toggled ( bool ) ),
 		  this, SLOT ( setSlopeTune ( bool ) ) );
-	
+
 
 	QLabel *cfgUSBOffsetLabel = new QLabel ( cfgIFreqBox );
 	cfgUSBOffsetLabel->setText ( "USB Offset" );
@@ -461,8 +519,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgUSBOffsetInput = new QSpinBox ( cfgIFreqBox );
 	cfgUSBOffsetInput->setGeometry ( 90, 53, 70, 20 );
-	cfgUSBOffsetInput->setMinValue ( 0 );
-	cfgUSBOffsetInput->setMaxValue ( 9999 );
+	cfgUSBOffsetInput->setMinimum ( 0 );
+	cfgUSBOffsetInput->setMaximum ( 9999 );
 	cfgUSBOffsetInput->setValue ( usbOffset );
 	connect ( cfgUSBOffsetInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateUSBOffset ( int ) ) );
@@ -474,8 +532,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgLSBOffsetInput = new QSpinBox ( cfgIFreqBox );
 	cfgLSBOffsetInput->setGeometry ( 90, 83, 70, 20 );
-	cfgLSBOffsetInput->setMinValue ( 0 );
-	cfgLSBOffsetInput->setMaxValue ( 9999 );
+	cfgLSBOffsetInput->setMinimum ( 0 );
+	cfgLSBOffsetInput->setMaximum ( 9999 );
 	cfgLSBOffsetInput->setValue ( lsbOffset );
 	connect ( cfgLSBOffsetInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateLSBOffset ( int ) ) );
@@ -516,17 +574,18 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	connect ( updateHamlibButton, SIGNAL ( pressed() ),
 	          this, SLOT ( updateHamlib() ) );
 
-	QRadioButton *cfgUseHamlib = new QRadioButton ( cfgHamlibBox );
+    QRadioButton *cfgUseHamlib = new QRadioButton ( cfgHamlibBox );
 	cfgUseHamlib->setText ( "Use Hamlib" );
+    cfgUseHamlib->setAutoExclusive(FALSE);
 	cfgUseHamlib->setGeometry ( 5, 100, 150, 45 );
-	cfgUseHamlib->setChecked ( useHamlib );
 	connect ( cfgUseHamlib, SIGNAL ( toggled ( bool ) ),
 	          this, SLOT ( setHamlib ( bool ) ) );
 	connect ( this, SIGNAL ( toggleHamlibButton ( bool ) ), 
 		  cfgUseHamlib, SLOT ( setChecked ( bool ))); 
 	
-	QRadioButton *cfgMuteXmitHamlib = new QRadioButton ( cfgHamlibBox );
+    QRadioButton *cfgMuteXmitHamlib = new QRadioButton ( cfgHamlibBox );
 	cfgMuteXmitHamlib->setText ( "Mute in Xmit" );
+    cfgMuteXmitHamlib->setAutoExclusive(FALSE);
 	cfgMuteXmitHamlib->setGeometry ( 150, 100, 180, 45 );
 	cfgMuteXmitHamlib->setChecked ( useHamlib );
 	connect ( cfgMuteXmitHamlib, SIGNAL ( toggled ( bool ) ),
@@ -557,8 +616,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgTxMicGainInput = new QSpinBox ( cfgTxGain );
 	cfgTxMicGainInput->setGeometry ( 80, 18, 70, 20 );
-	cfgTxMicGainInput->setMinValue ( -255 );
-	cfgTxMicGainInput->setMaxValue ( 255 );
+	cfgTxMicGainInput->setMinimum ( -255 );
+	cfgTxMicGainInput->setMaximum ( 255 );
 	cfgTxMicGainInput->setValue ( micGain );
 	connect ( cfgTxMicGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxMicGain ( int ) ) );
@@ -570,8 +629,8 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	cfgTxOutputGainInput = new QSpinBox ( cfgTxGain );
 	cfgTxOutputGainInput->setGeometry ( 245, 18, 70, 20 );
-	cfgTxOutputGainInput->setMinValue ( -255 );
-	cfgTxOutputGainInput->setMaxValue ( 255 );
+	cfgTxOutputGainInput->setMinimum ( -255 );
+	cfgTxOutputGainInput->setMaximum ( 255 );
 	cfgTxOutputGainInput->setValue ( txGain );
 	connect ( cfgTxOutputGainInput, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( updateTxOutputGain ( int ) ) );
@@ -586,9 +645,11 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// About
 	QTextEdit *aboutText = new QTextEdit ( cfgFrame5 );
 	aboutText->setGeometry ( 2, 2, 347, 262 );
+	helpText->setWordWrapMode(QTextOption::WordWrap);
+	helpText->setLineWrapMode(QTextEdit::WidgetWidth);
 	aboutText->setReadOnly ( true );
 	aboutText->append (
-	    QString ( "<center><br>SDR-Shell Version rxtx.4<br>" ) +
+	    QString ( "<center><br>SDR-Shell Version 4.15<br>" ) +
 	    "Copyright (c) 2006, 2007 & 2009<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
@@ -604,37 +665,46 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// S meter
 	QPixmap *meter1_pix = new QPixmap ( meter1_xpm );
 	signalFrame = new QFrame ( ctlFrame );
-	signalFrame->setPaletteBackgroundPixmap ( *meter1_pix );
+    p = signalFrame->palette();
+    p.setBrush(QPalette::Window, *meter1_pix);
+    //?? p.setColor(QPalette::Window, Qt::black);
+    signalFrame->setPalette(p); 
+    signalFrame->setAutoFillBackground( true );       
 
 	for ( int i = 0; i < 34; i++ )
 	{
 		signalBargraph[i] = new QFrame ( signalFrame );
-		signalBargraph[i]->setPaletteBackgroundColor ( QColor ( 50, 50, 50 ) );
+        signalBargraph[i]->setPalette( QColor( 50, 50, 50 ) );
 		signalBargraph[i]->setGeometry ( 3 + 4 * i, 3, 3, 9 );
+		//signalBargraph[i]->setFrameStyle ( QFrame::NoFrame | QFrame::Plain );
+        signalBargraph[i]->setAutoFillBackground(true);        
 		signalBargraph[i]->show();
 	}
 
-	signal_dBm = new QLabel ( this, "-174", signalFrame );
+    signal_dBm = new QLabel( "-174", signalFrame );    
 	signal_dBm->setFont ( *font1 );
-	signal_dBm->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	signal_dBm->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    p = signal_dBm->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor(255, 255, 255) );
+    signal_dBm->setPalette(p);
 
-	QLabel *dBmLabel = new QLabel ( this, " dBm", signalFrame );
+    QLabel *dBmLabel = new QLabel( " dBm", signalFrame );    
 	dBmLabel->setFont ( *font1 );
-	dBmLabel->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	dBmLabel->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    p = dBmLabel->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor(255, 255, 255) );
+    dBmLabel->setPalette(p);
 
-	/*lcd = new QLCDNumber ( 12, ctlFrame );
+    //Frequency display
+    lcd = new QLCDNumber( 12, ctlFrame );
 	lcd->setFrameStyle ( QFrame::NoFrame );
-	lcd->setSegmentStyle ( QLCDNumber::Filled );
-	lcd->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	lcd->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );*/
-	
-	lcd = new QLabel ( this, "", ctlFrame );
-	lcd->setFont ( *fontlcd);
-	lcd->setPaletteForegroundColor ( QColor (255, 255, 255 ) );
-	lcd->setPaletteBackgroundColor  ( QColor (0, 0, 0 ) );
-	lcd->setFrameStyle ( QFrame::NoFrame );
+	lcd->setSegmentStyle( QLCDNumber::Filled );
+    p = lcd->palette();
+    //p.setColor(QPalette::Window, Qt::black);
+    //p.setColor(QPalette::Active, QPalette::WindowText, QColor(255, 255, 255) );
+    p.setColor(QPalette::WindowText, QColor(255, 255, 255) );
+    lcd->setPalette(p);
+    lcd->setAutoFillBackground(true);
 
 	step_1Hz_frame = new QFrame ( ctlFrame );
 	step_1Hz_frame->setGeometry ( 318, 29, 11, 1 );
@@ -645,44 +715,55 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	step_100Hz_frame = new QFrame ( ctlFrame );
 	step_100Hz_frame->setGeometry ( 292, 29, 11, 1 );
 
-	step_1000Hz_frame = new QFrame ( ctlFrame );
-	step_1000Hz_frame->setGeometry ( 279, 29, 11, 1 );
+	step_1KHz_frame = new QFrame ( ctlFrame );
+	step_1KHz_frame->setGeometry ( 279, 29, 11, 1 );
 	
-	step_10000Hz_frame = new QFrame ( ctlFrame );
-	step_10000Hz_frame->setGeometry ( 266, 29, 11, 1 );
+	step_10KHz_frame = new QFrame ( ctlFrame );
+	step_10KHz_frame->setGeometry ( 266, 29, 11, 1 );
 	
-	step_100000Hz_frame = new QFrame ( ctlFrame );
-	step_100000Hz_frame->setGeometry ( 253, 29, 11, 1 );
+	step_100KHz_frame = new QFrame ( ctlFrame );
+	step_100KHz_frame->setGeometry ( 253, 29, 11, 1 );
 	
-	step_1000000Hz_frame = new QFrame ( ctlFrame );
-	step_1000000Hz_frame->setGeometry ( 234, 29, 11, 1 );
+	step_1MHz_frame = new QFrame ( ctlFrame );
+	step_1MHz_frame->setGeometry ( 234, 29, 11, 1 );
 	
-	step_10000000Hz_frame = new QFrame ( ctlFrame );
-	step_10000000Hz_frame->setGeometry ( 221, 29, 11, 1 );
+	step_10MHz_frame = new QFrame ( ctlFrame );
+	step_10MHz_frame->setGeometry ( 221, 29, 11, 1 );
 	
-	step_100000000Hz_frame = new QFrame ( ctlFrame );
-	step_100000000Hz_frame->setGeometry ( 208, 29, 11, 1 );
+	step_100MHz_frame = new QFrame ( ctlFrame );
+	step_100MHz_frame->setGeometry ( 208, 29, 11, 1 );
 
-	rxPix = new QPixmap ( rx_xpm );
-	txPix = new QPixmap ( tx_xpm );
+    QPixmap rxPix(rx_xpm);
+    QPixmap txPix(tx_xpm);
 
 	trxFrame = new QFrame ( ctlFrame );
-	trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+    trxFrame->setPalette( QColor( 0, 0, 0) );
+    trxFrame->setAutoFillBackground(true);
 	TRX_label = new Varilabel ( trxFrame );
 	TRX_label->setGeometry ( 0, 0, 19, 11 );
+    TRX_label->setPixmap(rxPix);
+    TRX_label->setLabel( RX );
 	connect ( TRX_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_TX ( int ) ) );
 
-	QPixmap *mhz_pix = new QPixmap ( mhz_xpm );
-	QFrame *mhzFrame = new QFrame ( ctlFrame );
-	mhzFrame->setPaletteBackgroundPixmap ( *mhz_pix );
+    QPixmap mhz_pix(mhz_xpm);
+    QFrame *mhzFrame = new QFrame( ctlFrame );
+    mhzFrame->setPalette( QColor( 0, 0, 0) );
+    mhzFrame->setAutoFillBackground(true);
+   
+    MHz_label = new QLabel(mhzFrame);
+    MHz_label->setPixmap(mhz_pix);
+    MHz_label->setPalette( QColor( 0, 0, 0) );
+    MHz_label->setAutoFillBackground(true);
 	signal_dBm->setGeometry ( 140, 2, 35, 12 );
 
 	// -----------------------------------------------------------------------
 	// Mode Frame
 
-	QFrame *modeFrame = new QFrame ( ctlFrame );
-	modeFrame->setBackgroundColor ( QColor ( 100, 0, 0 ) );
+    QFrame *modeFrame = new QFrame( this );
+    modeFrame->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );  
+    modeFrame->setPalette( QColor(100, 0, 0) );
+    modeFrame->setAutoFillBackground(true);
 
 	QPixmap lsb_pix ( lsb_xpm );
 	LSB_label = new VariModelabel ( modeFrame );
@@ -751,11 +832,14 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// -----------------------------------------------------------------------
 	// Noise Reduction Frame
 
-	QFrame *swFrame = new QFrame ( ctlFrame );
-	swFrame->setBackgroundColor ( QColor ( 0, 80, 0 ) );
+    QFrame *swFrame = new QFrame( this );
+    swFrame->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
+    swFrame->setPalette( QColor( 0, 80, 0 ) );
+    swFrame->setAutoFillBackground( true );
 
 	QPixmap nr_pix ( nr_xpm );
 	NR_label = new Varilabel ( swFrame );
+	//NR_label->setFrameStyle(QFrame::NoFrame );
 	NR_label->setPixmap ( nr_pix );
 	NR_label->setGeometry ( 3, 3, 27, 11 );
 	connect ( NR_label, SIGNAL ( mouseRelease ( int ) ),
@@ -786,7 +870,6 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	MUTE_label = new Varilabel ( swFrame );
 	MUTE_label->setPixmap ( mute_pix );
 	MUTE_label->setGeometry ( 33, 17, 27, 11 );
-	MUTE_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
 	connect ( MUTE_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_MUTE ( int ) ) );
 
@@ -799,39 +882,41 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	// -----------------------------------------------------------------------
 	// Band Frame
-	QFrame *bFrame = new QFrame ( ctlFrame );
-	bFrame->setBackgroundColor ( QColor ( 0, 80, 0 ) );
+	QFrame *bFrame = new QFrame ( this );
+    bFrame->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
+    bFrame->setPalette( QColor( 0, 80, 0 ) );
+    bFrame->setAutoFillBackground( true );
 
 	QPixmap up_pix ( up_xpm );
 	UP_label = new Varilabel ( bFrame );
 	UP_label->setPixmap ( up_pix );
 	UP_label->setGeometry ( 3, 3, 27, 11 );
+   	UP_label->setPalette(QColor(0, 0, 0) );
+    UP_label->setAutoFillBackground( true );
 	connect ( UP_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( band_UP ( int ) ) );
-
-	//QPixmap tx_pix ( tx_xpm );
-	//TX_label = new Varilabel ( bFrame );
-	//TX_label->setPixmap ( tx_pix );
-	//TX_label->setGeometry ( 33, 3, 27, 11 );
-	//connect ( TX_label, SIGNAL ( mouseRelease ( int ) ),
-	//          this, SLOT ( toggle_TX ( int ) ) );
 
 	QPixmap down_pix ( down_xpm );
 	DOWN_label = new Varilabel ( bFrame );
 	DOWN_label->setPixmap ( down_pix );
 	DOWN_label->setGeometry ( 3, 17, 27, 11 );
+   	DOWN_label->setPalette(QColor(0, 0, 0) );
+    DOWN_label->setAutoFillBackground( true );
 	connect ( DOWN_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( band_DOWN ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// Sub Mode Frame
-	QFrame *subFrame = new QFrame ( ctlFrame );
-	subFrame->setBackgroundColor ( QColor ( 0, 0, 180 ) );
+	QFrame *subFrame = new QFrame ( this );
+    subFrame->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
+    subFrame->setPalette( QColor( 0, 0, 100 ) );
+    subFrame->setAutoFillBackground( true );
 
 	QPixmap rit_pix ( rit_xpm );
 	RIT_label = new Varilabel ( subFrame );
 	RIT_label->setPixmap ( rit_pix );
 	RIT_label->setGeometry ( 3, 3, 27, 11 );
+   	RIT_label->setAutoFillBackground( true );
 	connect ( RIT_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_RIT ( int ) ) );
 
@@ -839,16 +924,20 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	SPLIT_label = new Varilabel ( subFrame );
 	SPLIT_label->setPixmap ( split_pix );
 	SPLIT_label->setGeometry ( 3, 17, 27, 11 );
+   	SPLIT_label->setAutoFillBackground( true );
 	connect ( SPLIT_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_SPLIT ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// RIT / Split Value
-	rit = new QLabel ( this, "", ctlFrame );
+	rit = new QLabel ( ctlFrame );
 	rit->setFont ( *fontlcd);
-	rit->setPaletteForegroundColor ( QColor (255, 255, 255 ) );
-	rit->setPaletteBackgroundColor  ( QColor (0, 0, 0 ) );
-	rit->setFrameStyle ( QFrame::NoFrame );
+    p = rit->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor(255, 255, 255) );
+    rit->setPalette(p);
+    rit->setAutoFillBackground(true);
+	//rit->setFrameStyle ( QFrame::NoFrame );
 
 	// -----------------------------------------------------------------------
 	// Memory Cells
@@ -856,9 +945,14 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	for (int i=0; i<NUM_MEMS; i++) {
 	  char buffer[256];
 	  f_cell[i] = new MemoryCell(ctlFrame2);
+      f_cell[i]->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	  f_cell[i]->setFont(*font1);
-	  f_cell[i]->setPaletteForegroundColor(QColor(255, 255, 255));
-	  f_cell[i]->setPaletteBackgroundColor (QColor(0, 0, 0));
+	  f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
+      f_cell[i]->setPalette( QColor( 0, 0, 0 ) );
+      f_cell[i]->setAutoFillBackground( true );
+      p = f_cell[i]->palette();
+      p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+      f_cell[i]->setPalette(p);
 	  f_cell[i]->setGeometry((i*21+1), 1, 20, 15);
 	  f_cell[i]->setAlignment(Qt::AlignHCenter|Qt::AlignVCenter);
 	  snprintf(buffer, 256, "F%d", (i+1));
@@ -874,10 +968,14 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	M_label = new QLabel ( ctlFrame2 );
 	M_label->setFont ( *font1 );
-	M_label->setPaletteForegroundColor ( QColor ( 255, 255, 255 ) );
-	M_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    M_label->setPalette( QColor( 0, 0, 0 ) );
+    M_label->setAutoFillBackground( true );
+    p = M_label->palette();
+    p.setColor(QPalette::Inactive, QPalette::WindowText, QColor( 255, 255, 255) );
+    M_label->setPalette(p);
 	M_label->setGeometry (
 	    169,
+//!		f8_cell->x() + f8_cell->width(), 
 	    1,
 	    font1Metrics->maxWidth() * 12,
 	    15 );
@@ -885,7 +983,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	for (int i=0; i<NUM_BANDMEMS; i++) {
 	  band_cell[i] = new MemoryCell();
-	  band_cell[i]->setID(i+1);
+	  band_cell[i]->setID(i+11);
 	}
 	band = 1;
 
@@ -895,14 +993,18 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// Spectrogram Color Aperture
 
 	CA_label = new QLabel ( ctlFrame2 );
+    CA_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	CA_label->setFont ( *font1 );
-	CA_label->setPaletteForegroundColor ( QColor ( 255, 100, 100 ) );
-	CA_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    p = CA_label->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor(255, 100, 100) );
+    CA_label->setPalette(p);
+    CA_label->setAutoFillBackground( true );
 	CA_label->setGeometry (
 	    M_label->x() + M_label->width() + 1,
-	    1,
+		0, 
 	    font1Metrics->maxWidth() * 16,
-	    15 );
+		17 );
 	CA_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
 
@@ -910,15 +1012,20 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	// AGC
 
 	AGC_label = new QLabel ( ctlFrame2 );
+    AGC_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	AGC_label->setFont ( *font1 );
 	AGC_label->setText ( " AGC" );
-	AGC_label->setPaletteForegroundColor ( QColor ( 0, 180, 255 ) );
-	AGC_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    p = AGC_label->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255 ) );
+    p.setColor(QPalette::Inactive, QPalette::WindowText, QColor( 255, 180, 0 ) );
+    AGC_label->setPalette(p);
+    AGC_label->setAutoFillBackground( true );
 	AGC_label->setGeometry (
-	    CA_label->x() + CA_label->width() + 1,
-	    1,
+		CA_label->x() + CA_label->width() - 1, 
+		0, 
 	    font1Metrics->maxWidth() * 5 + 50,
-	    15 );
+		17 );
 	AGC_label->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
 	//QPixmap agc_o_pix( agc_o_xpm );
@@ -933,7 +1040,10 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	AGC_L_label = new Varilabel ( AGC_label );
 	AGC_L_label->setLabel ( 1 );
 	AGC_L_label->setPixmap ( agc_l_pix );
-	AGC_L_label->setGeometry ( font1Metrics->maxWidth() * 5, 2, 9, 11 );
+    AGC_L_label->setFrameStyle( QFrame::Box | QFrame::Raised );
+    AGC_L_label->setLineWidth(0);
+    AGC_L_label->setMidLineWidth(0);
+    AGC_L_label->setGeometry( font1Metrics->maxWidth() * 5, 3, 9, 11 );
 	connect ( AGC_L_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( setAGC ( int ) ) );
 
@@ -941,7 +1051,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	AGC_S_label = new Varilabel ( AGC_label );
 	AGC_S_label->setLabel ( 2 );
 	AGC_S_label->setPixmap ( agc_s_pix );
-	AGC_S_label->setGeometry ( AGC_L_label->x() + 11, 2, 9, 11 );
+    AGC_S_label->setGeometry( AGC_L_label->x() + 11, 3, 9, 11 );
 	connect ( AGC_S_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( setAGC ( int ) ) );
 
@@ -949,7 +1059,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	AGC_M_label = new Varilabel ( AGC_label );
 	AGC_M_label->setLabel ( 3 );
 	AGC_M_label->setPixmap ( agc_m_pix );
-	AGC_M_label->setGeometry ( AGC_S_label->x() + 11, 2, 9, 11 );
+    AGC_M_label->setGeometry( AGC_S_label->x() + 11, 3, 9, 11 );
 	connect ( AGC_M_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( setAGC ( int ) ) );
 
@@ -957,7 +1067,7 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	AGC_F_label = new Varilabel ( AGC_label );
 	AGC_F_label->setLabel ( 4 );
 	AGC_F_label->setPixmap ( agc_f_pix );
-	AGC_F_label->setGeometry ( AGC_M_label->x() + 11, 2, 9, 11 );
+    AGC_F_label->setGeometry( AGC_M_label->x() + 11, 3, 9, 11 );
 	connect ( AGC_F_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( setAGC ( int ) ) );
 
@@ -966,31 +1076,33 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	Spacer_label = new QLabel ( ctlFrame2 );
 	Spacer_label->setFont ( *font1 );
-	Spacer_label->setPaletteForegroundColor ( QColor ( 100,255,100 ) );
-	Spacer_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
 	Spacer_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-
-	f_label = new Varilabel ( ctlFrame );
-	f_label->setFont ( *font1 );
-	f_label->setPaletteForegroundColor ( QColor ( 255,255,25 ) );
-	f_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
-	f_label->setGeometry ( 173, 48, 85, 14 );
+    Spacer_label->setPalette( QColor( 0, 0, 255 ) );    
+    Spacer_label->setAutoFillBackground( true );
 
 	CFG_label = new Varilabel ( ctlFrame2 );
+    CFG_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	CFG_label->setFont ( *font1 );
 	CFG_label->setText ( "Help & CFG" );
-	CFG_label->setPaletteForegroundColor ( QColor ( 255,255,255 ) );
-	CFG_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    CFG_label->setPalette( QColor( 0, 0, 0 ) );
+    CFG_label->setAutoFillBackground( true );
+    p = CFG_label->palette();
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+    CFG_label->setPalette(p);   
 	CFG_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	connect ( CFG_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setCfg ( int ) ) );
 
 	CPU_label = new QLabel ( ctlFrame2 );
+    CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
 	CPU_label->setFont ( *font1 );
-	CPU_label->setPaletteForegroundColor ( QColor ( 0, 180, 255 ) );
-	CPU_label->setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    CPU_label->setPalette( QColor( 0, 0, 0 ) );    
+    CPU_label->setAutoFillBackground( true );    
+    p = CPU_label->palette();
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255) );
+    CPU_label->setPalette(p);
 	CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
-	ctlFrame1->setGeometry ( 1, 1, 641, 31 );
+	//ctlFrame1->setGeometry ( 1, 1, 641, 31 );
 	signalFrame->setGeometry ( 1, 3, 170, 27 );
 	dBmLabel->setGeometry ( 140, 14, 35, 12 );
 	lcd->setGeometry ( 170, 3, 170, 27 );
@@ -998,22 +1110,22 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	mhzFrame->setGeometry ( 337, 19, 19, 8 );
 
 	bFrame->setGeometry ( 363, 1, 33, 31 );
-	//modeFrame->setGeometry ( 363, 1, 99, 31 );
 	modeFrame->setGeometry ( 397, 1, 99, 31 );
-	//swFrame->setGeometry ( 463, 1, 93, 31 );
 	swFrame->setGeometry ( 497, 1, 93, 31 );
 	subFrame->setGeometry ( 590, 1, 33, 31 );
 	rit->setGeometry ( 625, 1, 130, 31 );
 
 	logoFrame = new QFrame ( ctlFrame );
-	logoFrame->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    logoFrame->setPalette( QColor( 0, 0, 0 ) );
+    logoFrame->setAutoFillBackground(true);
 
 	QPixmap logo_pix ( logo_xpm );
 	logoLabel = new QLabel ( logoFrame );
 	logoLabel->setPixmap ( logo_pix );
-	logoLabel->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    logoLabel->setPalette( QColor( 0, 0, 0 ) );
+    logoLabel->setAutoFillBackground(true);
 
-	setRxFrequency( 1 );	// >> !rock_bound
+	setRxFrequency( 1 );
 	if (useIF)
 	{
 	  setDefaultRxFrequency();
@@ -1026,18 +1138,22 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 	set_BIN ( BIN_state );
 	set_SPEC ( SPEC_state );
 	set_MUTE ( 0 );
+	set_RIT ( 0 );
+	set_SPLIT ( 0 );
+   	UP_label->setPalette(QColor(0, 0, 0) );
+   	DOWN_label->setPalette(QColor(0, 0, 0) );
 	setCA_label();
 	setTuneStep ( 0 );
 	setTheme ( 2 );
-	setPolyFFT ( polyphaseFFT );
-	setFFTWindow ( fftWindow );
-	setSpectrumType ( spectrumType );
+        setPolyFFT ( );
+	setSpectrumDefaults();
 	setAGC ( agcType );
 	setTxIQGain();
 	setTxIQPhase();
 	setTxGain( 0 );
 	setTxGain( 1 );
 	processorLoad();
+	hScale = 1.0;
 	if ( useHamlib )
 	{
 		initHamlib();
@@ -1046,15 +1162,15 @@ Main_Widget::Main_Widget ( QWidget *parent, const char *name )
 
 	QTimer *cpuTimer = new QTimer ( this );
 	connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
-	cpuTimer->start ( 5000, FALSE );
+    cpuTimer->start( 5000 );
 
 	QTimer *meterTimer = new QTimer ( this );
 	connect ( meterTimer, SIGNAL ( timeout() ), this, SLOT ( readMeter() ) );
-	meterTimer->start ( 100, FALSE );
+    meterTimer->start( 100 );
 
 	QTimer *fftTimer = new QTimer ( this );
 	connect ( fftTimer, SIGNAL ( timeout() ), this, SLOT ( readSpectrum() ) );
-	fftTimer->start ( 100, FALSE );
+    fftTimer->start( 100 );      
 }
 
 void Main_Widget::initConstants()
@@ -1110,6 +1226,7 @@ void Main_Widget::initConstants()
 	s_dbm[33] = -13; signalColor[33] = new QColor ( 255,  40, 40 ); // S9+60dB
 
 	// Spectrogram colors
+
 	spec_b[0] =  0; spec_g[0] =  0; spec_r[0] =  0;
 	spec_b[1] =  9; spec_g[1] =  1; spec_r[1] =  1;
 	spec_b[2] =  15; spec_g[2] =  1; spec_r[2] =  1;
@@ -1238,10 +1355,12 @@ void Main_Widget::setTheme ( int t )
 	switch ( theme )
 	{
 		case 1:
-			setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    setPalette( QColor( 0, 0, 0 ) );
+    this->setAutoFillBackground(true);    
 			break;
 		case 2:
-			setPaletteBackgroundColor ( QColor ( 0, 0, 0 ) );
+    setPalette( QColor( 0, 0, 0 ) );
+    this->setAutoFillBackground(true);    
 			break;
 		default:
 			break;
@@ -1250,9 +1369,18 @@ void Main_Widget::setTheme ( int t )
 
 void Main_Widget::paintEvent ( QPaintEvent * )
 {
-	updateLayout();
-	plotSpectrum ( spectrum_head );
-	drawPassBandScale();
+	if (updated) {
+		//fprintf( stderr, "+");
+		updateLayout();
+		if ( SPEC_state ) {
+			drawSpectrogram();			// update the spectrogram (middle) display
+			plotSpectrum( spectrum_head );	// plots the spectrum display
+		}
+		drawPassBandScale();
+	} else {
+		//fprintf( stderr, "-");
+	}
+	updated = 0;
 }
 
 void Main_Widget::updateLayout()
@@ -1314,11 +1442,20 @@ void Main_Widget::updateLayout()
 	    CFG_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
 	    15 );
 
+	spectrum_width = int(spectrumFrame->width() * hScale);
 }
 
 void Main_Widget::loadSettings()
 {
-	QSettings settings;
+	QSettings settings("freesoftware", "sdr-shell");
+	//settings.sync();
+	// settings.setValue("editor/wrapMargin", 68);
+	//  int margin = settings.value("editor/wrapMargin").toInt();
+	//     settings.beginGroup("MainWindow");
+	//     resize(settings.value("size", QSize(400, 400)).toSize());
+	//     move(settings.value("pos", QPoint(200, 200)).toPoint());
+	//     settings.endGroup();
+
 
 	// SDR-Core Environment
 	char *ep;
@@ -1326,6 +1463,7 @@ void Main_Widget::loadSettings()
 	{
 		sample_rate = atoi ( ep );
 		printf ( "sample_rate = %d\n", sample_rate );
+		tuneCenter = -sample_rate / 4;
 	}
 	else
 	{
@@ -1346,24 +1484,43 @@ void Main_Widget::loadSettings()
      //sp = new_dttsp_port_client(DTTSP_PORT_CLIENT_SPECTRUM, 1);
      //mp = new_dttsp_port_client(DTTSP_PORT_CLIENT_METER, 1);
 
-     pCmd = new DttSPcmd ();
+	pUSBCmd = NULL;
+	pTXCmd = NULL;
 
-     pMeter = new DttSPmeter ();
+	if ( ( ep = getenv ( "SDR_HOST" ) ) ) {
+		pCmd = new DttSPcmd (ep);
 
-     pSpectrum = new DttSPspectrum ();
+		pMeter = new DttSPmeter (ep);
+
+		pSpectrum = new DttSPspectrum (ep);
      
-     pUSBCmd = new USBSoftrockCmd ();
-     // USB-Synth turns PTT on when it powers up.  Turn it off.
-     pUSBCmd->sendCommand("set ptt off\n");
+		pUSBCmd = new USBSoftrockCmd (ep);
+		// USB-Synth turns PTT on when it powers up.  Turn it off.
+		pUSBCmd->sendCommand("set ptt off\n");
+
+		pTXCmd = new DttSPTXcmd (ep);
+	} else {
+		pCmd = new DttSPcmd ();
+
+		pMeter = new DttSPmeter ();
+
+		pSpectrum = new DttSPspectrum ();
      
-     pTXCmd = new DttSPTXcmd ();
-     // The value is the transmit port's CMD
-     if ( ( ep = getenv ( "SDR_TRANSMIT" ) ) )
-     {
-	int port = atoi(ep);
-	if (port)
-		pTXCmd->setPort(port);
-     }
+		pUSBCmd = new USBSoftrockCmd ();
+		// USB-Synth turns PTT on when it powers up.  Turn it off.
+		if (!rock_bound) {
+			pUSBCmd->sendCommand("set ptt off\n");
+		}
+
+		pTXCmd = new DttSPTXcmd ();
+	}
+    // The value is the transmit port's CMD
+    if ( ( ep = getenv ( "SDR_TRANSMIT" ) ) )
+    {
+		int port = atoi(ep);
+		if (port)
+			pTXCmd->setPort(port);
+    }
 
 	sdr_mode = NULL;
 	if ( ( ep = getenv ( "SDR_MODE" ) ) )
@@ -1387,143 +1544,148 @@ void Main_Widget::loadSettings()
 	// Read config
 	//sample_rate = settings.readEntry(
 	//	"/sdr-shell/sample_rate", "48000" ).toInt();
-	rx_f = settings.readEntry (
-	           "/sdr-shell/rx_f", "14046000" ).toLongLong();
-	rx_f_string = settings.readEntry (
-	                  "/sdr-shell/rx_f", "14046000" );
-	useIF = ( bool ) settings.readEntry (
-	            "/sdr-shell/useIF", "0" ).toInt();
-	useSlopeTune = ( bool ) settings.readEntry (
-		  "/sdr-shell/useSlopeTune", "0" ).toInt();
-	muteXmit = ( bool ) settings.readEntry (
-			 "/sdr-shell/muteXmit", "0" ).toInt();
-	rx_if = settings.readEntry (
-	            "/sdr-shell/rx_if", "455000" ).toLongLong();
-	rx_if_string = settings.readEntry (
-	                   "/sdr-shell/rx_if", "455000" );
-	rx_delta_f = settings.readEntry (
-	                 "/sdr-shell/rx_delta_f", "11000" ).toInt();
-	cwPitch = settings.readEntry (
-			"/sdr-shell/cwPitch", "600" ).toInt();
-	specApertureLow = settings.readEntry (
-	                      "/sdr-shell/specApertureLow", "16" ).toInt();
-	specApertureHigh = settings.readEntry (
-	                       "/sdr-shell/specApertureHigh", "41" ).toInt();
-	tuneStep = settings.readEntry (
-	               "/sdr-shell/tuneStep", "1" ).toInt();
-	stationCallsign = settings.readEntry (
-	                      "/sdr-shell/stationCallsign", "nocall" );
-	stationQTH = settings.readEntry (
-	                 "/sdr-shell/stationQTH", "AA00aa" );
-	iqGain = settings.readEntry (
-	             "/sdr-shell/iqGain", "0" ).toInt();
-	iqPhase = settings.readEntry (
-	              "/sdr-shell/iqPhase", "0" ).toInt();
-	txIQGain = settings.readEntry (
-	             "/sdr-shell/txIQGain", "0" ).toInt();
-	txIQPhase = settings.readEntry (
-	              "/sdr-shell/txIQPhase", "0" ).toInt();
-	txGain = settings.readEntry (
-	             "/sdr-shell/txGain", "0" ).toInt();
-	micGain = settings.readEntry (
-	             "/sdr-shell/micGain", "0" ).toInt();
-	enableTransmit = ( bool ) settings.readEntry (
-	             "/sdr-shell/enableTransmit", "0" ).toInt();
-	mode = ( rmode_t ) settings.readEntry (
-	           "/sdr-shell/mode", "1" ).toInt();
-	usbOffset = settings.readEntry (
-	              "/sdr-shell/usbOffset", "1500" ).toInt();
-	lsbOffset = settings.readEntry (
-	              "/sdr-shell/lsbOffset", "1500" ).toInt();
-	slopeLowOffset = settings.readEntry (
-	              "/sdr-shell/slopeLowOffset", "3500" ).toInt();
-	slopeHighOffset = settings.readEntry (
-	              "/sdr-shell/slopeHighOffset", "3500" ).toInt();
-	NR_state = settings.readEntry (
-	               "/sdr-shell/NR_state", "0" ).toInt();
-	ANF_state = settings.readEntry (
-	                "/sdr-shell/ANF_state", "0" ).toInt();
-	NB_state = settings.readEntry (
-	               "/sdr-shell/NB_state", "0" ).toInt();
-	BIN_state = settings.readEntry (
-	                "/sdr-shell/BIN_state", "0" ).toInt();
-	SPEC_state = settings.readEntry (
-	                 "/sdr-shell/SPEC_state", "0" ).toInt();
-	filterLine = settings.readEntry (
-	                 "/sdr-shell/filterLine", "0" ).toInt();
-	my_lat = settings.readEntry (
-	             "/sdr-shell/my_lat", "0" ).toDouble();
-	my_lon = settings.readEntry (
-	             "/sdr-shell/my_lon", "0" ).toDouble();
-	font1PointSize = settings.readEntry (
-	                     "/sdr-shell/font1PointSize", "8" ).toInt();
-	polyphaseFFT = settings.readEntry (
-	                   "/sdr-shell/polyphaseFFT", "1" ).toInt();
-	fftWindow = settings.readEntry (
-	                "/sdr-shell/fftWindow", "11" ).toInt();
-	spectrumType = settings.readEntry (
-	                   "/sdr-shell/spectrumType", "0" ).toInt();
-	agcType = settings.readEntry (
-	              "/sdr-shell/agcType", "3" ).toInt();
-	specCal = settings.readEntry (
-	              "/sdr-shell/specCal", "70" ).toFloat();
-	metrCal = settings.readEntry (
-	              "/sdr-shell/metrCal", "40" ).toFloat();
+    rx_f = settings.value( 
+		"/sdr-shell/rx_f", 7055000 ).toLongLong();
+    rx_f_string = settings.value( 
+		"/sdr-shell/rx_f", 7055000 ).toString();
+	useIF = settings.value (
+	    "/sdr-shell/useIF", "0" ).toInt();
+	useSlopeTune = settings.value (
+		"/sdr-shell/useSlopeTune", "0" ).toInt();
+	muteXmit = ( bool ) settings.value (
+		"/sdr-shell/muteXmit", "0" ).toInt();
+	rx_if = settings.value (
+	    "/sdr-shell/rx_if", "455000" ).toLongLong();
+	rx_if_string = settings.value (
+	    "/sdr-shell/rx_if", "455000" ).toString();
+    rx_delta_f = settings.value( 
+		"/sdr-shell/rx_delta_f", 0 ).toInt();
+	cwPitch = settings.value (
+		"/sdr-shell/cwPitch", "600" ).toInt();
+    specApertureLow = settings.value( 
+		"/sdr-shell/specApertureLow", 16 ).toInt();
+    specApertureHigh = settings.value( 
+		"/sdr-shell/specApertureHigh", 41 ).toInt(); 
+    tuneStep = settings.value( 
+		"/sdr-shell/tuneStep", 1 ).toInt();
+    stationCallsign = settings.value( 
+		"/sdr-shell/stationCallsign", "nocall" ).toString();
+	stationQTH = settings.value (
+	    "/sdr-shell/stationQTH", "AA00aa" ).toString();
+    iqGain = settings.value( 
+		"/sdr-shell/iqGain", 0 ).toInt();
+    iqPhase = settings.value( 
+		"/sdr-shell/iqPhase", 0 ).toInt();
+    txIQGain = settings.value( 
+		"/sdr-shell/txIQGain", 0 ).toInt();
+    txIQPhase = settings.value( 
+		"/sdr-shell/txIQPhase", 0 ).toInt();
+	txGain = settings.value (
+        "/sdr-shell/txGain", "0" ).toInt();
+	micGain = settings.value (
+	    "/sdr-shell/micGain", "0" ).toInt();
+	enableTransmit = settings.value (
+	    "/sdr-shell/enableTransmit", "0" ).toInt();
+	dualConversion = settings.value (
+	    "/sdr-shell/dualConversion", "0" ).toInt();
+    mode = (rmode_t) settings.value( 
+		"/sdr-shell/mode", 1 ).toInt();
+	usbOffset = settings.value (
+	    "/sdr-shell/usbOffset", "1500" ).toInt();
+	lsbOffset = settings.value (
+	    "/sdr-shell/lsbOffset", "1500" ).toInt();
+	slopeLowOffset = settings.value (
+	    "/sdr-shell/slopeLowOffset", "3500" ).toInt();
+	slopeHighOffset = settings.value (
+	    "/sdr-shell/slopeHighOffset", "3500" ).toInt();
+    NR_state = settings.value( 
+		"/sdr-shell/NR_state", 0 ).toInt();
+    ANF_state = settings.value( 
+		"/sdr-shell/ANF_state", 0 ).toInt();
+    NB_state = settings.value( 
+		"/sdr-shell/NB_state", 0 ).toInt();
+    BIN_state = settings.value( 
+		"/sdr-shell/BIN_state", 0 ).toInt();
+    SPEC_state = settings.value( 
+		"/sdr-shell/SPEC_state", 1 ).toInt();
+    filterLine = settings.value( 
+		"/sdr-shell/filterLine", 0 ).toInt();
+	my_lat = settings.value (
+	    "/sdr-shell/my_lat", "0" ).toDouble();
+	my_lon = settings.value (
+	    "/sdr-shell/my_lon", "0" ).toDouble();
+    font1PointSize = settings.value( 
+		"/sdr-shell/font1PointSize", 8 ).toInt();		
+    polyphaseFFT = settings.value( 
+		"/sdr-shell/polyphaseFFT", 1 ).toInt();
+    fftWindow = settings.value( 
+		"/sdr-shell/fftWindow", 11 ).toInt();
+    spectrumType = settings.value( 
+		"/sdr-shell/spectrumType", 1 ).toInt();
+    agcType = settings.value( 
+		"/sdr-shell/agcType", 3 ).toInt();
+    specCal = settings.value( 
+		"/sdr-shell/specCal", 70 ).toInt();
+    metrCal = settings.value( 
+		"/sdr-shell/metrCal", 40 ).toInt();
+//    hscaleIndex = settings.value(
+//		"/sdr-shell/hScale", 3 ).toInt();
+   specLineFill = settings.value(
+		"/sdr-shell/specfill", false ).toBool();
 
-	// Restore window geometry
-	setGeometry (
-	    settings.readEntry ( "/sdr-shell/g_left", "172" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/g_top", "172" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/g_width", "650" ).toInt(),
-	    settings.readEntry ( "/sdr-shell/g_height", "424" ).toInt()
-	);
-
-	// Restore filter values
-	USB_filter_l = settings.readEntry (
-	                   "/sdr-shell/USB_filter_l", "20" ).toInt();
-	USB_filter_h = settings.readEntry (
-	                   "/sdr-shell/USB_filter_h", "2400" ).toInt();
-	LSB_filter_l = settings.readEntry (
-	                   "/sdr-shell/LSB_filter_l", "-2400" ).toInt();
-	LSB_filter_h = settings.readEntry (
-	                   "/sdr-shell/LSB_filter_h", "-20" ).toInt();
-	DSB_filter_l = settings.readEntry (
-	                   "/sdr-shell/DSB_filter_l", "-2400" ).toInt();
-	DSB_filter_h = settings.readEntry (
-	                   "/sdr-shell/DSB_filter_h", "2400" ).toInt();
-	CWL_filter_l = settings.readEntry (
-	                   "/sdr-shell/CWL_filter_l", "-500" ).toInt();
-	CWL_filter_h = settings.readEntry (
-	                   "/sdr-shell/CWL_filter_h", "-200" ).toInt();
-	CWU_filter_l = settings.readEntry (
-	                   "/sdr-shell/CWU_filter_l", "200" ).toInt();
-	CWU_filter_h = settings.readEntry (
-	                   "/sdr-shell/CWU_filter_h", "500" ).toInt();
-	SAM_filter_l = settings.readEntry (
-	                   "/sdr-shell/SAM_filter_l", "-4000" ).toInt();
-	SAM_filter_h = settings.readEntry (
-	                   "/sdr-shell/SAM_filter_h", "4000" ).toInt();
-	FMN_filter_l = settings.readEntry (
-	                   "/sdr-shell/FMN_filter_l", "-4000" ).toInt();
-	FMN_filter_h = settings.readEntry (
-	                   "/sdr-shell/FMN_filter_h", "4000" ).toInt();
-	AM_filter_l = settings.readEntry (
-	                  "/sdr-shell/AM_filter_l", "-2400" ).toInt();
-	AM_filter_h = settings.readEntry (
-	                  "/sdr-shell/AM_filter_h", "2400" ).toInt();
-	useHamlib = ( bool ) settings.readEntry (
-	            "/sdr-shell/useHamlib", "0" ).toInt();
-	rigString = settings.readEntry (
-	                "/sdr-shell/hamlib_rig", "1901" );
+    // Restore window geometry
+    setGeometry (
+        settings.value( "/sdr-shell/g_left", 172 ).toInt(),
+        settings.value( "/sdr-shell/g_top", 172 ).toInt(),
+        settings.value( "/sdr-shell/g_width", 650 ).toInt(),
+        settings.value( "/sdr-shell/g_height", 424 ).toInt()
+        );
+    // Restore filter values
+    USB_filter_l = settings.value( 
+		"/sdr-shell/USB_filter_l", 20 ).toInt();
+    USB_filter_h = settings.value( 
+		"/sdr-shell/USB_filter_h", 2400 ).toInt();
+    LSB_filter_l = settings.value( 
+		"/sdr-shell/LSB_filter_l", -2400 ).toInt();    
+    LSB_filter_h = settings.value( 
+		"/sdr-shell/LSB_filter_h", -20 ).toInt();
+    DSB_filter_l = settings.value( 
+		"/sdr-shell/DSB_filter_l", -2400 ).toInt();
+    DSB_filter_h = settings.value( 
+		"/sdr-shell/DSB_filter_h", 2400 ).toInt();
+    CWL_filter_l = settings.value( 
+		"/sdr-shell/CWL_filter_l", -500 ).toInt();
+    CWL_filter_h = settings.value( 
+		"/sdr-shell/CWL_filter_h", -200 ).toInt();
+    CWU_filter_l = settings.value( 
+		"/sdr-shell/CWU_filter_l", 200 ).toInt();
+    CWU_filter_h = settings.value( 
+		"/sdr-shell/CWU_filter_h", 500 ).toInt();
+    SAM_filter_l = settings.value( 
+		"/sdr-shell/SAM_filter_l", -4000 ).toInt();
+    SAM_filter_h = settings.value( 
+		"/sdr-shell/SAM_filter_h", "4000" ).toInt();
+    FMN_filter_l = settings.value( 
+		"/sdr-shell/FMN_filter_l", -4000 ).toInt();
+    FMN_filter_h = settings.value( 
+		"/sdr-shell/FMN_filter_h", 4000 ).toInt();
+    AM_filter_l = settings.value( 
+		"/sdr-shell/AM_filter_l", -2400 ).toInt();
+    AM_filter_h = settings.value( 
+		"/sdr-shell/AM_filter_h", 2400 ).toInt();
+	useHamlib = settings.value (
+	    "/sdr-shell/useHamlib", "0" ).toInt();
+	rigString = settings.value (
+	    "/sdr-shell/hamlib_rig", "1901" ).toString();
 	rig = rigString.toInt();
-	portString =  settings.readEntry (
-	                  "/sdr-shell/hamlib_port", "localhost" );
-	port = ( const char* ) portString;
-	speedString = settings.readEntry (
-	                  "/sdr-shell/hamlib_speed", "9600" );
+	portString =  settings.value (
+	    "/sdr-shell/hamlib_port", "localhost" ).toString();
+    //   hl_port =  qPrintable(settings.value (
+          //  "/sdr-shell/hamlib_port", "localhost" ).toString());
+	speedString = settings.value (
+	    "/sdr-shell/hamlib_speed", "4800" ).toString();
 	speed = speedString.toInt();
-
-	rock_bound = ( bool ) settings.readEntry (
+	rock_bound = ( bool ) settings.value (
 			  "/sdr-shell/rock_bound", "false" ).toInt();
 
 	map_flag = 1;
@@ -1533,35 +1695,35 @@ void Main_Widget::loadSettings()
 
 void Main_Widget::loadMemoryCells()
 {
-	QSettings settings;
+	QSettings settings("freesoftware", "sdr-shell");
 
 	// Restore memory cells
 	for(int i=0; i<NUM_MEMS; i++) {
 	  char buffer[256], buffer2[256];
 	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
-	  f_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
+	  f_cell[i]->setFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_txfrequency", i+1);
-	  f_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
+	  f_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
-	  f_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
+	  f_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
 	  snprintf(buffer2, 256, "/sdr-shell/f%d_filter_h", i+1);
-	  f_cell[i]->setFilter(settings.readEntry(buffer, "20").toInt(),
-			       settings.readEntry(buffer2, "2400").toInt());
+	  f_cell[i]->setFilter(settings.value(buffer, "20").toInt(),
+			       settings.value(buffer2, "2400").toInt());
 	}
 
 	for (int i=0; i<NUM_BANDMEMS; i++) {
 	  char buffer[256], buffer2[256];
 	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
-	  band_cell[i]->setFrequency(settings.readEntry(buffer, "0").toInt());
+	  band_cell[i]->setFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
-	  band_cell[i]->setTxFrequency(settings.readEntry(buffer, "0").toInt());
+	  band_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
-	  band_cell[i]->setMode((rmode_t)settings.readEntry(buffer, "1").toInt());
+	  band_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
 	  snprintf(buffer2, 256, "/sdr-shell/b%d_filter_h", i+1);
-	  band_cell[i]->setFilter(settings.readEntry(buffer, "20" ).toInt(),
-			      settings.readEntry(buffer2, "2400" ).toInt() );
+	  band_cell[i]->setFilter(settings.value(buffer, "20" ).toInt(),
+			      settings.value(buffer2, "2400" ).toInt() );
 	}
 
 	printf ( "::: Memory Cells loading completed\n" );
@@ -1575,77 +1737,78 @@ void Main_Widget::closeEvent ( QCloseEvent * )
 
 void Main_Widget::saveSettings()
 {
-	QSettings settings;
+	QSettings settings("freesoftware", "sdr-shell");
 
 	printf ( "Saving settings...\n" );
 
-	settings.setPath ( "n1vtn.org", ".qt", QSettings::User );
-	//settings.writeEntry( "/sdr-shell/sample_rate", sample_rate );
+	//settings.setPath ( "n1vtn.org", ".qt", QSettings::User );
+	//settings.setValue( "/sdr-shell/sample_rate", sample_rate );
 	rx_f_string.setNum(rx_f);
-	settings.writeEntry ( "/sdr-shell/rx_f", rx_f_string );
+	settings.setValue ( "/sdr-shell/rx_f", rx_f_string );
 	rx_if_string.setNum(rx_if);
-	settings.writeEntry ( "/sdr-shell/rx_if", rx_if_string );
+	settings.setValue ( "/sdr-shell/rx_if", rx_if_string );
 	int intUseIF = ( int ) useIF;
-	settings.writeEntry ( "/sdr-shell/useIF", intUseIF );
+	settings.setValue ( "/sdr-shell/useIF", intUseIF );
 	int intUseSlopeTune = ( int ) useSlopeTune;
-	settings.writeEntry ( "/sdr-shell/useSlopeTune", intUseSlopeTune );
+	settings.setValue ( "/sdr-shell/useSlopeTune", intUseSlopeTune );
 	int intMuteXmit = ( int ) muteXmit;
-	settings.writeEntry ( "/sdr-shell/useSlopeTune", intMuteXmit );
-	settings.writeEntry ( "/sdr-shell/cwPitch", cwPitch );
-	settings.writeEntry ( "/sdr-shell/rx_delta_f", rx_delta_f );
-	settings.writeEntry ( "/sdr-shell/specApertureLow", specApertureLow );
-	settings.writeEntry ( "/sdr-shell/specApertureHigh", specApertureHigh );
-	settings.writeEntry ( "/sdr-shell/tuneStep", tuneStep );
-	settings.writeEntry ( "/sdr-shell/stationCallsign", stationCallsign );
-	settings.writeEntry ( "/sdr-shell/stationQTH", stationQTH );
-	settings.writeEntry ( "/sdr-shell/iqGain", iqGain );
-	settings.writeEntry ( "/sdr-shell/iqPhase", iqPhase );
-	settings.writeEntry ( "/sdr-shell/txIQGain", txIQGain );
-	settings.writeEntry ( "/sdr-shell/txIQPhase", txIQPhase );
-	settings.writeEntry ( "/sdr-shell/txGain", txGain );
-	settings.writeEntry ( "/sdr-shell/micGain", micGain );
+	settings.setValue ( "/sdr-shell/useSlopeTune", intMuteXmit );
+	settings.setValue ( "/sdr-shell/cwPitch", cwPitch );
+	settings.setValue ( "/sdr-shell/rx_delta_f", rx_delta_f );
+	settings.setValue ( "/sdr-shell/specApertureLow", specApertureLow );
+	settings.setValue ( "/sdr-shell/specApertureHigh", specApertureHigh );
+	settings.setValue ( "/sdr-shell/tuneStep", tuneStep );
+	settings.setValue ( "/sdr-shell/stationCallsign", stationCallsign );
+	settings.setValue ( "/sdr-shell/stationQTH", stationQTH );
+	settings.setValue ( "/sdr-shell/iqGain", iqGain );
+	settings.setValue ( "/sdr-shell/iqPhase", iqPhase );
+	settings.setValue ( "/sdr-shell/txIQGain", txIQGain );
+	settings.setValue ( "/sdr-shell/txIQPhase", txIQPhase );
+	settings.setValue ( "/sdr-shell/txGain", txGain );
+	settings.setValue ( "/sdr-shell/micGain", micGain );
 	int intEnableTransmit = ( int ) enableTransmit;
-	settings.writeEntry ( "/sdr-shell/enableTransmit", intEnableTransmit );
-	settings.writeEntry ( "/sdr-shell/mode", ( int ) mode );
-	settings.writeEntry ( "/sdr-shell/NR_state", NR_state );
-	settings.writeEntry ( "/sdr-shell/ANF_state", ANF_state );
-	settings.writeEntry ( "/sdr-shell/NB_state", NB_state );
-	settings.writeEntry ( "/sdr-shell/BIN_state", BIN_state );
-	settings.writeEntry ( "/sdr-shell/SPEC_state", SPEC_state );
-	settings.writeEntry ( "/sdr-shell/filterLine", filterLine );
-	settings.writeEntry ( "/sdr-shell/my_lat", my_lat );
-	settings.writeEntry ( "/sdr-shell/my_lon", my_lon );
-	settings.writeEntry ( "/sdr-shell/font1PointSize", font1PointSize );
-	settings.writeEntry ( "/sdr-shell/polyphaseFFT", polyphaseFFT );
-	settings.writeEntry ( "/sdr-shell/fftWindow", fftWindow );
-	settings.writeEntry ( "/sdr-shell/spectrumType", spectrumType );
-	settings.writeEntry ( "/sdr-shell/agcType", agcType );
-	settings.writeEntry ( "/sdr-shell/specCal", specCal );
-	settings.writeEntry ( "/sdr-shell/metrCal", metrCal );
+	settings.setValue ( "/sdr-shell/enableTransmit", intEnableTransmit );
+	settings.setValue ( "/sdr-shell/dualConversion", dualConversion );
+	settings.setValue ( "/sdr-shell/mode", ( int ) mode );
+	settings.setValue ( "/sdr-shell/NR_state", NR_state );
+	settings.setValue ( "/sdr-shell/ANF_state", ANF_state );
+	settings.setValue ( "/sdr-shell/NB_state", NB_state );
+	settings.setValue ( "/sdr-shell/BIN_state", BIN_state );
+	settings.setValue ( "/sdr-shell/SPEC_state", SPEC_state );
+	settings.setValue ( "/sdr-shell/filterLine", filterLine );
+	settings.setValue ( "/sdr-shell/my_lat", my_lat );
+	settings.setValue ( "/sdr-shell/my_lon", my_lon );
+	settings.setValue ( "/sdr-shell/font1PointSize", font1PointSize );
+	settings.setValue ( "/sdr-shell/polyphaseFFT", polyphaseFFT );
+	settings.setValue ( "/sdr-shell/fftWindow", fftWindow );
+	settings.setValue ( "/sdr-shell/spectrumType", spectrumType );
+	settings.setValue ( "/sdr-shell/agcType", agcType );
+	settings.setValue ( "/sdr-shell/specCal", specCal );
+	settings.setValue ( "/sdr-shell/metrCal", metrCal );
 
 	// Save window geometry
-	settings.writeEntry ( "/sdr-shell/g_left", geometry().left() );
-	settings.writeEntry ( "/sdr-shell/g_top", geometry().top() );
-	settings.writeEntry ( "/sdr-shell/g_width", geometry().width() );
-	settings.writeEntry ( "/sdr-shell/g_height", geometry().height() );
+	settings.setValue ( "/sdr-shell/g_left", geometry().left() );
+	settings.setValue ( "/sdr-shell/g_top", geometry().top() );
+	settings.setValue ( "/sdr-shell/g_width", geometry().width() );
+	settings.setValue ( "/sdr-shell/g_height", geometry().height() );
 
 	// Save filter values
-	settings.writeEntry ( "/sdr-shell/USB_filter_l", USB_filter_l );
-	settings.writeEntry ( "/sdr-shell/USB_filter_h", USB_filter_h );
-	settings.writeEntry ( "/sdr-shell/LSB_filter_l", LSB_filter_l );
-	settings.writeEntry ( "/sdr-shell/LSB_filter_h", LSB_filter_h );
-	settings.writeEntry ( "/sdr-shell/DSB_filter_l", DSB_filter_l );
-	settings.writeEntry ( "/sdr-shell/DSB_filter_h", DSB_filter_h );
-	settings.writeEntry ( "/sdr-shell/CWL_filter_l", CWL_filter_l );
-	settings.writeEntry ( "/sdr-shell/CWL_filter_h", CWL_filter_h );
-	settings.writeEntry ( "/sdr-shell/CWU_filter_l", CWU_filter_l );
-	settings.writeEntry ( "/sdr-shell/CWU_filter_h", CWU_filter_h );
-	settings.writeEntry ( "/sdr-shell/SAM_filter_l", SAM_filter_l );
-	settings.writeEntry ( "/sdr-shell/SAM_filter_h", SAM_filter_h );
-	settings.writeEntry ( "/sdr-shell/FMN_filter_l", FMN_filter_l );
-	settings.writeEntry ( "/sdr-shell/FMN_filter_h", FMN_filter_h );
-	settings.writeEntry ( "/sdr-shell/AM_filter_l", AM_filter_l );
-	settings.writeEntry ( "/sdr-shell/AM_filter_h", AM_filter_h );
+	settings.setValue ( "/sdr-shell/USB_filter_l", USB_filter_l );
+	settings.setValue ( "/sdr-shell/USB_filter_h", USB_filter_h );
+	settings.setValue ( "/sdr-shell/LSB_filter_l", LSB_filter_l );
+	settings.setValue ( "/sdr-shell/LSB_filter_h", LSB_filter_h );
+	settings.setValue ( "/sdr-shell/DSB_filter_l", DSB_filter_l );
+	settings.setValue ( "/sdr-shell/DSB_filter_h", DSB_filter_h );
+	settings.setValue ( "/sdr-shell/CWL_filter_l", CWL_filter_l );
+	settings.setValue ( "/sdr-shell/CWL_filter_h", CWL_filter_h );
+	settings.setValue ( "/sdr-shell/CWU_filter_l", CWU_filter_l );
+	settings.setValue ( "/sdr-shell/CWU_filter_h", CWU_filter_h );
+	settings.setValue ( "/sdr-shell/SAM_filter_l", SAM_filter_l );
+	settings.setValue ( "/sdr-shell/SAM_filter_h", SAM_filter_h );
+	settings.setValue ( "/sdr-shell/FMN_filter_l", FMN_filter_l );
+	settings.setValue ( "/sdr-shell/FMN_filter_h", FMN_filter_h );
+	settings.setValue ( "/sdr-shell/AM_filter_l", AM_filter_l );
+	settings.setValue ( "/sdr-shell/AM_filter_h", AM_filter_h );
 
 	// Save memory cells
 	QString f_string;
@@ -1655,16 +1818,16 @@ void Main_Widget::saveSettings()
 
 	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
 	  f_string.sprintf("%lld", f_cell[i]->getFrequency());
-	  settings.writeEntry (buffer, f_string);
+	  settings.setValue (buffer, f_string);
 
 	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
-	  settings.writeEntry(buffer, f_cell[i]->getMode());
+	  settings.setValue(buffer, f_cell[i]->getMode());
 
 	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
-	  settings.writeEntry(buffer, f_cell[i]->getFilter_l());
+	  settings.setValue(buffer, f_cell[i]->getFilter_l());
 
 	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_h", i+1);
-	  settings.writeEntry(buffer, f_cell[i]->getFilter_h());
+	  settings.setValue(buffer, f_cell[i]->getFilter_h());
 	}
 
 	for (int i=0; i<NUM_BANDMEMS; i++) {
@@ -1672,35 +1835,35 @@ void Main_Widget::saveSettings()
 
 	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
 	  f_string.sprintf("%lld", band_cell[i]->getFrequency());
-	  settings.writeEntry (buffer, f_string );
+	  settings.setValue (buffer, f_string );
 
 	  if (band_cell[i]->getTxFrequency() != 0) {
 	    snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
 	    f_string.sprintf("%lld", band_cell[i]->getTxFrequency());
-	    settings.writeEntry(buffer, f_string );
+	    settings.setValue(buffer, f_string );
 	  }
 
 	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
-	  settings.writeEntry (buffer, band_cell[i]->getMode() );
+	  settings.setValue (buffer, band_cell[i]->getMode() );
 
 
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
-	  settings.writeEntry(buffer, band_cell[i]->getFilter_l() );
+	  settings.setValue(buffer, band_cell[i]->getFilter_l() );
 
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_h", i+1);
-	  settings.writeEntry(buffer, band_cell[i]->getFilter_h() );
+	  settings.setValue(buffer, band_cell[i]->getFilter_h() );
 	}
 
-	settings.writeEntry ( "/sdr-shell/hamlib_rig", rigString );
-	settings.writeEntry ( "/sdr-shell/useHamlib", (int) useHamlib );
-	settings.writeEntry ( "/sdr-shell/hamlib_port", portString );
-	settings.writeEntry ( "/sdr-shell/hamlib_speed", speedString );
-	settings.writeEntry ( "/sdr-shell/usbOffset", usbOffset );
-	settings.writeEntry ( "/sdr-shell/lsbOffset", lsbOffset );
-	settings.writeEntry ( "/sdr-shell/slopeLowOffset", slopeLowOffset );
-	settings.writeEntry ( "/sdr-shell/slopeHighOffset", slopeHighOffset );
-
-	settings.writeEntry ( "/sdr-shell/rock_bound", (int) rock_bound );
+	settings.setValue ( "/sdr-shell/hamlib_rig", rigString );
+	settings.setValue ( "/sdr-shell/useHamlib", (int) useHamlib );
+	settings.setValue ( "/sdr-shell/hamlib_port", portString );
+	settings.setValue ( "/sdr-shell/hamlib_speed", speedString );
+	settings.setValue ( "/sdr-shell/usbOffset", usbOffset );
+	settings.setValue ( "/sdr-shell/lsbOffset", lsbOffset );
+	settings.setValue ( "/sdr-shell/slopeLowOffset", slopeLowOffset );
+	settings.setValue ( "/sdr-shell/slopeHighOffset", slopeHighOffset );
+	settings.setValue ( "/sdr-shell/rock_bound", (int) rock_bound );
+	settings.sync();
 }
 
 void Main_Widget::finish()
@@ -1723,9 +1886,9 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 
 	//printf("k %d\n", e->key());
 
-	switch ( e->state() )
+	switch ( e->key() )
 	{
-		case Qt::ShiftButton:
+		 case Qt::Key_Shift:
 			switch ( e->key() )
 			{
 				case 82: state = RX_F; break;
@@ -1735,7 +1898,7 @@ void Main_Widget::keyPressEvent ( QKeyEvent * e )
 				default: break;
 			}
 			break;
-		case Qt::AltButton:
+        case Qt::Key_Alt:
 			switch ( e->key() )
 			{
 				case 65: setMode ( RIG_MODE_AM , FALSE, FALSE ); break; // a
@@ -1761,12 +1924,12 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 {
 	switch ( key )
 	{
-		case 4117: // Down arrow
+        case Qt::Key_Down: // Down arrow
 		case 72: // h
 			//if ( tuneStep > 0 ) tuneStep--;
 			setTuneStep ( -1 );
 			break;
-		case 4114: // Left arrow
+        case Qt::Key_Left: // Left arrow
 		case 74: // j
 			fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
 			if ( rock_bound )
@@ -1775,11 +1938,10 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 					rx_delta_f = rx_delta_f + ( int ) pow ( 10, tuneStep );
 				else
 				  rx_delta_f =  ( sample_rate / 2 - 2000 );
-			}
-			else
-			{
+				setRxFrequency( 0 );
+			} else {
 				rx_f -= rx_delta_f;
-				rx_delta_f = -sample_rate/4;
+				rx_delta_f = tuneCenter;
 				rx_f = rx_f - (int) pow ( 10, tuneStep );
 				rx_f += rx_delta_f;
 
@@ -1787,22 +1949,18 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 				//rx_f = (rx_f-rx_delta_f) / (int) pow ( 10, tuneStep );
 				//rx_f = rx_f * (int) pow ( 10, tuneStep ) + rx_delta_f;
 
-				// disable RIT
+				// disable RIT when tuning with the arrow keys.
 				if (enableRIT)
 					set_RIT( 0 );
-			/*
-				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6 ); 
-			*/
+				setRxFrequency( 1 );
 			}
-			setRxFrequency( 1 );	// >> !rock_bound
 			break;
-		case 4115: // Up arrow
+        case Qt::Key_Up: // Up arrow
 		case 76: // l
 			//if ( tuneStep < 3 ) tuneStep++;
 			setTuneStep ( +1 );
 			break;
-		case 4116: // Right arrow
+        case Qt::Key_Right: // Right arrow
 		case 75:  // k
 			fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
 			if ( rock_bound )
@@ -1811,11 +1969,10 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 					rx_delta_f = rx_delta_f - ( int ) pow ( 10, tuneStep );
 				else
 				  rx_delta_f = - ( sample_rate / 2 - 2000 );
-			}
-			else
-			{
+				setRxFrequency( 0 );
+			} else {
 				rx_f -= rx_delta_f;
-				rx_delta_f = -sample_rate/4;
+				rx_delta_f = tuneCenter;
 				rx_f = rx_f + (int) pow ( 10, tuneStep );
 				rx_f += rx_delta_f;
 
@@ -1823,15 +1980,11 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 				//rx_f = (rx_f-rx_delta_f) / (int) pow ( 10, tuneStep );
 				//rx_f = rx_f * (int) pow ( 10, tuneStep ) + rx_delta_f;
 
-				// disable RIT
+				// reset RIT when tuning with the arrow keys
 				if (enableRIT)
 					set_RIT( 0 );
-			/*
-				fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
-			*/
+				setRxFrequency( 1 );
 			}
-			setRxFrequency( 1 );	// >> !rock_bound
 			break;
 		case 4118:	// Page Up
 			// ^F = 4129 (ctl) 70
@@ -1847,23 +2000,25 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			}
 			break;
 		case '1':
-			spec_width = DEFSPEC;
-			once = 1;
+			hScale=1.0;
 			break;
 		case '2':
-			spec_width = DEFSPEC/2;
-			once = 1;
-			fprintf(stderr, "spec_width=%d\n", spec_width);
+			hScale=2.0;
+			break;
+		case '3':
+			hScale=3.0;
 			break;
 		case '4':
-			spec_width = DEFSPEC/4;
-			once = 1;
-			fprintf(stderr, "spec_width=%d\n", spec_width);
+			hScale = hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
+			break;
+		case '0':
+			hScale = 0.25;
+			break;
+		case '9':
+			hScale = 0.5;
 			break;
 		case '8':
-			spec_width = DEFSPEC/8;
-			once = 1;
-			fprintf(stderr, "spec_width=%d\n", spec_width);
+			hScale = 0.75;
 			break;
 		case 4096:
 			finish();
@@ -1958,6 +2113,8 @@ void Main_Widget::process_key ( int key )
 		case 84: //t  toggle transmit
 			if (enableTransmit)
 			{
+				toggle_TX(0);
+#if 0
 				if (transmit)
 				{
 					transmit = 0;
@@ -1965,7 +2122,8 @@ void Main_Widget::process_key ( int key )
 					pTXCmd->sendCommand ("setRunState 0\n");
 					pUSBCmd->sendCommand("set ptt off\n" );
 					fprintf (stderr, "set ptt off\n");
-					trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+//!					TRX_label->setPixmap(rxPix);
+//!					TRX_label->setLabel( RX );
 					set_MUTE ( 0 );
 				} else {
 					transmit = 1;
@@ -1974,8 +2132,10 @@ void Main_Widget::process_key ( int key )
 					pTXCmd->sendCommand ("setTRX 1\n");
 					set_MUTE ( 1 );
 					fprintf (stderr, "set ptt on\n");
-					trxFrame->setPaletteBackgroundPixmap ( *txPix );
+//!					TRX_label->setPixmap(txPix);
+//!					TRX_label->setLabel( TX );
 				}
+#endif
 			} else {
 				fprintf( stderr, "Transmit is not enabled\n");
 			}
@@ -1995,8 +2155,7 @@ void Main_Widget::setOurRxFrequency ( double frequency )
 	char text[32];
 	snprintf ( text, 32, "%11.6lf", ( double ) ( frequency ) / 1000000.0 );
 	displayMutex.lock();
-	lcd->setText(text);
-//	lcd->display ( text );	
+	lcd->display ( text );	
 	displayMutex.unlock();
 }
 
@@ -2024,11 +2183,12 @@ void Main_Widget::setDefaultRxFrequency ( )
 			rx_delta_f = rx_if - rx_f + slopeTuneOffset;
 			break;
 	}
-	setRxFrequency( 1 );	// >> !rock_bound
+	setRxFrequency( 1 );
 }
 
 //
-// synth flag means set the external synth (usbsoftrock) also
+// synth flag means set the external oscillator (via usbsoftrock), if
+// configured to do so (rock_bound == 0)
 //
 void Main_Widget::setRxFrequency( int synth )
 {
@@ -2037,44 +2197,44 @@ void Main_Widget::setRxFrequency( int synth )
 	{
 		snprintf ( text, 32, "......%11.6lf",
 			( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
-		fprintf ( stderr, "Set the frequency: %lld - %d = %11.6lf '%s'\n",
+		fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
 			rx_f, rx_delta_f, 
 			( rx_f - rx_delta_f) / 1000000.0, text);
 		displayMutex.lock();
-		lcd->setText( ( QString ) text);
-		//lcd->display ( text );
+		lcd->display ( text );
 
 		if (enableRIT) {
 			tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
 			rit->setText( tx_f_string );
-			fprintf ( stderr, "RIT %s\n", tx_f_string.ascii());
+			fprintf ( stderr, "RIT %s\n", qPrintable(tx_f_string));
 		}
 		displayMutex.unlock();
 	}
 	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
-	if (!enableRIT && !enableSPLIT) {
+
+	if (!rock_bound && !enableRIT && !enableSPLIT) {
 		pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
-	if ( synth ) {
-		if (dualConversion) {
-			fprintf (stderr, "set freq dual conversion %f %f %f\n",
-				(rx_f)*1e-6, 
-				((rx_f)*1e-6)/1.25,
-				((rx_f)*1e-6)/1.25/4); 
-			pUSBCmd->sendCommand("set freq %f\n", 
-				((rx_f)*1e-6)/1.25/4);
-		} else {
-			fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
-			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+		if ( synth ) {
+			if (dualConversion) {
+				fprintf (stderr, "set freq dual conversion %f %f %f\n",
+					(rx_f)*1e-6, 
+					((rx_f)*1e-6)/1.25,
+					((rx_f)*1e-6)/1.25/4); 
+				pUSBCmd->sendCommand("set freq %f\n", 
+					((rx_f)*1e-6)/1.25/4);
+			} else {
+				fprintf (stderr, "USBsoftrock: set freq %f\n", (rx_f)*1e-6); 
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+			}
 		}
-	}
 	}
 }
 
 void Main_Widget::setTxFrequency()
 {
-	pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 	fprintf ( stderr, "setOsc %d\n", rx_delta_f );
+	pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 }
 
 void Main_Widget::setFilter_l ( int n )
@@ -2112,7 +2272,6 @@ void Main_Widget::setFilter()
 	pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
 	pTXCmd->sendCommand ("setFilter %d %d 1\n", *filter_l, *filter_h );
 	fprintf ( stderr, "setFilter %d %d\n", *filter_l, *filter_h );
-	drawPassBandScale();
 }
 
 void Main_Widget::setLowerFilterScale ( int x )
@@ -2120,10 +2279,10 @@ void Main_Widget::setLowerFilterScale ( int x )
 	float bin_bw = sample_rate/(float)spec_width;
 	int stop_band;
 
-	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	//stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	stop_band = (int)(((x - (spectrogram->width() / 2)) * bin_bw) * hScale) / 10*10;
 
-	if ( stop_band < *filter_h )
-	{
+	if ( stop_band < *filter_h ) {
 		*filter_l = stop_band;
 		setFilter();
 	}
@@ -2134,10 +2293,10 @@ void Main_Widget::setUpperFilterScale ( int x )
 	float bin_bw = sample_rate/(float)spec_width;
 	int stop_band;
 
-	stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	//stop_band = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	stop_band = (int)(((x - (spectrogram->width() / 2)) * bin_bw) * hScale) / 10*10;
 
-	if ( stop_band > *filter_l )
-	{
+	if ( stop_band > *filter_l ) {
 		*filter_h = stop_band;
 		setFilter();
 	}
@@ -2154,131 +2313,90 @@ void Main_Widget::setCA_label()
 
 void Main_Widget::setTuneStep ( int step )
 {
-        if ( rock_bound ) 
-	{
+    if ( rock_bound ) {
 	  if ( tuneStep < 3 && step > 0 ) tuneStep++;
 	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
-	}
-	else
-	{
+	} else {
 	  if ( tuneStep < 8 && step > 0 ) tuneStep++;
 	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+	}
+
+	if (tuneStep != 0) {
+		step_1Hz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_1Hz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 1) {
+		step_10Hz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_10Hz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 2) {
+		step_100Hz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_100Hz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 3) {
+		step_1KHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_1KHz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 4) {
+		step_10KHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_10KHz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 5) {
+		step_100KHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_100KHz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 6) {
+		step_1MHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_1MHz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 7) {
+		step_10MHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_10MHz_frame->setAutoFillBackground(true);
+	}
+	if (tuneStep != 8) {
+		step_100MHz_frame->setPalette( QColor( 50, 50, 100 ) );
+		step_100MHz_frame->setAutoFillBackground(true);
 	}
 
 	switch ( tuneStep )
 	{
 		case 0:
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1Hz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_1Hz_frame->setAutoFillBackground(true);
 			break;
 		case 1:
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10Hz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_10Hz_frame->setAutoFillBackground(true);
 			break;
 		case 2:
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100Hz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_100Hz_frame->setAutoFillBackground(true);
 			break;
 		case 3:
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1KHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_1KHz_frame->setAutoFillBackground(true);
 			break;
 		case 4: 
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10KHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_10KHz_frame->setAutoFillBackground(true);
 			break;
 		case 5: 
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_100KHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_100KHz_frame->setAutoFillBackground(true);
 			break;
 		case 6: 
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_1MHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_1MHz_frame->setAutoFillBackground(true);
 			break;
 		case 7: 
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 255 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
+			step_10MHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_10MHz_frame->setAutoFillBackground(true);
 			break;
 		case 8: 
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 200, 200, 100 ) );
+			step_100MHz_frame->setPalette( QColor( 200, 200, 255 ) );
+			step_100MHz_frame->setAutoFillBackground(true);
 			break;
 		default:
-			step_1Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_1000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_10000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
-			step_100000000Hz_frame->setPaletteBackgroundColor ( QColor ( 50, 50, 100 ) );
 			break;
 	}
 }
@@ -2297,14 +2415,22 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 	QColor c_off ( 0, 0, 0 );
 	QColor c_on ( 200, 0, 0 );
 
-	LSB_label->setBackgroundColor ( c_off );
-	USB_label->setBackgroundColor ( c_off );
-	DSB_label->setBackgroundColor ( c_off );
-	AM_label->setBackgroundColor ( c_off );
-	CWL_label->setBackgroundColor ( c_off );
-	CWU_label->setBackgroundColor ( c_off );
-	SAM_label->setBackgroundColor ( c_off );
-	FMN_label->setBackgroundColor ( c_off );
+    LSB_label->setPalette( c_off );
+    LSB_label->setAutoFillBackground(true);
+    USB_label->setPalette( c_off );
+    USB_label->setAutoFillBackground(true);
+    DSB_label->setPalette( c_off );
+    DSB_label->setAutoFillBackground(true);
+    AM_label->setPalette( c_off );
+    AM_label->setAutoFillBackground(true);
+    CWL_label->setPalette( c_off );
+    CWL_label->setAutoFillBackground(true);
+    CWU_label->setPalette( c_off );
+    CWU_label->setAutoFillBackground(true);
+    SAM_label->setPalette( c_off );
+    SAM_label->setAutoFillBackground(true);
+    FMN_label->setPalette( c_off );
+	FMN_label->setAutoFillBackground(true);
 
 	switch ( mode )
 	{
@@ -2315,10 +2441,11 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", USB );
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
-			USB_label->setBackgroundColor ( c_on );
+			USB_label->setPalette( c_on );
+			USB_label->setAutoFillBackground(true);
 			if ( !displayOnly && useHamlib )
 				//fprintf ( stderr, "emitted changeRigMode at USB. \n" );
-				emit changeRigMode ( RIG_MODE_USB, 2700 );				
+				emit changeRigMode ( RIG_MODE_USB, 2700 );
 			break;
 		case RIG_MODE_LSB:
 			modeStr = "LSB";
@@ -2327,7 +2454,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", LSB );
 			filter_l = &LSB_filter_l; //-2400;
 			filter_h = &LSB_filter_h; //-20;
-			LSB_label->setBackgroundColor ( c_on );
+            LSB_label->setPalette( c_on );
+            LSB_label->setAutoFillBackground(true);
 			if ( !displayOnly && useHamlib )
 				emit changeRigMode ( RIG_MODE_LSB, 2700 );
 			break;
@@ -2338,7 +2466,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", DSB );
 			filter_l = &DSB_filter_l; //-2400;
 			filter_h = &DSB_filter_h; //2400;
-			DSB_label->setBackgroundColor ( c_on );
+            DSB_label->setPalette( c_on );
+            DSB_label->setAutoFillBackground(true);            
 			if ( !displayOnly && useHamlib)
 				emit changeRigMode ( RIG_MODE_USB, 6000 );
 			break;
@@ -2349,7 +2478,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", AM );
 			filter_l = &AM_filter_l; //-2400;
 			filter_h = &AM_filter_h; //2400;
-			AM_label->setBackgroundColor ( c_on );
+            AM_label->setPalette( c_on );
+            AM_label->setAutoFillBackground(true);            
 			if ( !displayOnly && useHamlib )
 				emit changeRigMode ( RIG_MODE_AM, 6000 );
 			break;
@@ -2360,7 +2490,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", CWL );
 			filter_l = &CWL_filter_l; //-500;
 			filter_h = &CWL_filter_h; //-200;
-			CWL_label->setBackgroundColor ( c_on );
+            CWL_label->setPalette( c_on );
+            CWL_label->setAutoFillBackground(true);            
 			if ( !displayOnly && useHamlib )
 				emit changeRigMode ( RIG_MODE_CWR, 500 );
 			break;
@@ -2371,7 +2502,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", CWU );
 			filter_l = &CWU_filter_l; //200;
 			filter_h = &CWU_filter_h; //500;
-			CWU_label->setBackgroundColor ( c_on );
+            CWU_label->setPalette( c_on );
+            CWU_label->setAutoFillBackground(true);            
 			if ( !displayOnly && useHamlib )
 				emit changeRigMode ( RIG_MODE_CW, 500 );
 			break;
@@ -2382,7 +2514,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", SAM );
 			filter_l = &SAM_filter_l; //-2400;
 			filter_h = &SAM_filter_h; //2400;
-			SAM_label->setBackgroundColor ( c_on );
+            SAM_label->setPalette( c_on );
+            SAM_label->setAutoFillBackground(true);            
 			/*if (!displayOnly) 
 			emit changeRigMode ( RIG_MODE_AM, 12000 ); */ //Some rigs can do syncronous AM, but not mine.  KL7NA  uncomment this for them.*/
 			break;
@@ -2393,7 +2526,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			fprintf ( stderr, "setMode %d\n", FMN );
 			filter_l = &FMN_filter_l; //-4000;
 			filter_h = &FMN_filter_h; //4000;
-			FMN_label->setBackgroundColor ( c_on );
+            FMN_label->setPalette( c_on );
+            FMN_label->setAutoFillBackground(true);            
 			if ( !displayOnly && useHamlib )
 				emit changeRigMode ( RIG_MODE_FM, 12000 );
 			break;
@@ -2402,19 +2536,19 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
 	}
-	fprintf( stderr, "Set mode: %s\n", modeStr.ascii());
+	fprintf( stderr, "Set mode: %s\n", qPrintable(modeStr));
 
 	// call external mode setting hook.
 	if (sdr_mode != NULL) {
 		QString cmd = sdr_mode;
 		cmd += " ";
 		cmd += modeStr;
-		fprintf( stderr, "Set mode: %s\n", cmd.ascii());
-		system(cmd.ascii());
+		fprintf( stderr, "Set mode: %s\n", qPrintable(cmd));
+		system(qPrintable(cmd));
 	}
 	setFilter();
 	if ( useIF ) setDefaultRxFrequency();
-	else setRxFrequency( 1 );	// >> !rock_bound
+	else setRxFrequency( 1 );
 }
 
 
@@ -2499,16 +2633,16 @@ void Main_Widget::readMeter()
 	for ( j = 0; j < 34; j++ )
 	{
 		if ( rxm[0] - metrCal > s_dbm[j] )
-			//signalBargraph[j]->setPaletteBackgroundColor( *signalColor[j] );
-			signalBargraph[j]->setPaletteBackgroundColor ( QColor ( 0,180,255 ) );
+			signalBargraph[j]->setPalette( QColor( 0,180,255 ));
 		else if ( j != k )
-			signalBargraph[j]->setPaletteBackgroundColor ( QColor ( 50,50,50 ) );
+			signalBargraph[j]->setPalette( QColor( 50,50,50 ) );
 		else if ( k != 0 )
-			signalBargraph[j]->setPaletteBackgroundColor ( *signalColor[j] );
+			signalBargraph[j]->setPalette( *signalColor[j] );
+
+		signalBargraph[j]->setAutoFillBackground(true);
 	}
 }
 
-//----------------------------------------------------------------------------
 // Fetch the spectrum data from sdr-core
 //
 void Main_Widget::readSpectrum()
@@ -2518,6 +2652,8 @@ void Main_Widget::readSpectrum()
 	float raw_spectrum[DEFSPEC];
 	float a;
 
+	//fprintf( stderr, ".");
+	updated++;
 	pCmd->sendCommand ("reqSpectrum %d\n", getpid() ); 
 
 	if (spec_width == DEFSPEC) {
@@ -2565,289 +2701,332 @@ void Main_Widget::readSpectrum()
 		// wrapped data.
 	}
 
-	drawSpectrogram();
-	if ( SPEC_state ) plotSpectrum ( spectrum_head );
+	//drawSpectrogram();
+	//if ( SPEC_state ) plotSpectrum ( spectrum_head );
+	repaint();
 }
 
 void Main_Widget::drawSpectrogram()
 {
-	int x, x1, x2, x3, x4;
-	static int y = 0;
-	int pwr;
-	float pwr_range;
-	float bin_bw = sample_rate/(float)spec_width;
+    int x, x1, x2;
+    static int y = 0;
+    int pwr, specval;
+    float pwr_range;
+    bool spec_debug = false;
 
-	pwr_range = specApertureHigh - specApertureLow;
+    pwr_range = specApertureHigh - specApertureLow;
+    if(spec_debug)
+	printf("drawSpectrogram() \n");
 
-	QImage spectrogramLine ( spectrogram->width(), 1 , 32 );
-
-	x3 = 0;
-	x1 = spec_width/2 - spectrogram->width() /2;
-	if (x1 < 0) {
-		x3 = abs(x1);
-		x1 = 0;
-	}
-	x2 = x1 + spectrogram->width();
-	x4 = spec_width;
-
-	if (spectrogram->width() > spec_width) {
-		x2 = spec_width;
-		uint rgb = qRgb ( spec_r[0], spec_g[0], spec_b[0] );
-		for ( x = 0; x < spectrogram->width(); x++ ) {
-			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x );
-			*p = rgb;
-		}
-		// spectrum from dttsp is centered at Osc.  When Osc is not zero, some of
-		// the spectrum will be above the width or below zero.  dttps returns
-		// sort of mirrored data.  Don't show it.
-		if (rx_delta_f < 0) {
-			x4 = spec_width - (abs(rx_delta_f) / bin_bw);
-		}
-	}
-
-	for ( x = 0; x < spec_width; x++ )
+//tf    QImage spectrogramLine( spectrogram->width() , 1, QImage::Format_RGB32 );
+    QImage spectrogramLine( spectrum_width , 1, QImage::Format_RGB32 );
+   
+//tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
+//tf    x2 = x1 + spectrogram->width();
+    x1 = DEFSPEC/2 - spectrum_width/2;
+    x2 = x1 + spectrum_width;
+    if(spec_debug)
 	{
-		// Compute the power (magnified)
-		pwr = ( int ) ( ( spectrum[ x ] + specCal - specApertureLow ) *
-		                ( 120 / pwr_range ) );
+	printf("drawSpectrogram::x1 = %d\n", x1);
+	printf("drawSpectrogram::x2 = %d\n", x2);
+	printf("drawSpectrugram::y = %d\n", y);
+	}    
+    for ( x = 0; x < DEFSPEC; x++)		// for number of fft samples per line.. 
+	{
+        						// Compute the power (magnified)
+        pwr = (int)((spectrum[ x ] + specCal - specApertureLow) * 
+					(SPECFRM_V / pwr_range));
+        if ( pwr > 119 ) pwr = 119;			// Sanitize the value
+        else if ( pwr < 0 ) pwr = 0;
+        						
+	specval = (int)(spectrum[ x ] + specCal);	//Save power for spectrum display
+	if(specval > 119) specval = 119;
+	if(specval < 0) specval = 0;
+	spectrum_history[y][x] = specval;
+//tf        spectrum_history[y][x] = (int)(spectrum[ x ] + specCal);
 
-		// Sanitize
-		if ( pwr > 119 ) pwr = 119;
-		else if ( pwr < 0 ) pwr = 0;
+        if ( x >= x1 && x < x2 )	// If bin is in visible range, plot it.
+	    {
+            uint *p = (uint *)spectrogramLine.scanLine(0) + (x - x1); // Set pixel color
+            *p = qRgb( spec_r[pwr], spec_g[pwr], spec_b[pwr] );
 
-		// Save power for spectrum display
-		spectrum_history[y][x] = ( int ) ( spectrum[ x ] + specCal );
+            // Turn on vertical filter line: Note that filterLine is set to 0 by default, so 
+            // no filter boundary lines will be drawn in the spectrogram.  The following two
+            // if statements will fail.  (MS)
+            if ( filterLine &&
+                 (x - x1) == spectrogram->width() / 2 +
+                 (int)(*filter_l / bin_bw) ) {
+                *p = qRgb( 100, 255, 100 );
+            }
 
-		// If bin is in visible range, plot it.
-		if ( x >= x1 && x < x2 )
-		{
-			// Set the pixel color
-			uint *p = ( uint * ) spectrogramLine.scanLine ( 0 ) + ( x - x1 + x3 );
-			*p = qRgb ( spec_r[pwr], spec_g[pwr], spec_b[pwr] );
+            if ( filterLine &&
+                 (x - x1) == spectrogram->width() / 2 +
+                 (int)(*filter_h / bin_bw) ) {
+                *p = qRgb( 100, 255, 100 );
+            }        
+                    					// Set the center mark (red)
+//tf            if ( (x - x1) == spectrogram->width() / 2 )
+//tf                *p = qRgb( 255,0,0 );
+            if ( (x - x1) == spectrum_width / 2 )
+                *p = qRgb( 255,0,0 );
+        }
+    }
+    spectrum_head = y;
+   	//////////////////////////////////////////////// Now, draw this spectrum line
+    QPainter p;
+    p.begin( this );
+    //p.begin( spectrogramFrame );
+    p.scale((1.0 / hScale), 1.0);
+	y = (y+1) % spectrogram->height();
+    p.drawImage( 2, y + TOPFRM_V, spectrogramLine );
 
-			// Turn on vertical filter line
-			if ( filterLine &&
-			        ( x - x1 + x3 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_l / ( sample_rate/(float) spec_width ) ) )
-			{
-				*p = qRgb ( 100, 255, 100 );
-			}
 
-			if ( filterLine &&
-			        ( x - x1 + x3 ) == spectrogram->width() / 2 +
-			        ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ) )
-			{
-				*p = qRgb ( 100, 255, 100 );
-			}
+    //Temporarily disable the bandpass width yellow indicator line in the waterfall display
+    p.setPen( Qt::yellow );
+    p.drawLine( spectrum_width / 2 + 
+				((int)(*filter_l / bin_bw) + 2), y+1 + TOPFRM_V,
+                spectrum_width / 2 + 
+				((int)(*filter_h / bin_bw) + 2), y+1 + TOPFRM_V );
+    p.drawLine( spectrum_width / 2 + 
+				((int)(*filter_l / bin_bw) + 2), y+2 + TOPFRM_V,
+               spectrum_width / 2 + 
+				((int)(*filter_h / bin_bw) + 2), y+2 + TOPFRM_V );
+    p.end();
+}    
 
-			// Set the center mark
-			if ( ( x - x1 + x3 ) == spectrogram->width() / 2 )
-				*p = qRgb ( 255,0,0 );
-			if ( x == x4 )
-				*p = qRgb (0, 255, 0);
-		}
-	}
-
-	if (once) {
-		fprintf(stderr, "width=%d wwidth=%d x1=%d x2=%d x3=%d bin_bw=%f\n",
-			spec_width, spectrogram->width(), x1, x2, x3, bin_bw);
-		fprintf(stderr, "  Osc=%d bins=%.1f stop=%d x4=%d\n",
-			rx_delta_f, 
-			rx_delta_f / bin_bw,
-			(int)(spec_width - (abs(rx_delta_f) / bin_bw)),
-			x4);
-	}
-
-	spectrum_head = y;
-
-	// Draw the spectrum line
-	QPainter p;
-	p.begin ( spectrogram );
-	p.drawImage ( 0, y = ( y+1 ) % spectrogram->height(), spectrogramLine );
-
-	p.setPen ( Qt::yellow );
-	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/(float)spec_width ) ), y+1,
-	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ), y+1 );
-	p.drawLine ( spectrogram->width() / 2 +
-	             ( int ) ( *filter_l / ( sample_rate/(float)spec_width ) ), y+2,
-	             spectrogram->width() / 2 +
-	             ( int ) ( *filter_h / ( sample_rate/(float)spec_width ) ), y+2 );
-
-	p.end();
-}
-
+/****************************************************************************************
+*	drawPassBandScale()	draws the pass-band scale on screen			*
+****************************************************************************************/
 void Main_Widget::drawPassBandScale()
 {
-	float bin_bw = sample_rate/(float)spec_width;
-	char temp[20];
-	int x1, x2;
+//printf("drawPassBandScale() \n");
+  char temp[20];
+  int x1, x2;
 
-	x1 = spectrogram->width() / 2 + ( int ) ( *filter_l / bin_bw );
-	x2 = spectrogram->width() / 2 + ( int ) ( *filter_h / bin_bw );
+		// x1 is the lower-BP filter location
+		// x2 is the upper-BP filter location  
+  x1 = spectrogram->width() / 2 + ((int)((*filter_l / bin_bw)+2) / hScale);
+  x2 = spectrogram->width() / 2 + ((int)((*filter_h / bin_bw)+2) / hScale);
 
-	QPainter p;
-	p.begin ( pbscale );
-	p.setFont ( *font1 );
+//printf("dPBS x1 = %d, x2 = %d\n", x1, x2);
+  QPainter p;
+  p.begin( this );
 
-	p.eraseRect ( 0, 0, pbscale->width(), pbscale->height() );
+  p.setFont( *font1 );
 
-	snprintf ( temp, 20, "%5d", *filter_l );
-	p.setPen ( Qt::cyan );
-	p.drawText ( x1 - 11 - font1Metrics->maxWidth() * 5,
-	             font1Metrics->ascent() + 1, temp );
+  p.eraseRect( 2, spectrogram->height() + TOPFRM_V, pbscale->width()+1, 
+		pbscale->height()+1 );
+  p.fillRect(2, spectrogram->height() + TOPFRM_V,pbscale->width()+1,
+		pbscale->height()+1,QColor(100, 0, 0));  
+  sprintf( temp, "%5d", *filter_l );
+  p.setPen( Qt::cyan );
+  p.drawText( x1 - 11 -1 - font1Metrics->maxWidth() * 5, 
+			  font1Metrics->ascent() + 1 + TOPFRM_V + spectrogram->height(), temp );
+  //////////////////////////////////////////////////// Draw low-side passband arrow
+  p.setPen( Qt::yellow );
+  p.drawLine( x1 - 10 -1, 7 + TOPFRM_V + spectrogram->height(), 
+		x1, 7 + TOPFRM_V + spectrogram->height()); //horizontal part of arrow
+  p.drawLine( x1 - 4 -1, 4 + TOPFRM_V + spectrogram->height(), 
+		x1 -1, 7 + TOPFRM_V + spectrogram->height() );
+  p.drawLine( x1 - 4 -1, 10 + TOPFRM_V + spectrogram->height(), 
+		x1 -1, 7 + TOPFRM_V + spectrogram->height()  );
+  p.drawLine( x1, 0 + TOPFRM_V + spectrogram->height(), 
+		x1, PBSFRM_V + TOPFRM_V + spectrogram->height() ); //vertical line 
 
-	// Draw pb_l arrow
-	p.setPen ( Qt::yellow );
-	p.drawLine ( x1 - 10, 7, x1, 7 );
-	p.drawLine ( x1 - 4, 4, x1 - 1, 7 );
-	p.drawLine ( x1 - 4, 10, x1 - 1, 7 );
-	p.drawLine ( x1, 0, x1, 15 );
+  sprintf( temp, "%-5d", *filter_h );
+  p.setPen( Qt::cyan );
+  p.drawText( x2 + 12, font1Metrics->ascent() + 1 + TOPFRM_V + spectrogram->height(), temp );
 
-	snprintf ( temp, 20, "%-5d", *filter_h );
-	p.setPen ( Qt::cyan );
-	p.drawText ( x2 + 12, font1Metrics->ascent() + 1, temp );
-
-	// Draw pb_h arrow
-	p.setPen ( Qt::yellow );
-	p.drawLine ( x2 + 10, 7, x2, 7 );
-	p.drawLine ( x2 + 4, 4, x2 + 1, 7 );
-	p.drawLine ( x2 + 4, 10, x2 + 1, 7 );
-	p.drawLine ( x2, 0, x2, 15 );
-
-	p.end();
+  /////////////////////////////////////////////////// Draw high-side passband arrow
+  p.setPen( Qt::yellow );
+ p.drawLine( x2 + 10, 7 + TOPFRM_V +  spectrogram->height(), 
+		x2 + 1, 7 + TOPFRM_V + spectrogram->height()); //horizontal part of arrow
+  p.drawLine( x2 + 4, 4 + TOPFRM_V +  spectrogram->height(), 
+		x2 + 1, 7 + TOPFRM_V + spectrogram->height() );
+  p.drawLine( x2 + 4, 10 + TOPFRM_V +  spectrogram->height(), 
+		x2 + 1, 7 + TOPFRM_V + spectrogram->height() );
+  p.drawLine( x2, 0 + TOPFRM_V +  spectrogram->height(), 
+		x2, PBSFRM_V + TOPFRM_V + spectrogram->height() ); //vertical line
+  p.end();
 }
 
-void Main_Widget::plotSpectrum ( int y )
+/****************************************************************************************
+*	plotSpectrum()		Plots the spectrum DATA on the screen			*
+****************************************************************************************/
+void Main_Widget::plotSpectrum( int y )
 {
-	float bin_bw = sample_rate/(float)spec_width;
-	int x, x1, x2;
-	double kHz_step;
-	int f;
-	char f_text[10];
-	char nlabel;
+//printf("plotSpectrum( int y ) \n");
+    int x, y1, x1, x2, spectrumFrame_width_less1;
+    double kHz_step;
+    int f;
+    int f1, f2;
+    char f_text[10];
+    bool debug = false;
 
-	int f1, f2;
+    spectrumFrame_width_less1 = spectrum_width - 1;
 
-	f1 = spectrogram->width() / 2 + ( int ) ( *filter_l / bin_bw );
-	f2 = spectrogram->width() / 2 + ( int ) ( *filter_h / bin_bw );
+	//  Set up the dark-green BP filter swath start/stop in spectrum display
+    f1 = spectrum_width / 2 + (int)(*filter_l / bin_bw) + 2;	// f1 is low filter
+    f2 = spectrum_width / 2 + (int)(*filter_h / bin_bw) + 2;	// f2 is high filter
 
-	QPixmap pix ( spectrumFrame->width(), spectrumFrame->height() );
-	pix.fill ( QColor ( 0,0,0 ) );
+//tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
+//tf    x2 = x1 + spectrogram->width();
+	// 4096/2 - width/2
+    x1 = (DEFSPEC/2 - spectrum_width / 2) -3;
+    x2 = x1 + spectrum_width;
 
-	x1 = spec_width/2 - spectrogram->width() /2;
-	if (x1 >= 0) {
-		x2 = x1 + spectrogram->width();
-	} else {
-		x2 = spec_width + abs(x1);
-	}
-	kHz_step = 1000 / ( sample_rate / (float)spec_width );
-	if (once) {
-		fprintf(stderr, "bin_bw=%4.4f width=%d f1=%d f2=%d x1=%d x2=%d\n",
-			bin_bw, spectrogram->width(), f1, f2, x1, x2);
-		once = 0;
-	}
-
-	QPainter p;
-	p.begin ( &pix );
-	p.setFont ( *font1 );
-
-	// Draw Passband
-	p.fillRect ( f1, 0, f2-f1+1, 120, QColor ( 0, 50, 0 ) );
-
-	// Draw Spectrum
-	for ( x = 0; x < spectrumFrame->width(); x++ )
+    if(hScale > 2.0)
+//tf    	kHz_step = 5000 / ( sample_rate / 4096.0 );
+    	kHz_step = 5000 / bin_bw;
+    else
+//tf    	kHz_step = 1000 / ( sample_rate / 4096.0 );
+    	kHz_step = 1000 / bin_bw;
+	
+    if(debug)
 	{
-		if (x + x1 < 0 || x > x2)
-			continue;
-		p.setPen ( QColor ( 0, 200, 0 ) );
-		p.drawLine ( x, spectrumFrame->height() -
-		             spectrum_history[y][x + x1],
-		             x + 1, spectrumFrame->height() -
-		             spectrum_history[y][x + x1 + 1] );
+	printf("\nStart drawspectrum debug: y = %d \n", y);
+	printf("f1 = %d, f2 = %d\n",f1, f2);
+	printf("%s %d, ", "spectrumFrame->width() = ", spectrumFrame->width());
+	printf("%s %d \n", "spectrumFrame->height() = ", spectrumFrame->height());
+	printf("%s %d, ", "spectrogram->width() = ", spectrogram->width());
+	printf("%s %d \n", "spectrogram->height() = ", spectrogram->height());
+	printf("%s %d \n", "spectrum_width = ", spectrum_width);
+	printf("x1 = %d, x2 = %d\n", x1, x2);
+	printf("sample_rate = %d \n", sample_rate);
+	printf("kHz_step = %.2f Hz, ", kHz_step);     
+	printf("bin_bw = %.2f Hz\n", bin_bw);
 	}
 
-	// Draw the 1 kHz positive marks
-	nlabel = DEFSPEC / spec_width;
-	f = 0;
-	for ( double dx = spectrumFrame->width() /2;
-	        dx <= spectrumFrame->width();
-	        dx = dx + kHz_step )
+    QPainter p;
+    p.begin( this ); 
+    p.scale( (1.0 / hScale), 1.0);  	// set the horizontal scaling value 
+    if(hScale > 2.0)
+		p.setFont ( *font2 );
+    else
+    	p.setFont ( *font1 );
+
+	//////////////////////////////////  erase last spectrogram frame & redraw filter
+    p.eraseRect( 2, spectrogram->height() + PBSFRM_V + TOPFRM_V, spectrum_width,
+				spectrumFrame->height() + 6  ); // erase last spectrogram
+	//////////////// next line puts in dark green area showing audio bandpass filter   
+    p.fillRect( f1 , 0 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f2 - f1,
+				spectrumFrame->height() + 4 , QColor( 0, 50, 0 ) );
+    //////////////////// Draw the 1 kHz positive marks and the vertical lines below them.
+    f = 0;
+    for ( double dx = spectrum_width / 2; 
+		  dx <= spectrum_width; 
+		  dx = dx + kHz_step ) {
+        p.setPen( QColor( 100, 100, 100 ) );
+        p.drawLine( (int)rint(dx) + 2, 
+			font1Metrics->ascent() + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			(int)rint(dx) + 2, 
+			spectrumFrame->height() + spectrogram->height() + PBSFRM_V + TOPFRM_V );
+        //sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
+		sprintf( f_text, "%d", f );
+        p.setPen( QColor( 255, 255, 255 ) );
+        if(hScale > 2.0) {
+	    f = f + 5000;
+            p.drawText( ((int)rint(dx) + 1) - (font2Metrics->maxWidth() * 
+				 strlen( f_text )) / 2, 
+			20 + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			f_text );
+	    } else {
+	    f = f + 1000;
+            p.drawText( ((int)rint(dx) + 1) - (font1Metrics->maxWidth() * 
+				 strlen( f_text )) / 2, 
+			10 + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			f_text );
+	    }
+    }
+    //////////////////// Draw the 1 kHz negative marks and the vertical lines below them.
+    if(hScale > 2.0)
+		f = -5000;
+    else
+		f = -1000;
+    for ( double dx = spectrum_width / 2 - kHz_step; 
+		  dx >= 0; 
+		  dx = dx - kHz_step ) {
+        p.setPen( QColor( 100, 100, 100 ) );
+        p.drawLine( (int)rint(dx) + 2, 
+			font1Metrics->ascent() + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			(int)rint(dx) + 2, 
+			spectrumFrame->height() + spectrogram->height() + PBSFRM_V + TOPFRM_V );
+					
+        //sprintf( f_text, "%lf", (double)((rx_f + f) / 1000000.0) );
+        sprintf( f_text, "%d", f );
+        p.setPen( QColor( 255, 255, 255 ) );
+        if(hScale > 2.0)
+	    {
+            p.drawText( ((int)rint(dx) + 1) - (font2Metrics->maxWidth() * 
+					(strlen( f_text ) + 1)) / 2, 
+			20 + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			f_text );		
+	    f = f - 5000;
+	    } else {
+            p.drawText( ((int)rint(dx) + 1) - (font1Metrics->maxWidth() * 
+					(strlen( f_text ) + 1)) / 2, 
+			10 + spectrogram->height() + PBSFRM_V + TOPFRM_V, 
+			f_text );		
+	    f = f - 1000;
+	    }
+    }
+    ///////////////////////////////////////////////////////////// Now, Draw the dB marks
+    for ( int i = 20; i < SPECFRM_V; i += 20 ) {
+        p.setPen( QColor( 100, 100, 100 ) );
+        p.drawLine( 1, i + spectrogram->height() + PBSFRM_V + TOPFRM_V, spectrum_width - 2,
+						 i + spectrogram->height() + PBSFRM_V + TOPFRM_V );
+    }
+	////////////////////////////////////////////////// Draw the color aperture lines
+	QPen pen( Qt::DotLine );
+	pen.setColor( QColor( 255, 50, 0 ) );
+	p.setPen( pen );
+	p.drawLine( 2, (int)(specApertureLow - SPECFRM_V) * -1 + spectrogram->height() + PBSFRM_V+TOPFRM_V, 
+				spectrum_width, (int)(specApertureLow - SPECFRM_V) * 
+					-1 + spectrogram->height() + PBSFRM_V + TOPFRM_V );
+	p.drawLine( 2, (int)(specApertureHigh - SPECFRM_V) * -1 + spectrogram->height() +PBSFRM_V+TOPFRM_V,
+				spectrum_width, (int)(specApertureHigh - SPECFRM_V) *
+					 -1  + spectrogram->height() + PBSFRM_V + TOPFRM_V);
+    //////////////////////////////////////////////////////////////// Draw the dB labels
+    for ( int i = 0; i < SPECFRM_V; i += 20 )
 	{
-		p.setPen ( QColor ( 100, 100, 100 ) );
-		p.drawLine ( ( int ) rint ( dx ),
-		             font1Metrics->ascent(),
-		             ( int ) rint ( dx ),
-		             spectrumFrame->height() );
-		//snprintf( f_text, 10, "%lf", (double)((rx_f + f) / 1000000.0) );
-		if ((f/1000) % nlabel == 0) {
-			snprintf ( f_text, 10, "%d", f );
-			p.setPen ( QColor ( 255, 255, 255 ) );
-			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
-		                                     strlen ( f_text ) ) / 2,
-		        		10,
-					f_text );
+        p.setPen( QColor( 255, 255, 255 ) );
+        sprintf( f_text, "%d", -i - 40 );
+        p.drawText( 4, i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );        
+        sprintf( f_text, "%4d", -i - 40 );
+		if(hScale > 2) {
+            p.drawText( spectrum_width - 
+			font2Metrics->maxWidth() * 4 - 2,
+		i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
+
+	    } else {
+            p.drawText( spectrum_width - 
+			font1Metrics->maxWidth() * 4 - 2,
+		i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
+	    }
+    }    
+	////////////////////////////////////////// Finally, Draw the actual Spectrum data
+    y1 =  spectrogram->height() + PBSFRM_V + TOPFRM_V + spectrumFrame->height();
+//    p.setPen( QColor( 0, 200, 0 ) );
+// tf:change color back to green
+//    p.setPen( Qt::yellow );
+    p.setPen( Qt::green );
+	// Draw Spectrum                     + 2
+    for ( x = 1; x < spectrumFrame_width_less1 ; x++ )
+	{
+    	if(specLineFill) {
+        	p.drawLine( x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V,
+           	         x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+					spectrum_history[y][x + x1 + 1] );
+		} else {
+        	p.drawLine( x - 1, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+					spectrum_history[y][x + x1],
+                    x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+					spectrum_history[y][x + x1 + 1] );
 		}
-		f = f + 1000;
-	}
-
-	// Draw the 1 kHz negative marks
-	f = -1000;
-	for ( double dx = spectrumFrame->width() /2 - kHz_step;
-	        dx >= 0;
-	        dx = dx - kHz_step )
-	{
-		p.setPen ( QColor ( 100, 100, 100 ) );
-		p.drawLine ( ( int ) rint ( dx ),
-		             font1Metrics->ascent(),
-		             ( int ) rint ( dx ),
-		             spectrumFrame->height() );
-		//snprintf( f_text, 10, "%lf", (double)((rx_f + f) / 1000000.0) );
-		if ((f/1000) % nlabel == 0) {
-			snprintf ( f_text, 10, "%d", f );
-			p.setPen ( QColor ( 255, 255, 255 ) );
-			//p.drawText( (int)rint(dx) + 2, 10, f_text );
-			p.drawText ( ( int ) rint ( dx ) - ( font1Metrics->maxWidth() *
-		                                     ( strlen ( f_text ) + 1 ) ) / 2,
-		             		10,
-		             		f_text );
-		}
-		f = f - 1000;
-	}
-
-	// Draw the dB marks
-	for ( int i = 20; i < 120; i += 20 )
-	{
-		p.setPen ( QColor ( 100, 100, 100 ) );
-		p.drawLine ( 1, i, spectrumFrame->width() - 2, i );
-	}
-
-	// Draw the color aperture lines
-	QPen pen ( Qt::DotLine );
-	pen.setColor ( QColor ( 255, 50, 0 ) );
-	p.setPen ( pen );
-	p.drawLine ( 0, ( int ) ( specApertureLow - 120 ) * -1,
-	             spectrumFrame->width(), ( int ) ( specApertureLow - 120 ) * -1 );
-	p.drawLine ( 0, ( int ) ( specApertureHigh - 120 ) * -1,
-	             spectrumFrame->width(), ( int ) ( specApertureHigh - 120 ) * -1 );
-
-	// Draw the dB labels
-	for ( int i = 0; i < 120; i += 20 )
-	{
-		p.setPen ( QColor ( 255, 255, 255 ) );
-		snprintf ( f_text, 10, "%d", -i - 40 );
-		p.drawText ( 2, i + 19, f_text );
-		snprintf ( f_text, 10, "%4d", -i - 40 );
-		p.drawText ( spectrumFrame->width() -
-		             font1Metrics->maxWidth() * 4 - 2, i + 19, f_text );
-	}
-
-	p.end();
-
-	bitBlt ( spectrumFrame, 0, 0, &pix,
-	         0, 0, pix.width(), pix.height(), Qt::CopyROP, true );
+    }
+	p.end();   		 
 }
+
 
 void Main_Widget::spectrogramClicked ( int x )
 {
@@ -2856,33 +3035,30 @@ void Main_Widget::spectrogramClicked ( int x )
 	int f_limit = sample_rate/2 - 2000;
 	if ( !useIF )  // Disable changing frequency for IF mode.  Use arrows for IF shift.
 	{
-		f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
+		//f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
+		f = (int)(bin_bw * (spectrogram->width() / 2 - x) * hScale);
 		
-		fprintf(stderr, "The value of f is %d x is %d\n",f, x);
+		fprintf(stderr, "spectrogramClicked: x = %d f = %d rx_f = %lld freq = %.6lf\n", x, f, rx_f,
+			(double)( (rx_f - rx_delta_f) - f ) / 1000000.0);
 
 		if ( rock_bound )
 		{
-			if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
-			if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
-			else 
-			{
-				rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;	
+			rx_delta_f = rx_delta_f + f + *filter_l + ( *filter_h - *filter_l ) / 2 ;	
+			if ( rx_delta_f >  f_limit ) {
+				rx_delta_f =  f_limit;
+			} else if ( rx_delta_f < -f_limit ) {
+				rx_delta_f = -f_limit;
 			}
-		}
-		else
-		{
-	 /*	  fprintf (stderr,"Before, the rx_f sent to the usb is %f MHz. and rx_delta_f is %f KHz.",rx_f*1e-6, rx_delta_f*1e-3);
-	  *	  rx_f = rx_f - rx_delta_f + sample_rate/4;
-	  *	  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
-	  *	  fprintf (stderr,"The rx_f sent to the usb is %f MHz.",rx_f*1e-6); */
+		    setRxFrequency( 0 );
+		} else {
+			// Clicking re-tunes the synth and osc.  Set osc to center.
+			rx_f -= rx_delta_f;
+			rx_delta_f =  tuneCenter;	//Make it not tuned to the center
+			rx_f += rx_delta_f;
 
-		  // Clicking re-tunes the synth and osc.  Set osc to center.
-		  rx_f -= rx_delta_f;
-		  rx_delta_f =  -sample_rate/4; //Make it not tuned to the center
-		  rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
-		  rx_f += rx_delta_f;
+			rx_f = rx_f - f - *filter_l - ( *filter_h - *filter_l ) / 2;
+			setRxFrequency( 1 );
 		}
-		setRxFrequency( 1 );	// >> !rock_bound
 	}
 }
 
@@ -2891,10 +3067,11 @@ void Main_Widget::f_at_mousepointer ( int x )
 	int f;
 	char temp[32];
 
-	f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
-	if ( !rock_bound ) f = f - sample_rate / 4 ;
+	//f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
+	f = (int)((bin_bw) * (spectrogram->width()/2 - x) * hScale);
+	//f = (int)((bin_bw) * (spectrum_width / 2 - x));
 
-	snprintf ( temp, 32, "%.6lf", ( double ) ( rx_f - f ) / 1000000.0 );
+	snprintf ( temp, 32, "%.6lf", ( double ) ( (rx_f - rx_delta_f) - f ) / 1000000.0 );
 	M_label->setText ( temp );
 }
 
@@ -2906,10 +3083,10 @@ void Main_Widget::tune ( int x )
 	// f_limit = sample_rate / 2 - spectrogram->width() / 2
 
 	// use usbsoftrock if the tuning step is large enough
-	if ( x > 10000 || x < -10000 ) {
-		rx_delta_f = -sample_rate/4;
+	if (!rock_bound && ( x > 10000 || x < -10000 )) {
+		rx_delta_f = tuneCenter;
 		rx_f = rx_f + x;
-		setRxFrequency( 1 );	// >> !rock_bound
+		setRxFrequency( 1 );
 	} else {
 		rx_delta_f += x;
 		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
@@ -2920,12 +3097,16 @@ void Main_Widget::tune ( int x )
 
 void Main_Widget::focusInEvent ( QFocusEvent * )
 {
-	ctlFrame->setPaletteBackgroundColor ( QColor ( 255, 200, 0 ) );
+    //ctlFrame->setPalette( QColor( 255, 200, 0 ) );
+    ctlFrame->setPalette( QColor( 0, 0, 0 ) );
+    ctlFrame->setAutoFillBackground(true);
 }
 
 void Main_Widget::focusOutEvent ( QFocusEvent * )
 {
-	ctlFrame->setPaletteBackgroundColor ( QColor ( 50, 50, 50 ) );
+    //ctlFrame->setPalette( QColor( 255, 200, 0 ) );
+    ctlFrame->setPalette( QColor( 0, 0, 0 ) );
+    ctlFrame->setAutoFillBackground(true);
 }
 
 void Main_Widget::processorLoad()
@@ -2946,8 +3127,9 @@ void Main_Widget::toggle_NR ( int )
 void Main_Widget::set_NR ( int state )
 {
 	NR_state = state;
-	if ( NR_state ) NR_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
-	else NR_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( NR_state ) NR_label->setPalette( QColor( 0, 100, 200 ) );
+    else NR_label->setPalette( QColor( 0, 0, 0 ) );
+    NR_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setNR %d\n", state );
 	fprintf ( stderr, "setNR %d\n", state );
@@ -2962,8 +3144,9 @@ void Main_Widget::toggle_ANF ( int )
 void Main_Widget::set_ANF ( int state )
 {
 	ANF_state = state;
-	if ( ANF_state ) ANF_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
-	else ANF_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( ANF_state ) ANF_label->setPalette( QColor( 0, 100, 200 ) );
+    else ANF_label->setPalette( QColor( 0, 0, 0 ) );
+    ANF_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setANF %d\n", ANF_state );
 	fprintf ( stderr, "setANF %d\n", ANF_state );
@@ -2977,8 +3160,9 @@ void Main_Widget::toggle_NB ( int )
 void Main_Widget::set_NB ( int state )
 {
 	NB_state = state;
-	if ( NB_state ) NB_label->setBackgroundColor ( QColor ( 0, 100, 200 ) );
-	else NB_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( NB_state ) NB_label->setPalette( QColor( 0, 100, 200 ) );
+    else NB_label->setPalette( QColor( 0, 0, 0 ) );
+    NB_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setNB %d\n", NB_state );
 	fprintf ( stderr, "setNB %d\n", NB_state );
@@ -2992,8 +3176,9 @@ void Main_Widget::toggle_BIN ( int )
 void Main_Widget::set_BIN ( int state )
 {
 	BIN_state = state;
-	if ( BIN_state ) BIN_label->setBackgroundColor ( QColor ( 200, 0, 0 ) );
-	else BIN_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( BIN_state ) BIN_label->setPalette( QColor( 200, 0, 0 ) );
+    else BIN_label->setPalette( QColor( 0, 0, 0 ) );
+    BIN_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setBIN %d\n", BIN_state );
 	fprintf ( stderr, "setBIN %d\n", BIN_state );
@@ -3007,8 +3192,9 @@ void Main_Widget::toggle_MUTE ( int )
 void Main_Widget::set_MUTE ( int state )
 {
 	MUTE_state = state;
-	if ( MUTE_state ) MUTE_label->setBackgroundColor ( QColor ( 200, 0, 0 ) );
-	else MUTE_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( MUTE_state ) MUTE_label->setPalette( QColor( 200, 0, 0 ) );
+    else MUTE_label->setPalette( QColor( 0, 0, 0 ) );
+    MUTE_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setRunState %d\n", MUTE_state ? 0: 2 );
 	fprintf ( stderr, "setRunState %d\n", MUTE_state ? 0 : 2 );
@@ -3022,8 +3208,10 @@ void Main_Widget::toggle_SPEC ( int )
 void Main_Widget::set_SPEC ( int state )
 {
 	SPEC_state = state;
-	if ( SPEC_state ) SPEC_label->setBackgroundColor ( QColor ( 0, 150, 50 ) );
-	else SPEC_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    if ( SPEC_state ) SPEC_label->setPalette( QColor( 0, 150, 50 ) );
+    else SPEC_label->setPalette( QColor( 0, 0, 0 ) );
+    
+    SPEC_label->setAutoFillBackground( true );
 }
 
 void Main_Widget::leave_band( int band )
@@ -3047,8 +3235,8 @@ void Main_Widget::enter_band(int band)
 		b.sprintf ("%lld", rx_f - rx_delta_f);
 		cmd += " ";
 		cmd += b;
-		fprintf( stderr, "Set band: %s\n", cmd.ascii());
-		system(cmd.ascii());
+		fprintf( stderr, "Set band: %s\n", qPrintable(cmd));
+		system(qPrintable(cmd));
 	}
 }
 
@@ -3082,22 +3270,25 @@ void Main_Widget::toggle_TX ( int )
 	fprintf( stderr, "Toggle TX\n");
 	if (enableTransmit)
 	{
-		if (transmit)
-		{
+		if (transmit) {
 			transmit = 0;
 			pTXCmd->sendCommand ("setTRX 0\n");
+			pTXCmd->sendCommand ("setRunState 0\n");
 			pUSBCmd->sendCommand("set ptt off\n" );
 			fprintf (stderr, "set ptt off\n");
-			trxFrame->setPaletteBackgroundPixmap ( *rxPix );
+			TRX_label->setPixmap( QPixmap( rx_xpm ) );
+			TRX_label->setLabel( RX );
 			set_MUTE ( 0 );
 		} else {
 			// if enableSPLIT   set USBSoftrock frequency
 			transmit = 1;
 			pUSBCmd->sendCommand ("set ptt on\n" );
+			pTXCmd->sendCommand ("setRunState 2\n");
 			pTXCmd->sendCommand ("setTRX 1\n");
 			set_MUTE ( 1 );
 			fprintf (stderr, "set ptt on\n");
-			trxFrame->setPaletteBackgroundPixmap ( *txPix );
+			TRX_label->setPixmap( QPixmap( tx_xpm ) );
+			TRX_label->setLabel( TX );
 		}
 	} else {
 		fprintf( stderr, "Transmit is not enabled\n");
@@ -3108,12 +3299,12 @@ void Main_Widget::set_RIT ( int state )
 {
 	enableRIT = state;
 	if ( enableRIT ) {
-		RIT_label->setBackgroundColor ( QColor ( 0, 0, 150 ) );
+    	RIT_label->setPalette(QColor(0, 0, 200) );
 		set_SPLIT( 0 );
 		tx_f = rx_f;
 		tx_delta_f = rx_delta_f;
 	} else {
-		RIT_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    	RIT_label->setPalette(QColor(0, 0, 0) );
 		rit->setText( "" );
 	}
 }
@@ -3127,14 +3318,14 @@ void Main_Widget::set_SPLIT ( int state )
 {
 	enableSPLIT = state;
 	if ( enableSPLIT ) {
-		SPLIT_label->setBackgroundColor ( QColor ( 0, 0, 150 ) );
+    	SPLIT_label->setPalette(QColor(0, 0, 200) );
 		set_RIT( 0 );
 		tx_f_string.sprintf ("%11.6lf", 
 			( double ) ( tx_f - tx_delta_f ) / 1000000.0 );
-		fprintf(stderr, "set_SPLIT %s\n", tx_f_string.ascii());
+		fprintf(stderr, "set_SPLIT %s\n", qPrintable(tx_f_string));
 		rit->setText( tx_f_string );
 	} else {
-		SPLIT_label->setBackgroundColor ( QColor ( 0, 0, 0 ) );
+    	SPLIT_label->setPalette(QColor(0, 0, 0) );
 		rit->setText( "" );
 	}
 }
@@ -3153,8 +3344,14 @@ void Main_Widget::readMem ( MemoryCell *m )
 	setMode ( ( rmode_t ) m->getMode(), FALSE, FALSE );
 	if ( rock_bound ) {
 		rx_delta_f = m->getFrequency();
+		if ((rx_delta_f > spec_width) || (rx_delta_f < -spec_width)) {
+			fprintf(stderr, "Error: frequency outside spectrum (%d <-> %d).  Reset it to 0\n",
+				rx_delta_f, spec_width);
+			rx_delta_f = 0;
+		}
+		setRxFrequency( 0 );
 	} else {
-		rx_delta_f = -sample_rate/4;
+		rx_delta_f = tuneCenter;
 		rx_f = m->getFrequency();
 		rx_f += rx_delta_f;
 		fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 ); 
@@ -3162,14 +3359,14 @@ void Main_Widget::readMem ( MemoryCell *m )
 		tx_f = m->getTxFrequency();
 		set_RIT( 0 );	// do this before set_SPLIT, as it clears the RIT text
 		if (tx_f != 0) {
-			tx_delta_f = -sample_rate/4;
+			tx_delta_f = tuneCenter;
 			tx_f += tx_delta_f;
 			set_SPLIT ( TRUE );
 		} else {
 			set_SPLIT ( FALSE );
 		}
+		setRxFrequency( 1 );
 	}
-	setRxFrequency( 1 );	// >> !rock_bound
 	*filter_l = m->getFilter_l();
 	*filter_h = m->getFilter_h();
 	setFilter();
@@ -3198,7 +3395,7 @@ void Main_Widget::displayMem ( MemoryCell *m )
 	char temp[32];
 	snprintf ( temp, 32, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
 	M_label->setText ( temp );
-printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
+	printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 }
 
 void Main_Widget::displayNCO ( int x )
@@ -3206,7 +3403,9 @@ void Main_Widget::displayNCO ( int x )
 	int pb_f;
 	char temp[32];
 	float bin_bw = sample_rate/(float)spec_width;
-	pb_f = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	//pb_f = ( int ) ( ( ( x - ( spectrogram->width() / 2 ) ) * bin_bw ) ) /10*10;
+	pb_f = (int)(((x - (spectrogram->width() / 2)) * bin_bw) * hScale) / 10*10;  
+
 	snprintf ( temp, 32, "%d", pb_f );
 	M_label->setText ( temp );
 }
@@ -3214,7 +3413,7 @@ void Main_Widget::displayNCO ( int x )
 void Main_Widget::updateCallsign()
 {
 	stationCallsign = cfgCallInput->text();
-	setCaption ( "SDR-Shell rxtx.4 @ " + stationCallsign );
+	setWindowTitle("SDR-Shell 4.15 @ " + stationCallsign );
 }
 
 void Main_Widget::updateLOFreq()
@@ -3222,7 +3421,18 @@ void Main_Widget::updateLOFreq()
 	rx_f = cfgLOFreqInput->text().toLongLong();
 	rx_f_string = cfgLOFreqInput->text();
 	if ( useIF ) setDefaultRxFrequency();
-	else setRxFrequency( 1 );	// >> !rock_bound
+	else setRxFrequency( 1 );
+}
+
+void Main_Widget::updateTuneOffset()
+{
+	//fprintf(stderr, "updateTuneOffset = %s\n", qPrintable(cfgTuneOffsetInput->text()));
+	tuneCenter = cfgTuneOffsetInput->text().toInt();
+	fprintf(stderr, "updateTuneOffset = %d\n", tuneCenter);
+	rx_f -= rx_delta_f;
+	rx_delta_f =  tuneCenter;	//Make it not tuned to the center
+	rx_f += rx_delta_f;
+	setRxFrequency( 1 );
 }
 
 void Main_Widget::updateIFreq()
@@ -3234,7 +3444,6 @@ void Main_Widget::updateIFreq()
 void Main_Widget::updateHamlib()
 {
 	portString = cfgHamlibPortInput->text();
-	port = ( const char* ) portString;
 	speedString = cfgHamlibSpeedInput->text();
 	speed = speedString.toInt();
 	rigString = cfgHamlibRigInput->text();
@@ -3277,27 +3486,82 @@ void Main_Widget::updateTxOutputGain ( int gain )
 	setTxGain( 1 );
 }
 
-void Main_Widget::setPolyFFT ( int state )
+void Main_Widget::setPolyFFT ( )
 {
-	polyphaseFFT = state;
-	pCmd->sendCommand ("setSpectrumPolyphase %d\n", state );
-	fprintf ( stderr, "setSpectrumPolyphase %d\n", state );
+	if(polyFFT_button->isChecked())
+		polyphaseFFT = 1;
+	else
+		polyphaseFFT = 0;
+        //polyphaseFFT = ~polyphaseFFT;
+    pCmd->sendCommand ("setSpectrumPolyphase %d\n", polyphaseFFT );
+    fprintf ( stderr, "setSpectrumPolyphase %d\n", polyphaseFFT );
 }
 
-void Main_Widget::setFFTWindow ( int window )
+void Main_Widget::setFFTWindow ( )
 {
-	fftWindow = window;
-	pCmd->sendCommand ("setSpectrumWindow %d\n", window );
-	fprintf ( stderr, "setSpectrumWindow %d\n", window );
+//	fftWindow = window;
+    if ( fftWindow_0->isChecked() )
+       { fftWindow = 0; }
+    else 
+     if ( fftWindow_1->isChecked() )
+        {  fftWindow = 1; }
+     else
+      if ( fftWindow_2->isChecked() )
+         {  fftWindow = 2; }
+      else
+       if ( fftWindow_3->isChecked() )
+          {  fftWindow = 3; }
+       else
+        if ( fftWindow_4->isChecked() )
+           {  fftWindow = 4; }
+        else
+         if ( fftWindow_5->isChecked() )
+            {  fftWindow = 5; }
+         else
+          if ( fftWindow_6->isChecked() )
+             {  fftWindow = 6; }
+          else
+           if ( fftWindow_7->isChecked() )
+              {  fftWindow = 7; }
+           else
+            if ( fftWindow_8->isChecked() )
+               {  fftWindow = 8; }
+            else
+             if ( fftWindow_9->isChecked() )
+                {  fftWindow = 2; }
+             else
+              if ( fftWindow_10->isChecked() )
+                 {  fftWindow = 10; }
+              else
+               if ( fftWindow_11->isChecked() )
+                  {  fftWindow = 11; }
+               else
+                  {  fftWindow = 12; };
+           
+	pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
+	fprintf ( stderr, "setSpectrumWindow %d\n", fftWindow );
 }
 
-void Main_Widget::setSpectrumType ( int type )
+void Main_Widget::setSpectrumType()
 {
-	spectrumType = type;
-	pCmd->sendCommand ("setSpectrumType %d\n", type + 1 );
-	fprintf ( stderr, "setSpectrumType %d\n", type + 1 );
+	if ( preFilter_button->isChecked() )
+	   { spectrumType = 1; }		// SPEC_PRE_FILT
+	else
+	   { spectrumType = 2; };		// SPEC_POST_FILT
+	pCmd->sendCommand ("setSpectrumType %d\n", spectrumType );
+	fprintf ( stderr, "setSpectrumType %d\n", spectrumType );
 
 }
+
+void Main_Widget::setSpectrumDefaults()
+{
+	fprintf(stderr, "setSpectrumType %d\n", spectrumType );
+	fprintf(stderr, "setSpectrumWindow %d\n", fftWindow );
+	fprintf(stderr, "setSpectrumPolyphase %d\n", polyphaseFFT );
+	pCmd->sendCommand ("setSpectrumType %d\n", spectrumType );
+	pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
+	pCmd->sendCommand ("setSpectrumPolyphase %d\n", polyphaseFFT );
+}    
 
 void Main_Widget::setAGC ( int type )
 {
@@ -3308,45 +3572,51 @@ void Main_Widget::setAGC ( int type )
 	QColor on ( 150, 50, 50 );
 	QColor off ( 0, 0, 0 );
 
-	switch ( type )
-	{
-		case 0:
-			//AGC_O_label->setBackgroundColor( on );
-			AGC_L_label->setBackgroundColor ( off );
-			AGC_S_label->setBackgroundColor ( off );
-			AGC_M_label->setBackgroundColor ( off );
-			AGC_F_label->setBackgroundColor ( off );
-			break;
-		case 1:
-			//AGC_O_label->setBackgroundColor( off );
-			AGC_L_label->setBackgroundColor ( on );
-			AGC_S_label->setBackgroundColor ( off );
-			AGC_M_label->setBackgroundColor ( off );
-			AGC_F_label->setBackgroundColor ( off );
-			break;
-		case 2:
-			//AGC_O_label->setBackgroundColor( off );
-			AGC_L_label->setBackgroundColor ( off );
-			AGC_S_label->setBackgroundColor ( on );
-			AGC_M_label->setBackgroundColor ( off );
-			AGC_F_label->setBackgroundColor ( off );
-			break;
-		case 3:
-			//AGC_O_label->setBackgroundColor( off );
-			AGC_L_label->setBackgroundColor ( off );
-			AGC_S_label->setBackgroundColor ( off );
-			AGC_M_label->setBackgroundColor ( on );
-			AGC_F_label->setBackgroundColor ( off );
-			break;
-		case 4:
-			//AGC_O_label->setBackgroundColor( off );
-			AGC_L_label->setBackgroundColor ( off );
-			AGC_S_label->setBackgroundColor ( off );
-			AGC_M_label->setBackgroundColor ( off );
-			AGC_F_label->setBackgroundColor ( on );
-			break;
-		default:
-			break;
+    //AGC_O_label->setAutoFillBackground(true);
+    AGC_L_label->setAutoFillBackground(true);
+    AGC_S_label->setAutoFillBackground(true);
+    AGC_M_label->setAutoFillBackground(true);
+    AGC_F_label->setAutoFillBackground(true);
+	switch( type ) {
+	case 0:
+		//AGC_O_label->setPalette( on ); 
+		AGC_L_label->setPalette( off );
+		AGC_S_label->setPalette( off );
+		AGC_M_label->setPalette( off );
+		AGC_F_label->setPalette( off );
+		//AGC_O_label->setAutoFillBackground(true);
+		break;
+	case 1:
+		//AGC_O_label->setPalette( off );
+		AGC_L_label->setPalette( on ); 		 
+		AGC_S_label->setPalette( off );		
+		AGC_M_label->setPalette( off );		
+		AGC_F_label->setPalette( off );
+		
+		break;
+	case 2:
+		//AGC_O_label->setPalette( off );
+		AGC_L_label->setPalette( off );
+		AGC_S_label->setPalette( on );  
+		AGC_M_label->setPalette( off );
+		AGC_F_label->setPalette( off );
+		break;
+	case 3:
+		//AGC_O_label->setPalette( off );
+		AGC_L_label->setPalette( off );
+		AGC_S_label->setPalette( off );
+		AGC_M_label->setPalette( on );  
+		AGC_F_label->setPalette( off );
+		break;
+	case 4:
+		//AGC_O_label->setPalette( off );
+		AGC_L_label->setPalette( off );
+		AGC_S_label->setPalette( off );
+		AGC_M_label->setPalette( off );
+		AGC_F_label->setPalette( on );  
+		break;
+	default:
+		break;
 	}
 }
 
@@ -3362,13 +3632,18 @@ void Main_Widget::calibrateMetr ( int value )
 
 void Main_Widget::setIF ( bool value )
 {
+fprintf(stderr, "setIF: %d\n", value);
 	useIF =  value;
 }
 
 void Main_Widget::updateUseUSBsoftrock ( bool value )
 {
-	rock_bound =  !value;
-	rx_delta_f = - sample_rate / 4 ;
+	rock_bound = !value;
+	if (value) {
+		rx_f -= rx_delta_f;
+		rx_delta_f = tuneCenter;
+		rx_f += rx_delta_f;
+	}
 	fprintf ( stderr, "useUSBsoftrock: %s\n", 
 		value ? "enabled" : "disabled");
 }
@@ -3399,10 +3674,16 @@ void Main_Widget::updateTransmit ( bool value )
 
 void Main_Widget::setHamlib ( bool value )
 {
-	useHamlib =  value;
-	if ( value ) initHamlib();
-	else if (ourHamlibWrapper) ourHamlibWrapper->~hamlibWrapper();
-	emit toggleHamlibButton ( useHamlib );
+        if ( value )
+        {
+            useHamlib = TRUE;
+        }
+        else
+        {
+            useHamlib = FALSE;
+            if (ourHamlibWrapper) ourHamlibWrapper->~hamlibWrapper();
+        }
+        emit toggleHamlibButton ( useHamlib );
 }
 
 void Main_Widget::setMuteXmit ( bool value )
@@ -3414,6 +3695,7 @@ void Main_Widget::setMuteXmit ( bool value )
 
 void Main_Widget::initHamlib ()
 {
+        rig_errcode_e error;
 	ourHamlibWrapper = new hamlibWrapper ( this );
 
 	connect ( ourHamlibWrapper, SIGNAL ( nowTransmit ( int ) ), this, SLOT ( set_MUTE ( int ) ) );
@@ -3422,11 +3704,15 @@ void Main_Widget::initHamlib ()
 	connect ( ourHamlibWrapper, SIGNAL ( slopeLowChangedByRig ( int ) ), this, SLOT ( setSlopeLowOffset ( int ) ) );
 	connect ( ourHamlibWrapper, SIGNAL ( slopeHighChangedByRig ( int ) ), this, SLOT ( setSlopeHighOffset ( int ) ) );
 	connect ( ourHamlibWrapper, SIGNAL ( rigPitch ( int ) ), this, SLOT ( setCWPitch ( int ) ) );
-	
-	if ( ourHamlibWrapper->init ( rig, port, speed ) != RIG_OK )
+
+       // hl_port = "localhost";  //Debugging fix.
+        QByteArray myarray = portString.toAscii();
+        char *hl_port = myarray.data();
+        if ( (error = (rig_errcode_e)ourHamlibWrapper->init ( rig, hl_port, speed )) != RIG_OK )
 	{
-		fprintf( stderr, "Hamlib would not initialize.  Fix the hamlib set up and re-enable hamblib via the CFG option. \n");
-		setHamlib ( FALSE );
+                fprintf( stderr, "Hamlib initialization error: %d. \n", error);
+                fprintf( stderr, "Hamlib would not initialize.  Fix the hamlib set up and re-enable hamblib via the CFG option. \n");
+                setHamlib ( FALSE );
 	}
 	emit changeSlopeTune ( useSlopeTune );
 	emit tellMuteXmit ( muteXmit );
