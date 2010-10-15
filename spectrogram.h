@@ -16,6 +16,7 @@ class Spectrogram : public QWidget
     protected:
         void mouseReleaseEvent( QMouseEvent * );
         void mouseMoveEvent( QMouseEvent * );
+	void wheelEvent(QWheelEvent *event);
 
     signals:
         void tune1( int );

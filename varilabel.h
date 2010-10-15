@@ -2,6 +2,7 @@
 #define VARILABEL_H
 
 #include <qlabel.h>
+#include <hamlib/rig.h>
 
 class Varilabel : public QLabel
 {
@@ -9,7 +10,7 @@ class Varilabel : public QLabel
     
     public:
         Varilabel(QWidget *parent = 0, const char *name = 0);
-    void setLabel( int );
+    	void setLabel( int );
 
     private:
         int label;
@@ -22,6 +23,25 @@ class Varilabel : public QLabel
         void y( int );
         void pulse( int );
         void mouseRelease( int );
+
+};
+
+class VariModelabel : public Varilabel
+{
+	Q_OBJECT
+    
+	public:
+		VariModelabel(QWidget *parent = 0, const char *name = 0);
+		void setLabel( rmode_t );
+		
+	private:
+		rmode_t label;
+		
+	protected:
+		void mouseReleaseEvent ( QMouseEvent *);
+		
+	signals:
+		void mouseRelease( rmode_t, bool, bool );
 
 };
 #endif
