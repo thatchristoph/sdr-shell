@@ -31,11 +31,11 @@
   *@author Rob Frohne, with thanks to Luc Langehegermann for a look at his code for his ktrack hamlibwrapper.
   */
 
-class hamlibWrapper : public QObject, QThread
+class hamlibWrapper : public QThread
 {
-		Q_OBJECT
+        Q_OBJECT
 	public:
-		hamlibWrapper ( QWidget *parent=0, const char *name=0 );
+                hamlibWrapper ( QObject *parent=0);
 		~hamlibWrapper();
 		int init ( rig_model_t, const char* port, int speed );
 		void run();

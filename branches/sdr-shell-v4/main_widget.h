@@ -5,31 +5,39 @@
 #include <qwidget.h>
 #include <qapplication.h>
 #include <qpushbutton.h>
-#include <qscrollview.h>
 #include <qfont.h>
 #include <qpixmap.h>
 #include <qlistview.h>
-#include <qlabel.h>
+#include <QLabel>
 #include <qslider.h>
 #include <qlineedit.h>
 #include <qtimer.h>
 #include <qdatetime.h>
 #include <qfile.h>
-#include <qsettings.h>
+#include <QSettings>
 #include <qpainter.h>
+#include <QPaintDevice>
 #include <qimage.h>
 #include <qlcdnumber.h>
-#include <qheader.h>
 #include <qdir.h>
-#include <qtextedit.h>
+#include <QTextEdit>
+#include <QTextOption>
+#include <QIODevice>
+#include <QDataStream>
 #include <qscrollbar.h>
 #include <qtabwidget.h>
 #include <qspinbox.h>
-#include <qtextedit.h>
 #include <qgroupbox.h>
 #include <qbuttongroup.h>
 #include <qradiobutton.h>
 #include <qmutex.h>
+
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QPalette>
+#include <QString>
+#include <QVBoxLayout>
+#include <QComboBox>
 
 #include <time.h>
 #include <sys/timeb.h>
@@ -38,14 +46,12 @@
 #include "spectrum.h"
 #include "varilabel.h"
 #include "memorycell.h"
-#include "worldmap.h"
 #include "pbscale.h"
 #include "hamlibwrapper.h"
 #include "dttsp.h"
+#include "freqlabel.h"
 
-#define CMD_FILE "/dev/shm/SDRcommands"
-#define MTR_FILE "/dev/shm/SDRmeter"
-#define FFT_FILE "/dev/shm/SDRspectrum"
+#include "cmath"
 
 // DttSP constants
 #define DEFSPEC (4096)
@@ -63,15 +69,25 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 #define NUM_BANDMEMS 10
 #define NUM_MEMS 8
 
+#define TOPFRM_V 35
+#define PBSFRM_V 15
+#define SPECFRM_V 120
+
+const int FREQUENCY_UPDATE = 2;
+const int OFFSET = 10000;
+
 class Main_Widget : public QWidget
 {
 		Q_OBJECT
 
 	private:
 		QPushButton *quit_button;
-		QScrollView *scroll_view;
+		QPushButton *updateLOFreqButton;
+		QPushButton *updateTuneOffsetButton;
+		//QScrollView *scroll_view;
 		QFont *font;
 		QLineEdit *cfgCallInput, *cfgLOFreqInput, *cfgIFreqInput, *cfgHamlibRigInput, *cfgHamlibSpeedInput, *cfgHamlibPortInput;
+		QLineEdit *cfgTuneOffsetInput;
 		QSpinBox *cfgIQPhaseInput, *cfgIQGainInput, *cfgUSBOffsetInput;
 		QSpinBox *cfgTxIQPhaseInput, *cfgTxIQGainInput;
 		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
@@ -79,17 +95,17 @@ class Main_Widget : public QWidget
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
-		hamlibWrapper *ourHamlibWrapper;
+                hamlibWrapper *ourHamlibWrapper;
 		QMutex displayMutex;
 
-		const char* port;  //hamlib parameters.  
+                //hamlib parameters.
 		QString portString;
 		rig_model_t rig;
 		QString rigString;
 		int speed;
 		QString speedString;
 		bool useHamlib;
-		void initHamlib ();
+                void initHamlib ();
 		bool useSlopeTune;
 		bool muteXmit;
 
@@ -119,6 +135,8 @@ class Main_Widget : public QWidget
 		Varilabel *DOWN_label;
 		Varilabel *RIT_label;
 		Varilabel *SPLIT_label;
+		QLabel *RX_label;
+		QLabel *MHz_label;
 
 		VariModelabel *LSB_label;
 		VariModelabel *USB_label;
@@ -132,11 +150,15 @@ class Main_Widget : public QWidget
 		Varilabel *AGC_O_label, *AGC_L_label,
 		*AGC_S_label, *AGC_M_label, *AGC_F_label;
 
+		Freqlabel *THOUSANDS_label, *HUNDREDS_label, *TENS_label, *UNITS_label;
+
 		PassBandScale *pbscale;
 
 		QFont *font1;
+		QFont *font2;
 		QFont *fontlcd;
 		QFontMetrics *font1Metrics;
+		QFontMetrics *font2Metrics;
 		QFontMetrics *fontlcdMetrics;
 		QLabel *signal_S;
 		QLabel *signal_dBm;
@@ -189,30 +211,36 @@ class Main_Widget : public QWidget
 		QString *modeName[NUM_MODES];
 		QString stationCallsign;
 		QString stationQTH;
-		QLabel *lcd;
+		QLCDNumber *lcd;
 		QLabel *rit;
-		//QLCDNumber *lcd;
-		QTextStream cmdStream;
 		QTextEdit *textFrame;
-		QTable *configTable;
+                QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
+			*fftWindow_0, *fftWindow_1, *fftWindow_2, *fftWindow_3, *fftWindow_4, *fftWindow_5,
+			*fftWindow_6, *fftWindow_7, *fftWindow_8, *fftWindow_9,*fftWindow_10, *fftWindow_11,
+			*fftWindow_12;
+		QRadioButton *cfgUseUSBsoftrock;
+		QRadioButton *cfgDualConversion;
+
+		QPalette p;
 
 		QFrame *step_1Hz_frame;
 		QFrame *step_10Hz_frame;
 		QFrame *step_100Hz_frame;
-		QFrame *step_1000Hz_frame;
-		QFrame *step_10000Hz_frame;
-		QFrame *step_100000Hz_frame;
-		QFrame *step_1000000Hz_frame;
-		QFrame *step_10000000Hz_frame;
-		QFrame *step_100000000Hz_frame;
+		QFrame *step_1KHz_frame;
+		QFrame *step_10KHz_frame;
+		QFrame *step_100KHz_frame;
+		QFrame *step_1MHz_frame;
+		QFrame *step_10MHz_frame;
+		QFrame *step_100MHz_frame;
 		
-		WorldMap *worldmap;
-
-		unsigned long long int rx_f,rx_if;
+		unsigned long long int rx_f, rx_if;
 		unsigned long long int tx_f;
-		QString rx_f_string,rx_if_string;
+		QString rx_f_string, rx_if_string;
 		QString tx_f_string;
+		QString	TuneOffset_string;
+		bool specLineFill;	// true=enables spectrum display line filled
 		int sample_rate;
+		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
 		int rx_delta_f;		// relative to center frequeny
 		int tx_delta_f;		// relative to center frequeny
@@ -239,15 +267,17 @@ class Main_Widget : public QWidget
 		int SPEC_state;
 		int filterLine;
 		int font1PointSize;
+		int font2PointSize;
 		int fontlcdPointSize;
 		int theme;
 		int map_flag;
-		int polyphaseFFT;
+                int polyphaseFFT;
 		int fftWindow;
 		int spectrumType;
 		int agcType;
 		int transmit;
 		int band;
+		int updated;
 		char *sdr_mode;		// mode change script
 		char *sdr_band;		// band change script
 		char *sdr_rxtx;		// rx/tx change script
@@ -259,9 +289,12 @@ class Main_Widget : public QWidget
 		float specApertureLow, specApertureHigh;
 		float specCal;
 		float metrCal;
+		float hScale;
+		float bin_bw;
 
 		int spectrum_history[SPECTRUM_HISTORY_SIZE][DEFSPEC];
 		int spectrum_head;
+		int spectrum_width;
 
 		float loadavg;
 		double my_lon, my_lat;
@@ -280,6 +313,7 @@ class Main_Widget : public QWidget
 		enum modes
 		{ LSB, USB, DSB, CWL, CWU, FMN, AM, DIGU, SPEC, DIGL, SAM, DRM }; 
 		enum spec_type { SEMI_RAW, PRE_FILT, POST_FILT };
+		enum radio_state { RX, TX };
 
 		typedef enum _windowtype {
 		    RECTANGULAR_WINDOW,
@@ -295,7 +329,7 @@ class Main_Widget : public QWidget
 		    RIEMANN_WINDOW,
 		    BLACKMANHARRIS_WINDOW,
 		    NUTTALL_WINDOW,
-	} Windowtype;
+		} Windowtype;
 
 		void initConstants();
 		void rx_cmd ( int );
@@ -329,13 +363,12 @@ class Main_Widget : public QWidget
 		void loadMemoryCells();
 
 	public:
-		Main_Widget ( QWidget *parent = 0, const char *name = 0 );
+		Main_Widget ( QWidget *parent = 0 );
 
 	public slots:
 		void finish();
 		void readMeter();
 		void readSpectrum();
-		//void processCmdLine();
 		void spectrogramClicked ( int );
 		void plotSpectrum ( int );
 		void tune ( int );
@@ -384,15 +417,17 @@ class Main_Widget : public QWidget
 		void updateTxIQPhase ( int );
 		void updateTxMicGain ( int );
 		void updateTxOutputGain ( int );
-		void setPolyFFT ( int );
-		void setFFTWindow ( int );
-		void setSpectrumType ( int );
+                void setPolyFFT ( );
+		void setFFTWindow ( );
+		void setSpectrumType ( );
+		void setSpectrumDefaults ( );
 		void setAGC ( int );
 		void calibrateSpec ( int );
 		void calibrateMetr ( int );
 		void updateUseUSBsoftrock ( bool );
 		void updateTransmit ( bool );
 		void updateDualConversion ( bool );
+		void updateTuneOffset ( );
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

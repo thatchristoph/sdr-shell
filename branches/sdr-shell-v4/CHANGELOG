@@ -1,3 +1,126 @@
+Version rxrx-14
+
+
+- Remove the fixed -sample-rate/4 tuning offset used when tuning with usbsoftrock.
+  The offset is now configurable (but not persistant across restart)
+
+- UDP command connections (for sdr-shell and usbsoftrock) can now go
+  to another computer, or from a virtual machine to the host.  Spectrum and
+  meter data must be sent back to the local host by some other means.
+  I attempted to do this with netcat, but was unsuccessful.  I ended up
+  writing a simple tunnel of my own (it's in the tools directory)
+
+To use:
+
+host:
+./tunnel1 19003 17003
+./tunnel1 19002 17002 
+ 
+remote:
+./tunnel2 otherside 17002 19002
+./tunnel2 otherside 17003 19003
+
+I put the name otherside in /etc/hosts.  This is the host side of the virtualbox
+
+- kubuntu spectrogram drawing.  I don't know why this was different on kubuntu,
+  but I changed the main widget's attributes from:
+
+    setAttribute( Qt::WA_OpaquePaintEvent, true);
+
+  to	
+
+    setAttribute( Qt::WA_NoSystemBackground, true);
+
+and it updates correctly.  It also updates correctly on Fedora9 and Ubuntu 10,
+but not on OSX with qt4-mac.  I could argue that the WA_OpaquePaintEvent
+attribute was wrong, since sdr-shell does NOT redraw the entire spectrogram
+on every update.
+
+				QT Version
+Kubuntu:			4:4.6.2-0ubuntu5
+Ubuntu 10.04.1 LTS:		4:4.6.2-0ubuntu5.1
+Fedora 9:			4.5.2
+OSX:				4.5.2-2 (qt4-mac)
+Fedora 13:			qt-x11-4.6.3-8.fc13.i686 
+
+
+Version rxtx-13
+
+The goal for this version is to restore the sdr-for-if v2d behavior.
+v2d has no ability to to tune the usbsoftrock (that feature was in v2e)
+so the arrow keys, mouse dragging in the spectrogram and clicking in
+the spectrum window all tune within the bandwidth of the sound card.
+
+This functionality is configured by turning off the "USBSoftrock"
+configuration setting (CFG -> General).
+
+Testing
+
+Set the SoftRock to a frequeny, then tune.
+
+Frequencies:
+	./usbsoftrock -vvv -a set freq 3.5815
+	(W1AW CW bulletins and morse code practice)
+
+	Open CFG window
+		Click off Use usbsoftrock via UDP
+		set LO Frequency to 3581500 (click Update)
+
+Tuning Operations
+	1. arrow keys (left, right).
+	   tune from one end of the sound card spectrom to the other
+	2. change the arrow key steps (up & down arrows), 
+	   use the left & right arrow keys to tune
+	3. click-and-drag in the spectrogram (buttons 1, 2, 3)
+	4. click in the spectrum.
+	   Click from one end to the other.
+	   Click on a signal to tune to it.
+
+With usbsoftrock -vvv set, make sure it does not get changed.
+Use usbsoftrock getfreq at the end to make sure it has not been changed.
+
+Version rxtx-12
+
+Revert all the changes to setRxFrequency made in rxtx-11.  This almost certainly
+breaks tuning when not using IF mode and not using USBSoftrock.
+
+Filter stuff:
+echo 'getSpectrumInfo' | nc -v -u localhost 19001
+
+CFG/General/Calibration:
+	Spectrum: 70  S-Meter: 40
+
+
+Version rxtx-11
+
+- fixed the IF mode that won't turn off.  This looks like some QT4 interactions
+that I don't understand.  I put the IF on/off button inside of a box inside the
+frame and now it works.
+
+- initialize cfg menus to saved values.  This affected the Spectrum type
+
+- fixed a bunch of spectrum type settings bugs.  FWIW there are other spectrum
+types that are not supported.
+
+- fixed the General / USBSoftrock Control settings so they are independent
+
+- save the 5/4 tuning (for 6m/2m converter) setting
+
+- vfo display no longer goes black when window loses focus
+
+- there is still a bug in the IF code where the frequency gets really messed up
+on startup.
+
+- I removed the RX and TX phase calibration.  I've seen many comments on this
+list saying that it doesn't really work anymore since that is automatic.
+
+- there was something buggy in the RX/TX and TX/RX switching.  I'm not sure of
+the details but the click button (click on RX widget) and T key now call the
+same function.  So, if they're broken they're at least broken in the same way.
+
+- there have been some improvements on tuning with the arrow keys when not using
+usbsoftrock for tuning ("rock bound" - the old crystal softrocks).  I'm sure that
+there are some bugs in this area.
 
 Version rxtx-5
 

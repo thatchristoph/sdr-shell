@@ -1,3 +1,19 @@
+
+Readme for the special alpha
+
+This is sdr-shell built for use with the qt4 GUI library (an upgrade from the qt3 library).  It incoporates
+the work of Terry, WB4JFI and Mel, W4MEL.
+
+- the spectrum scaling is completely redone.  It uses the GUI libraries to scale the spectrum
+instead of reducing the size
+
+ keys 1 2 3 4 5  set the spectrum scale to 1.0, 2x, 4x, and full
+ keys 0 9 8 7 set the spectrum scale to 0.25, 0.5, and 0.75 respectively
+
+For fedora, the 'qt-devel' package is now needed.
+
+Glen Overby, kc0iyt   2010-10-03
+
 Getting started using SDR-Shell with the SoftRock RXTX 6.3
 
 Getting a radio working with sdr-shell, dttsp, and utilities is a lot like

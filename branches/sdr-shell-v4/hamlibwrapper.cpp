@@ -22,15 +22,15 @@
 
 #include "hamlibwrapper.h"
 
-hamlibWrapper::hamlibWrapper ( QWidget *parent, const char *name ) : QObject ( parent, name )
+hamlibWrapper::hamlibWrapper ( QObject *parent) : QThread ( parent )
 {
 	rRig=NULL;
 	shouldexit = FALSE;
 	useSlopeTuning = FALSE;
 	rig_set_debug ( RIG_DEBUG_TRACE ); // RIG_DEBUG_NONE for none.
-	connect ( parent, SIGNAL ( changeRigMode ( rmode_t, pbwidth_t ) ), this, SLOT ( setMode ( rmode_t, pbwidth_t ) ) );
-	connect ( parent, SIGNAL ( changeSlopeTune ( bool ) ), this, SLOT ( pollSlopeTuning ( bool ) ) );
-	connect ( parent, SIGNAL ( tellMuteXmit ( bool ) ), this, SLOT ( useMuteXmit ( bool ) ) );
+        connect ( parent, SIGNAL ( changeRigMode ( rmode_t, pbwidth_t ) ), this, SLOT ( setMode ( rmode_t, pbwidth_t ) ) );
+        connect ( parent, SIGNAL ( changeSlopeTune ( bool ) ), this, SLOT ( pollSlopeTuning ( bool ) ) );
+        connect ( parent, SIGNAL ( tellMuteXmit ( bool ) ), this, SLOT ( useMuteXmit ( bool ) ) );
 }
 
 hamlibWrapper::~hamlibWrapper()

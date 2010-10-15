@@ -40,6 +40,7 @@ class DttSP {
 protected:
     unsigned short      port;
     struct sockaddr_in *pSa;
+	struct addrinfo		*address;
     int clen, flags, sock;
 
     char  buff [DTTSP_PORT_CLIENT_BUFSIZE];
@@ -47,6 +48,8 @@ protected:
 
 
     DttSP (int port, int inbound);
+    DttSP (int port, int inbound, char *host);
+    DttSP (char *host);
 
     int send_command ( char *cmdstr) ;
 public:
@@ -61,6 +64,9 @@ public:
     DttSPcmd (int port = DTTSP_PORT_CLIENT_COMMAND):
         DttSP (port, 0) 
         {}
+    DttSPcmd (char *host):
+        DttSP (DTTSP_PORT_CLIENT_COMMAND, 0, host) 
+        {}
 
     ~DttSPcmd () {}
 
@@ -73,6 +79,9 @@ class DttSPmeter: public DttSP {
 public:
     DttSPmeter (int port = DTTSP_PORT_CLIENT_METER):
         DttSP (port, 1) 
+    {}
+    DttSPmeter (char *host):
+        DttSP (DTTSP_PORT_CLIENT_METER, 1, host) 
     {}
 
     ~DttSPmeter () {}
@@ -87,6 +96,9 @@ public:
     DttSPspectrum (int port = DTTSP_PORT_CLIENT_SPECTRUM):
         DttSP (port, 1) 
     {}
+    DttSPspectrum (char *host):
+        DttSP (DTTSP_PORT_CLIENT_SPECTRUM, 1, host) 
+    {}
 
     ~DttSPspectrum () {}
 
@@ -100,6 +112,9 @@ class USBSoftrockCmd: public DttSP {
     USBSoftrockCmd (int port = USBSOFTROCK_CLIENT_COMMAND):
 	    DttSP (port, 0)
 	    {}
+    USBSoftrockCmd (char *host):
+	    DttSP (USBSOFTROCK_CLIENT_COMMAND, 0, host)
+	    {}
 
     ~USBSoftrockCmd () {}
 
@@ -111,6 +126,9 @@ class DttSPTXcmd: public DttSP {
 public:
     DttSPTXcmd (int port = DTTSP_TX_PORT_CLIENT_COMMAND):
         DttSP (port, 0) 
+        {}
+    DttSPTXcmd (char *host):
+        DttSP (DTTSP_TX_PORT_CLIENT_COMMAND, 0, host) 
         {}
 
     ~DttSPTXcmd () {}
