@@ -93,6 +93,13 @@ class Main_Widget : public QWidget
 		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
+		//NR Values Glenn VE9GJ
+        QSpinBox *NR_TapsSpinBox, *NR_DelaySpinBox; 
+        QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox; 
+        QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
+        QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox; 
+        QDoubleSpinBox *NB_ThresholdSpinBox;
+        
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
                 hamlibWrapper *ourHamlibWrapper;
@@ -147,8 +154,9 @@ class Main_Widget : public QWidget
 		VariModelabel *SAM_label;
 		VariModelabel *FMN_label;
 		Varilabel *CFG_label;
-		Varilabel *AGC_O_label, *AGC_L_label,
-		*AGC_S_label, *AGC_M_label, *AGC_F_label;
+		Varilabel *HELP_label;
+		Varilabel *AGC_O_label, *AGC_L_label, *AGC_S_label, *AGC_M_label, *AGC_F_label;
+		Varilabel *Zoom_in_label, *Zoom_out_label;
 
 		Freqlabel *THOUSANDS_label, *HUNDREDS_label, *TENS_label, *UNITS_label;
 
@@ -172,6 +180,7 @@ class Main_Widget : public QWidget
 		QLabel *logoLabel;
 		QLabel *M_label;
 		QLabel *AGC_label;
+		QLabel *Zoom_label;
 		QLabel *Spacer_label;
 
 		QFrame *logoFrame;
@@ -202,7 +211,8 @@ class Main_Widget : public QWidget
 		QFrame *ctlFrame;
 		QFrame *ctlFrame2;
 		QFrame *cfgFrame;
-		QFrame *cmdFrame;
+		QFrame *helpFrame;
+		QFrame *dspFrame;
 		QFrame *signalFrame;
 		QFrame *signalBargraph[34];
 		QFrame *map;
@@ -259,7 +269,12 @@ class Main_Widget : public QWidget
 		rmode_t mode;
 		int iqGain, iqPhase;
 		int txIQGain, txIQPhase, txGain, micGain;
-		int NR_state;
+		int NR_Taps, NR_Delay;
+        float NR_Gain, NR_Leakage;
+		int ANF_Taps, ANF_Delay;
+        float ANF_Gain, ANF_Leakage;
+		float NB_Threshold;
+        int NR_state;
 		int ANF_state;
 		int NB_state;
 		int BIN_state;
@@ -397,6 +412,8 @@ class Main_Widget : public QWidget
 		void setLowerFilterScale ( int );
 		void setUpperFilterScale ( int );
 		void setCfg ( int );
+		void setHelp ( int );
+		void setDSP ( int );
 
 		void readMem ( MemoryCell * );
 		void writeMem ( MemoryCell * );
@@ -422,8 +439,22 @@ class Main_Widget : public QWidget
 		void setSpectrumType ( );
 		void setSpectrumDefaults ( );
 		void setAGC ( int );
+		void zoomIN ( int );
+		void zoomOUT ( int );
 		void calibrateSpec ( int );
 		void calibrateMetr ( int );
+        void setNR_Taps ( int );
+        void setNR_Delay ( int );
+        void setNR_Gain ( double);
+        void setNR_Leakage ( double);
+        void set_NRvals ( );
+        void setANF_Taps ( int );
+        void setANF_Delay ( int );
+        void setANF_Gain ( double);
+        void setANF_Leakage ( double);
+        void set_ANFvals ( );
+        void setNB_Threshold ( double);
+        void set_NBvals ( );
 		void updateUseUSBsoftrock ( bool );
 		void updateTransmit ( bool );
 		void updateDualConversion ( bool );
