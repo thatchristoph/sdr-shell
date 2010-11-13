@@ -31,7 +31,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 	loadSettings();
 	bin_bw = sample_rate / 4096.0;
 
-	setWindowTitle("SDR-Shell 4.15 @ " + stationCallsign );
+	setWindowTitle("SDR-Shell 4.16 @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -111,7 +111,8 @@ Main_Widget::Main_Widget(QWidget *parent)
 	// Bottom
 	ctlFrame2 = new QFrame ( this, Qt::Widget );
 	ctlFrame2->setFrameStyle ( QFrame::StyledPanel | QFrame::Plain );
-    ctlFrame2->setPalette(QPalette(QColor(0, 255, 0)));
+    //ctlFrame2->setPalette(QPalette(QColor(0, 255, 0)));
+    ctlFrame2->setPalette(QPalette(QColor(0, 0, 0)));
     ctlFrame2->setAutoFillBackground(true);
 
 	// -----------------------------------------------------------------------
@@ -248,7 +249,6 @@ Main_Widget::Main_Widget(QWidget *parent)
 	metrCalSpinBox->setValue ( ( int ) metrCal );
 	connect ( metrCalSpinBox, SIGNAL ( valueChanged ( int ) ),
 	          this, SLOT ( calibrateMetr ( int ) ) );
-
 	// IQ Phase Calibration
 	QGroupBox *cfgIQCal = new QGroupBox ( cfgFrame2 );
 	cfgIQCal->setTitle ( "RX IQ Calibration" );
@@ -649,7 +649,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 	helpText->setLineWrapMode(QTextEdit::WidgetWidth);
 	aboutText->setReadOnly ( true );
 	aboutText->append (
-	    QString ( "<center><br>SDR-Shell Version 4.15<br>" ) +
+	    QString ( "<center><br>SDR-Shell Version 4.16<br>" ) +
 	    "Copyright (c) 2006, 2007 & 2009<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
@@ -660,6 +660,176 @@ Main_Widget::Main_Widget(QWidget *parent)
 	    "it and/or modify it under the terms and conditions of the GNU " +
 	    "General Public License Version 2 as published by the Free " +
 	    "Software Foundation.\n\n" );
+
+	// -----------------------------------------------------------------------
+	// Help frame
+	helpFrame = new QFrame();
+	helpFrame->setGeometry ( 50, 50, 380, 400 );
+	helpFrame->setMinimumWidth ( 380 );
+	helpFrame->setMaximumWidth ( 380 );
+	helpFrame->setMinimumHeight ( 500 );
+	helpFrame->setMaximumHeight ( 500 );
+    helpFrame->setWindowTitle("SDR-Shell : Help ");
+
+	QFrame *helpFrame1 = new QFrame( helpFrame );
+
+	QTabWidget *helpTab = new QTabWidget ( helpFrame );
+	helpTab->addTab ( helpFrame1, "General" );
+	helpTab->setGeometry ( 2, 2,
+	                         helpFrame->width() - 4,
+	                         helpFrame->height() - 2 );
+
+	QTextEdit *helpFText = new QTextEdit ( helpFrame1 );
+	helpFText->setGeometry ( 2, 2, 360, 460 );
+	helpFText->setReadOnly ( true );
+	helpFText->append ( helptext );
+	helpFText->setWordWrapMode(QTextOption::WordWrap);
+	helpFText->setLineWrapMode(QTextEdit::WidgetWidth);
+
+	// -----------------------------------------------------------------------
+	// DSP frame
+	dspFrame = new QFrame();
+	dspFrame->setGeometry ( 50, 50, 380, 250 );
+	dspFrame->setMinimumWidth ( 380 );
+	dspFrame->setMaximumWidth ( 380 );
+	dspFrame->setMinimumHeight ( 250 );
+	dspFrame->setMaximumHeight ( 250 );
+    dspFrame->setWindowTitle("SDR-Shell : DSP ");
+
+	QFrame *dspFrame1 = new QFrame( dspFrame );
+	QFrame *dspFrame2 = new QFrame( dspFrame );
+	QFrame *dspFrame3 = new QFrame( dspFrame );
+
+	QTabWidget *dspTab = new QTabWidget ( dspFrame );
+	dspTab->addTab ( dspFrame1, "NR" );
+	dspTab->addTab ( dspFrame2, "ANF" );
+	dspTab->addTab ( dspFrame3, "NB" );
+	dspTab->setGeometry ( 2, 2,
+	                         dspFrame->width() - 4,
+	                         dspFrame->height() - 2 );
+
+    //NR Vals Glenn VE9GJ
+	QGroupBox *nrvaluesBox = new QGroupBox ( dspFrame1 );
+	nrvaluesBox->setTitle ( "NR Values" );
+    nrvaluesBox->setGeometry( 5, 5, 330, 200 );
+	QLabel *NR_TapsLabel = new QLabel ( nrvaluesBox );
+	NR_TapsLabel->setText ( "Adaptive Filter Size (taps 128) :" );
+	NR_TapsLabel->setGeometry ( 10, 18, 250, 20 );
+	NR_TapsLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    NR_TapsSpinBox = new QSpinBox ( nrvaluesBox );
+	NR_TapsSpinBox->setGeometry (260, 18, 70, 20 );
+	NR_TapsSpinBox->setMinimum( 0 );
+	NR_TapsSpinBox->setMaximum( 255 );
+	NR_TapsSpinBox->setValue ( ( int ) NR_Taps );
+	connect ( NR_TapsSpinBox, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( setNR_Taps ( int ) ) );
+    QLabel *NR_DelayLabel = new QLabel ( nrvaluesBox );
+	NR_DelayLabel->setText ( "Delay (75):" );
+	NR_DelayLabel->setGeometry ( 10, 48, 250, 20 );
+	NR_DelayLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    NR_DelaySpinBox = new QSpinBox ( nrvaluesBox );
+	NR_DelaySpinBox->setGeometry ( 260, 48, 70, 20 );
+	NR_DelaySpinBox->setMinimum( 0 );
+	NR_DelaySpinBox->setMaximum( 255 );
+	NR_DelaySpinBox->setValue ( ( int ) NR_Delay );
+	connect ( NR_DelaySpinBox, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( setNR_Delay ( int ) ) );
+    QLabel *NR_GainLabel = new QLabel ( nrvaluesBox );
+	NR_GainLabel->setText ( "Adaptation Rate (gain 1):" );
+	NR_GainLabel->setGeometry ( 10, 78, 250, 20 );
+	NR_GainLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    NR_GainSpinBox = new QDoubleSpinBox ( nrvaluesBox );
+	NR_GainSpinBox->setGeometry ( 260, 78, 70, 20 );
+	NR_GainSpinBox->setMinimum( 0 );
+	NR_GainSpinBox->setMaximum( 255 );
+    NR_GainSpinBox->setDecimals( 2 );
+    NR_GainSpinBox->setSingleStep( 0.01);
+    NR_GainSpinBox->setValue ( ( double ) NR_Gain );
+    connect ( NR_GainSpinBox, SIGNAL ( valueChanged (double ) ),
+	          this, SLOT ( setNR_Gain (double ) ) );
+    QLabel *NR_LeakageLabel = new QLabel ( nrvaluesBox );
+	NR_LeakageLabel->setText ( "Leakage (leak 1):" );
+	NR_LeakageLabel->setGeometry ( 10, 108, 250, 20 );
+  	NR_LeakageLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    NR_LeakageSpinBox = new QDoubleSpinBox ( nrvaluesBox );
+	NR_LeakageSpinBox->setGeometry ( 260, 108, 70, 20 );
+	NR_LeakageSpinBox->setMinimum( 0 );
+	NR_LeakageSpinBox->setMaximum( 255 );
+    NR_LeakageSpinBox->setDecimals( 2 );
+    NR_LeakageSpinBox->setSingleStep( 0.01);
+    NR_LeakageSpinBox->setValue ( ( double ) NR_Leakage );
+	connect ( NR_LeakageSpinBox, SIGNAL ( valueChanged (double ) ),
+	          this, SLOT ( setNR_Leakage (double ) ) );
+    // End Glenn NR Values
+
+	// ANF Values
+	QGroupBox *anfvaluesBox = new QGroupBox ( dspFrame2 );
+	anfvaluesBox->setTitle ( "ANF Values" );
+    anfvaluesBox->setGeometry( 5, 5, 330, 200 );
+	QLabel *ANF_TapsLabel = new QLabel ( anfvaluesBox );
+	ANF_TapsLabel->setText ( "Adaptive Filter Size:" );
+	ANF_TapsLabel->setGeometry ( 10, 18, 250, 20 );
+	ANF_TapsLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    ANF_TapsSpinBox = new QSpinBox ( anfvaluesBox );
+	ANF_TapsSpinBox->setGeometry (260, 18, 70, 20 );
+	ANF_TapsSpinBox->setMinimum( 0 );
+	ANF_TapsSpinBox->setMaximum( 255 );
+	ANF_TapsSpinBox->setValue ( ( int ) ANF_Taps );
+	connect ( ANF_TapsSpinBox, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( setANF_Taps ( int ) ) );
+    QLabel *ANF_DelayLabel = new QLabel ( anfvaluesBox );
+	ANF_DelayLabel->setText ( "Delay:" );
+	ANF_DelayLabel->setGeometry ( 10, 48, 250, 20 );
+	ANF_DelayLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    ANF_DelaySpinBox = new QSpinBox ( anfvaluesBox );
+	ANF_DelaySpinBox->setGeometry ( 260, 48, 70, 20 );
+	ANF_DelaySpinBox->setMinimum( 0 );
+	ANF_DelaySpinBox->setMaximum( 255 );
+	ANF_DelaySpinBox->setValue ( ( int ) ANF_Delay );
+	connect ( ANF_DelaySpinBox, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( setANF_Delay ( int ) ) );
+    QLabel *ANF_GainLabel = new QLabel ( anfvaluesBox );
+	ANF_GainLabel->setText ( "Adaptation Rate (gain):" );
+	ANF_GainLabel->setGeometry ( 10, 78, 250, 20 );
+	ANF_GainLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    ANF_GainSpinBox = new QDoubleSpinBox ( anfvaluesBox );
+	ANF_GainSpinBox->setGeometry ( 260, 78, 70, 20 );
+	ANF_GainSpinBox->setMinimum( 0 );
+	ANF_GainSpinBox->setMaximum( 255 );
+    ANF_GainSpinBox->setDecimals( 2 );
+    ANF_GainSpinBox->setSingleStep( 0.01);
+    ANF_GainSpinBox->setValue ( ( double ) ANF_Gain );
+    connect ( ANF_GainSpinBox, SIGNAL ( valueChanged (double ) ),
+	          this, SLOT ( setANF_Gain (double ) ) );
+    QLabel *ANF_LeakageLabel = new QLabel ( anfvaluesBox );
+	ANF_LeakageLabel->setText ( "Leakage:" );
+	ANF_LeakageLabel->setGeometry ( 10, 108, 250, 20 );
+  	ANF_LeakageLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    ANF_LeakageSpinBox = new QDoubleSpinBox ( anfvaluesBox );
+	ANF_LeakageSpinBox->setGeometry ( 260, 108, 70, 20 );
+	ANF_LeakageSpinBox->setMinimum( 0 );
+	ANF_LeakageSpinBox->setMaximum( 255 );
+    ANF_LeakageSpinBox->setDecimals( 2 );
+    ANF_LeakageSpinBox->setSingleStep( 0.01);
+    ANF_LeakageSpinBox->setValue ( ( double ) ANF_Leakage );
+	connect ( ANF_LeakageSpinBox, SIGNAL ( valueChanged (double ) ),
+	          this, SLOT ( setANF_Leakage (double ) ) );
+
+	// NB Values
+	QGroupBox *nbvaluesBox = new QGroupBox ( dspFrame3 );
+	nbvaluesBox->setTitle ( "NB Values" );
+    nbvaluesBox->setGeometry( 5, 5, 330, 200 );
+	QLabel *NB_ThresholdLabel = new QLabel ( nbvaluesBox );
+	NB_ThresholdLabel->setText ( "Threshold:" );
+	NB_ThresholdLabel->setGeometry ( 10, 18, 250, 20 );
+	NB_ThresholdLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
+    NB_ThresholdSpinBox = new QDoubleSpinBox ( nbvaluesBox );
+	NB_ThresholdSpinBox->setGeometry (260, 18, 70, 20 );
+	NB_ThresholdSpinBox->setMinimum( 0 );
+	NB_ThresholdSpinBox->setMaximum( 255 );
+	NB_ThresholdSpinBox->setValue ( ( int ) NB_Threshold );
+	connect ( NB_ThresholdSpinBox, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( setNB_Threshold ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	// S meter
@@ -839,11 +1009,12 @@ Main_Widget::Main_Widget(QWidget *parent)
 
 	QPixmap nr_pix ( nr_xpm );
 	NR_label = new Varilabel ( swFrame );
-	//NR_label->setFrameStyle(QFrame::NoFrame );
 	NR_label->setPixmap ( nr_pix );
 	NR_label->setGeometry ( 3, 3, 27, 11 );
 	connect ( NR_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_NR ( int ) ) );
+	connect ( NR_label, SIGNAL ( mouseRelease2 ( int ) ),
+	          this, SLOT ( setDSP ( int ) ) );
 
 	QPixmap anf_pix ( anf_xpm );
 	ANF_label = new Varilabel ( swFrame );
@@ -851,6 +1022,8 @@ Main_Widget::Main_Widget(QWidget *parent)
 	ANF_label->setGeometry ( 33, 3, 27, 11 );
 	connect ( ANF_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_ANF ( int ) ) );
+	connect ( ANF_label, SIGNAL ( mouseRelease2 ( int ) ),
+	          this, SLOT ( setDSP ( int ) ) );
 
 	QPixmap nb_pix ( nb_xpm );
 	NB_label = new Varilabel ( swFrame );
@@ -858,6 +1031,8 @@ Main_Widget::Main_Widget(QWidget *parent)
 	NB_label->setGeometry ( 63, 3, 27, 11 );
 	connect ( NB_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( toggle_NB ( int ) ) );
+	connect ( NB_label, SIGNAL ( mouseRelease2 ( int ) ),
+	          this, SLOT ( setDSP ( int ) ) );
 
 	QPixmap bin_pix ( bin_xpm );
 	BIN_label = new Varilabel ( swFrame );
@@ -1010,7 +1185,6 @@ Main_Widget::Main_Widget(QWidget *parent)
 
 	// -----------------------------------------------------------------------
 	// AGC
-
 	AGC_label = new QLabel ( ctlFrame2 );
     AGC_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	AGC_label->setFont ( *font1 );
@@ -1072,18 +1246,54 @@ Main_Widget::Main_Widget(QWidget *parent)
 	          this, SLOT ( setAGC ( int ) ) );
 
 	// -----------------------------------------------------------------------
-	// Spacer for filling up empty space
+	// Zoom
+	Zoom_label = new QLabel ( ctlFrame2 );
+    Zoom_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+	Zoom_label->setFont ( *font1 );
+	Zoom_label->setText ( " Zoom" );
+    p = Zoom_label->palette();
+    p.setColor(QPalette::Window, Qt::black);
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255 ) );
+    p.setColor(QPalette::Inactive, QPalette::WindowText, QColor( 255, 180, 0 ) );
+    Zoom_label->setPalette(p);
+    Zoom_label->setAutoFillBackground( true );
+	Zoom_label->setGeometry (
+		AGC_label->x() + AGC_label->width() - 1, 
+		0, 
+	    font1Metrics->maxWidth() * 5 + 50,
+		17 );
+	Zoom_label->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
 
+	QPixmap zoom_in_pix ( zoom_in_xpm );
+	Zoom_in_label = new Varilabel ( Zoom_label );
+	Zoom_in_label->setLabel ( 3 );
+	Zoom_in_label->setPixmap ( zoom_in_pix );
+    Zoom_in_label->setGeometry( font1Metrics->maxWidth() * 5, 3, 27, 11 );
+	connect ( Zoom_in_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( zoomIN ( int ) ) );
+
+	QPixmap zoom_out_pix ( zoom_out_xpm );
+	Zoom_out_label = new Varilabel ( Zoom_label );
+	Zoom_out_label->setLabel ( 4 );
+	Zoom_out_label->setPixmap ( zoom_out_pix );
+    Zoom_out_label->setGeometry( Zoom_in_label->x() + 27, 3, 27, 11 );
+	connect ( Zoom_out_label, SIGNAL ( mouseRelease ( int ) ),
+	          this, SLOT ( zoomOUT ( int ) ) );
+
+	// -----------------------------------------------------------------------
+	// Spacer for filling up empty space
 	Spacer_label = new QLabel ( ctlFrame2 );
 	Spacer_label->setFont ( *font1 );
 	Spacer_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-    Spacer_label->setPalette( QColor( 0, 0, 255 ) );    
+    //Spacer_label->setPalette( QColor( 0, 0, 255 ) );    
+    Spacer_label->setPalette( QColor( 0, 0, 0 ) );    
     Spacer_label->setAutoFillBackground( true );
 
+	// -----------------------------------------------------------------------
 	CFG_label = new Varilabel ( ctlFrame2 );
     CFG_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	CFG_label->setFont ( *font1 );
-	CFG_label->setText ( "Help & CFG" );
+	CFG_label->setText ( "CFG" );
     CFG_label->setPalette( QColor( 0, 0, 0 ) );
     CFG_label->setAutoFillBackground( true );
     p = CFG_label->palette();
@@ -1092,6 +1302,20 @@ Main_Widget::Main_Widget(QWidget *parent)
 	CFG_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	connect ( CFG_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setCfg ( int ) ) );
 
+	// -----------------------------------------------------------------------
+	HELP_label = new Varilabel ( ctlFrame2 );
+    HELP_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+	HELP_label->setFont ( *font1 );
+	HELP_label->setText ( "Help" );
+    HELP_label->setPalette( QColor( 0, 0, 0 ) );
+    HELP_label->setAutoFillBackground( true );
+    p = HELP_label->palette();
+    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+    HELP_label->setPalette(p);   
+	HELP_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
+	connect ( HELP_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setHelp ( int ) ) );
+
+	// -----------------------------------------------------------------------
 	CPU_label = new QLabel ( ctlFrame2 );
     CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
 	CPU_label->setFont ( *font1 );
@@ -1102,6 +1326,7 @@ Main_Widget::Main_Widget(QWidget *parent)
     CPU_label->setPalette(p);
 	CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
+	// -----------------------------------------------------------------------
 	//ctlFrame1->setGeometry ( 1, 1, 641, 31 );
 	signalFrame->setGeometry ( 1, 3, 170, 27 );
 	dBmLabel->setGeometry ( 140, 14, 35, 12 );
@@ -1431,15 +1656,20 @@ void Main_Widget::updateLayout()
 	    font1Metrics->maxWidth() * 11,
 	    15 );
 	CFG_label->setGeometry (
-	    ctlFrame2->width() - CPU_label->width() -
-	    font1Metrics->maxWidth() * 11 - 2,
+	    ctlFrame2->width() - CPU_label->width() - font1Metrics->maxWidth() * 4 - 2,
 	    1,
-	    font1Metrics->maxWidth() * 11,
+	    font1Metrics->maxWidth() * 4,
+	    15 );
+	HELP_label->setGeometry (
+	    ctlFrame2->width() - CPU_label->width() - CFG_label->width() - font1Metrics->maxWidth() * 5 - 2,
+	    1,
+	    font1Metrics->maxWidth() * 5,
 	    15 );
 	Spacer_label->setGeometry (
-	    AGC_label->x() + AGC_label->width() + 1,
+	    //AGC_label->x() + AGC_label->width() + 1,
+	    Zoom_label->x() + Zoom_label->width() + 1,
 	    1,
-	    CFG_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
+	    HELP_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
 	    15 );
 
 	spectrum_width = int(spectrumFrame->width() * hScale);
@@ -1448,14 +1678,6 @@ void Main_Widget::updateLayout()
 void Main_Widget::loadSettings()
 {
 	QSettings settings("freesoftware", "sdr-shell");
-	//settings.sync();
-	// settings.setValue("editor/wrapMargin", 68);
-	//  int margin = settings.value("editor/wrapMargin").toInt();
-	//     settings.beginGroup("MainWindow");
-	//     resize(settings.value("size", QSize(400, 400)).toSize());
-	//     move(settings.value("pos", QPoint(200, 200)).toPoint());
-	//     settings.endGroup();
-
 
 	// SDR-Core Environment
 	char *ep;
@@ -1474,15 +1696,6 @@ void Main_Widget::loadSettings()
 	}
 
      // create the command, spectrum, and meter ports
-
-     // this does a blind send to a port that's already bound,
-     // so it's outbound == !inbound -> inbound = 0
-     //cp = new_dttsp_port_client(DTTSP_PORT_CLIENT_COMMAND, 0);
-
-     // these need to suck up blind sends from elsewhere,
-     // so they need to be bound, hence inbound = 1
-     //sp = new_dttsp_port_client(DTTSP_PORT_CLIENT_SPECTRUM, 1);
-     //mp = new_dttsp_port_client(DTTSP_PORT_CLIENT_METER, 1);
 
 	pUSBCmd = NULL;
 	pTXCmd = NULL;
@@ -1598,12 +1811,31 @@ void Main_Widget::loadSettings()
 	    "/sdr-shell/slopeLowOffset", "3500" ).toInt();
 	slopeHighOffset = settings.value (
 	    "/sdr-shell/slopeHighOffset", "3500" ).toInt();
+    // NR_val settings defaults: 128, 75, 1.0, 1.0
+    NR_Taps = settings.value( 
+		"/sdr-shell/NR_Taps", 128 ).toInt();  
+    NR_Delay = settings.value( 
+		"/sdr-shell/NR_Delay", 75 ).toInt();
+    NR_Gain = settings.value( 
+		"/sdr-shell/NR_Gain", 1.0 ).toDouble();
+    NR_Leakage = settings.value( 
+		"/sdr-shell/NR_Leakage", 1.0 ).toDouble();
     NR_state = settings.value( 
 		"/sdr-shell/NR_state", 0 ).toInt();
     ANF_state = settings.value( 
 		"/sdr-shell/ANF_state", 0 ).toInt();
+    ANF_Taps = settings.value( 
+		"/sdr-shell/ANF_Taps", 45 ).toInt();  
+    ANF_Delay = settings.value( 
+		"/sdr-shell/ANF_Delay", 64 ).toInt();
+    ANF_Gain = settings.value( 
+		"/sdr-shell/ANF_Gain", 0.01 ).toDouble();
+    ANF_Leakage = settings.value( 
+		"/sdr-shell/ANF_Leakage", 0.000010 ).toDouble();
     NB_state = settings.value( 
 		"/sdr-shell/NB_state", 0 ).toInt();
+    NB_Threshold = settings.value( 
+		"/sdr-shell/NB_Threshold", 3.3 ).toDouble();
     BIN_state = settings.value( 
 		"/sdr-shell/BIN_state", 0 ).toInt();
     SPEC_state = settings.value( 
@@ -1770,6 +2002,10 @@ void Main_Widget::saveSettings()
 	settings.setValue ( "/sdr-shell/enableTransmit", intEnableTransmit );
 	settings.setValue ( "/sdr-shell/dualConversion", dualConversion );
 	settings.setValue ( "/sdr-shell/mode", ( int ) mode );
+    settings.setValue ( "/sdr-shell/NR_Taps", NR_Taps );
+    settings.setValue ( "/sdr-shell/NR_Delay", NR_Delay );
+    settings.setValue ( "/sdr-shell/NR_Gain", NR_Gain );
+    settings.setValue ( "/sdr-shell/NR_Leakage", NR_Leakage );
 	settings.setValue ( "/sdr-shell/NR_state", NR_state );
 	settings.setValue ( "/sdr-shell/ANF_state", ANF_state );
 	settings.setValue ( "/sdr-shell/NB_state", NB_state );
@@ -2114,28 +2350,6 @@ void Main_Widget::process_key ( int key )
 			if (enableTransmit)
 			{
 				toggle_TX(0);
-#if 0
-				if (transmit)
-				{
-					transmit = 0;
-					pTXCmd->sendCommand ("setTRX 0\n");
-					pTXCmd->sendCommand ("setRunState 0\n");
-					pUSBCmd->sendCommand("set ptt off\n" );
-					fprintf (stderr, "set ptt off\n");
-//!					TRX_label->setPixmap(rxPix);
-//!					TRX_label->setLabel( RX );
-					set_MUTE ( 0 );
-				} else {
-					transmit = 1;
-					pTXCmd->sendCommand ("setRunState 2\n");
-					pUSBCmd->sendCommand ("set ptt on\n" );
-					pTXCmd->sendCommand ("setTRX 1\n");
-					set_MUTE ( 1 );
-					fprintf (stderr, "set ptt on\n");
-//!					TRX_label->setPixmap(txPix);
-//!					TRX_label->setLabel( TX );
-				}
-#endif
 			} else {
 				fprintf( stderr, "Transmit is not enabled\n");
 			}
@@ -3130,10 +3344,26 @@ void Main_Widget::set_NR ( int state )
     if ( NR_state ) NR_label->setPalette( QColor( 0, 100, 200 ) );
     else NR_label->setPalette( QColor( 0, 0, 0 ) );
     NR_label->setAutoFillBackground( true );
-
+    set_NRvals();
 	pCmd->sendCommand ("setNR %d\n", state );
 	fprintf ( stderr, "setNR %d\n", state );
 
+}
+
+void Main_Widget::set_NRvals (  )
+{
+      pCmd->sendCommand ("setNRvals %d %d %f %f\n", NR_Taps, NR_Delay, NR_Gain, NR_Leakage);
+      fprintf ( stderr, "setNRvals %d, %d, %f, %f\n", NR_Taps, NR_Delay, NR_Gain, NR_Leakage );
+}
+void Main_Widget::set_ANFvals (  )
+{
+      pCmd->sendCommand ("setANFvals %d %d %f %f\n", ANF_Taps, ANF_Delay, ANF_Gain, ANF_Leakage);
+      fprintf ( stderr, "setANFNRvals %d, %d, %f, %f\n", ANF_Taps, ANF_Delay, ANF_Gain, ANF_Leakage );
+}
+void Main_Widget::set_NBvals (  )
+{
+      pCmd->sendCommand ("setNBvals %f\n", NB_Threshold );
+      fprintf ( stderr, "setNBvals %f\n", NB_Threshold );
 }
 
 void Main_Widget::toggle_ANF ( int )
@@ -3263,6 +3493,16 @@ void Main_Widget::band_DOWN ( int )
 void Main_Widget::setCfg ( int )
 {
 	cfgFrame->show();
+}
+
+void Main_Widget::setHelp ( int )
+{
+	helpFrame->show();
+}
+
+void Main_Widget::setDSP ( int )
+{
+	dspFrame->show();
 }
 
 void Main_Widget::toggle_TX ( int )
@@ -3413,7 +3653,7 @@ void Main_Widget::displayNCO ( int x )
 void Main_Widget::updateCallsign()
 {
 	stationCallsign = cfgCallInput->text();
-	setWindowTitle("SDR-Shell 4.15 @ " + stationCallsign );
+	setWindowTitle("SDR-Shell 4.16 @ " + stationCallsign );
 }
 
 void Main_Widget::updateLOFreq()
@@ -3499,7 +3739,6 @@ void Main_Widget::setPolyFFT ( )
 
 void Main_Widget::setFFTWindow ( )
 {
-//	fftWindow = window;
     if ( fftWindow_0->isChecked() )
        { fftWindow = 0; }
     else 
@@ -3620,6 +3859,43 @@ void Main_Widget::setAGC ( int type )
 	}
 }
 
+void Main_Widget::zoomIN ( int )
+{
+	if (hScale >= 3.0)
+		hScale = 2.0;
+	else if (hScale == 2.0)
+		hScale = 1.0;
+	else if (hScale == 1.0)
+		hScale = 0.75;
+	else if (hScale == 0.75)
+		hScale = 0.5;
+	else if (hScale == 0.5)
+		hScale = 0.25;
+	else if (hScale == 0.25)
+		fprintf(stderr, "Zoom in furthest\n");
+	else
+		fprintf(stderr, "Zoom in from %f\n", hScale);
+}
+void Main_Widget::zoomOUT ( int )
+{
+	if (hScale >= 3.0)
+		fprintf(stderr, "Zoom out furthest\n");
+	else if (hScale == 3.0)
+			hScale = hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
+	else if (hScale == 2.0)
+		hScale = 3.0;
+	else if (hScale == 1.0)
+		hScale = 2.0;
+	else if (hScale == 0.75)
+		hScale = 1.0;
+	else if (hScale == 0.5)
+		hScale = 0.75;
+	else if (hScale == 0.25)
+		hScale = 0.5;
+	else
+		fprintf(stderr, "Zoom out from %f\n", hScale);
+}
+
 void Main_Widget::calibrateSpec ( int value )
 {
 	specCal = value;
@@ -3629,6 +3905,71 @@ void Main_Widget::calibrateMetr ( int value )
 {
 	metrCal = value;
 }
+
+// NR_Settings Glenn VE9GJ
+void Main_Widget::setNR_Taps ( int value )
+{
+	fprintf ( stderr, "NR_Taps spinbox changed to %d\n",value );
+    NR_Taps = value;
+    set_NRvals();
+}
+
+void Main_Widget::setNR_Delay ( int value )
+{
+	fprintf ( stderr, "NR_Delay spinbox changed to %d\n",value );
+    NR_Delay = value;
+    set_NRvals();
+}
+
+void Main_Widget::setNR_Gain ( double value )
+{
+	fprintf ( stderr, "NR_Gain spinbox changed to %f\n",float(value) );
+    NR_Gain = float(value);
+    set_NRvals();
+}
+
+void Main_Widget::setNR_Leakage ( double value )
+{
+	fprintf ( stderr, "NR_Leakage spinbox changed to %f\n",float(value) );
+    NR_Leakage = float(value);
+    set_NRvals();
+}
+
+void Main_Widget::setANF_Taps ( int value )
+{
+	fprintf ( stderr, "ANF_Taps spinbox changed to %d\n",value );
+    ANF_Taps = value;
+    set_ANFvals();
+}
+
+void Main_Widget::setANF_Delay ( int value )
+{
+	fprintf ( stderr, "ANF_Delay spinbox changed to %d\n",value );
+    ANF_Delay = value;
+    set_ANFvals();
+}
+
+void Main_Widget::setANF_Gain ( double value )
+{
+	fprintf ( stderr, "ANF_Gain spinbox changed to %f\n",float(value) );
+    ANF_Gain = float(value);
+    set_ANFvals();
+}
+
+void Main_Widget::setANF_Leakage ( double value )
+{
+	fprintf ( stderr, "ANF_Leakage spinbox changed to %f\n",float(value) );
+    ANF_Leakage = float(value);
+    set_ANFvals();
+}
+
+void Main_Widget::setNB_Threshold ( double value )
+{
+	fprintf ( stderr, "NB_Threshold spinbox changed to %f\n",value );
+    NB_Threshold = value;
+    set_NBvals();
+}
+
 
 void Main_Widget::setIF ( bool value )
 {

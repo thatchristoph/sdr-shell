@@ -19,9 +19,14 @@ void Varilabel::mouseMoveEvent( QMouseEvent *e )
     emit y( e->y() );
 }
 
-void Varilabel::mouseReleaseEvent ( QMouseEvent * )
+void Varilabel::mouseReleaseEvent ( QMouseEvent *e )
 {
-    emit mouseRelease( label );
+	if (e->button() & Qt::LeftButton)
+    	emit mouseRelease( label );
+	if (e->button() & Qt::RightButton)
+    	emit mouseRelease2( label );
+	if (e->button() & Qt::MidButton)
+    	emit mouseRelease3( label );
 }
 
 void Varilabel::setLabel( int l )

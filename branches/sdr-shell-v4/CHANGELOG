@@ -1,5 +1,18 @@
-Version rxrx-14
+Version 4.16
 
+- Separate HELP window from Configuration (the config window still has help in it)
+
+- Incorporate user settable NR values for dttsp by Glenn VE9GJ
+
+- Make a separate configuration window for setting NR, NB and ANF values.  Bring it up by clicking the
+left mouse button (for right handed mice) on one of the NR NB or ANF widgets.
+
+- Make a widget for setting the zoom level, along the bottom of the window.
+
+- Change some menu bar colors around so it looks better.
+
+
+Version rxrx-14
 
 - Remove the fixed -sample-rate/4 tuning offset used when tuning with usbsoftrock.
   The offset is now configurable (but not persistant across restart)

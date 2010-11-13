@@ -24,6 +24,8 @@ class Varilabel : public QLabel
         void y( int );
         void pulse( int );
         void mouseRelease( int );
+        void mouseRelease2( int );
+        void mouseRelease3( int );
 
 };
 
