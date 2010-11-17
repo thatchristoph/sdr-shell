@@ -36,11 +36,18 @@ where 127.0.0.1 is the IP address of the machine which sdr-core is running and 1
 ====Tested Commands:====
 
 setNB 0  (turns off Noise blanker) setNB 1 (turns on Noise Blanker)
+
 setFilter fL fH where -sample_rate/2 < fL < fH < sample_rate/2 sets the filter corner frequencies.
+
 setMode m where m denotes: (LSB is 0, USB is 1, DSB is 2, CWL is 3, CWU is 4, FM is 5, AM is 6, SAM is 10) sets the mode.
+
 setRunState 0 is mute, setRunState 2 is unmuted
+
 setOsc f where -sample_rate/2 < f < sample_rate/2 sets the oscillator frequency.
+
 setRXAGC m (where m is: Long 1, slow 2, medium 3, fast 4)
+
+setGain trx io gain_db where trx is 0 for RX, 1 for TX, io is 0 for input gain, 1 for output gain, and gain_db is the gain in decibels you wish to set that stage to.
 
 
 At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
