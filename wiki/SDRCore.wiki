@@ -57,11 +57,13 @@ PRIVATE REAL INLINE 	dB2lin  (REAL dB)
 PRIVATE int 	setRXFilter (int n, char **p)
  	private setRXFilter
 PRIVATE int 	getRXFilter (int n, char **p)
+
 PRIVATE int 	setRXFiltCoefs (int n, char **p)
  	private setRXFiltCoefs
 PRIVATE int 	setTXFilter (int n, char **p)
  	private setTXFilter
 PRIVATE int 	getTXFilter (int n, char **p)
+
 PRIVATE int 	setTXFiltCoefs (int n, char **p)
  	private setTXFiltCoefs
 PRIVATE int 	setFilter (int n, char **p)
@@ -69,44 +71,55 @@ PRIVATE int 	setFilter (int n, char **p)
 PRIVATE int 	setMode (int n, char **p)
  	private setMode
 PRIVATE int 	getRXMode (int n, char **p)
+
 PRIVATE int 	getTXMode (int n, char **p)
+
 PRIVATE int 	setOsc (int n, char **p)
  	private setOSC
 PRIVATE int 	getRXOsc (int n, char **p)
+
 PRIVATE int 	getTXOsc (int n, char **p)
+
 PRIVATE void 	replay_updates (void)
  	private replay_update
 PRIVATE int 	setBlkNR (int n, char **p)
  	private setBlkNR
 PRIVATE int 	getBlkNR (int n, char **p)
+
 PRIVATE int 	setBlkNRval (int n, char **p)
  	private setBlkNRval
 PRIVATE int 	setBlkANF (int n, char **p)
  	private setBlkANF
 PRIVATE int 	getBlkANF (int n, char **p)
+
 PRIVATE int 	setBlkANFval (int n, char **p)
  	private setBlkANFval
 PRIVATE int 	setNB (int n, char **p)
  	private setNB
 PRIVATE int 	getNB (int n, char **p)
+
 PRIVATE int 	setNBvals (int n, char **p)
  	private setNBvals
 PRIVATE int 	setSDROM (int n, char **p)
  	private setSDROM
 PRIVATE int 	getSDROM (int n, char **p)
+
 PRIVATE int 	setSDROMvals (int n, char **p)
  	private setSDROMvals
 PRIVATE int 	setBIN (int n, char **p)
  	private setBIN
 PRIVATE int 	getBIN (int n, char **p)
+
 PRIVATE int 	setfixedAGC (int n, char **p)
  	private setfixedAGC
 PRIVATE int 	setRXAGCCompression (int n, char **p)
  	private setRXAGCCompression
 PRIVATE int 	getRXAGC (int n, char **p)
+
 PRIVATE int 	setTXLevelerAttack (int n, char **p)
  	private setTXLevelerAttack
 PRIVATE int 	getTXLeveler (int n, char **p)
+
 PRIVATE int 	setTXLevelerSt (int n, char **p)
  	private setTXLevelerSt
 PRIVATE int 	setTXLevelerDecay (int n, char **p)
@@ -142,6 +155,7 @@ PRIVATE int 	setTXSpeechCompression (int n, char **p)
 PRIVATE int 	setTXSpeechCompressionGain (int n, char **p)
  	private setTXSpeechCompressionGain
 PRIVATE int 	getTXSpeechCompression (int n, char **p)
+
 PRIVATE REAL 	gmean (REAL x, REAL y)
  	private gmean
 PRIVATE int 	setGrphRXEQ3 (int n, char **p)
@@ -149,30 +163,37 @@ PRIVATE int 	setGrphRXEQ3 (int n, char **p)
 PRIVATE int 	setGrphRXEQ10 (int n, char **p)
  	private setGrphRXEQ10
 PRIVATE int 	getGrphRXEQ (int n, char **p)
+
 PRIVATE int 	setGrphTXEQ3 (int n, char **p)
  	private setGrphTXEQ3
 PRIVATE int 	setGrphTXEQ10 (int n, char **p)
  	private setGrphTXEQ10
 PRIVATE int 	getGrphTXEQ (int n, char **p)
+
 PRIVATE int 	setNotch160 (int n, char **p)
  	private setNotch160
 PRIVATE int 	setTXCarrierLevel (int n, char **p)
  	private setTXCarrierLevel
 PRIVATE int 	getTXCarrierLevel (int n, char **p)
+
 PRIVATE int 	setANF (int n, char **p)
  	private setANF
 PRIVATE int 	setANFvals (int n, char **p)
  	private setANFvals
 PRIVATE int 	getANF (int n, char **p)
+
 PRIVATE int 	setNR (int n, char **p)
  	private setNR
 PRIVATE int 	setNRvals (int n, char **p)
  	private setNRvals
 PRIVATE int 	getANR (int n, char **p)
+
 PRIVATE int 	setcorrectIQ (int n, char **p)
  	private setcorrectIQ
 PRIVATE int 	getRXIQ (int n, char **p)
+
 PRIVATE int 	getTXIQ (int n, char **p)
+
 PRIVATE int 	setcorrectIQphase (int n, char **p)
  	private setcorrectIQphase
 PRIVATE int 	setcorrectIQgain (int n, char **p)
@@ -188,24 +209,29 @@ PRIVATE int 	setSquelch (int n, char **p)
 PRIVATE int 	setSquelchSt (int n, char **p)
  	private setSquelchSt
 PRIVATE int 	getRXSquelch (int n, char **p)
+
 PRIVATE int 	setTXSquelch (int n, char **p)
  	private setTXSquelch
 PRIVATE int 	setTXSquelchSt (int n, char **p)
  	private setTXSquelchSt
 PRIVATE int 	getTXSquelch (int n, char **p)
+
 PRIVATE int 	setTXWaveShapeFunc (int n, char **p)
  	private setTXWaveShapeFunc
 PRIVATE int 	setTXWaveShapeSt (int n, char **p)
  	private setTXWaveShapeSt
 PRIVATE int 	getTXWaveShape (int n, char **p)
+
 PRIVATE int 	setTRX (int n, char **p)
  	private setTRX
 PRIVATE int 	getTRX (int n, char **p)
+
 PRIVATE int 	setRunState (int n, char **p)
  	private setNRunState
 PRIVATE int 	setSpotToneVals (int n, char **p)
  	private setSpotToneVals
 PRIVATE int 	getSpotTone (int n, char **p)
+
 PRIVATE int 	setSpotTone (int n, char **p)
  	private setSpotTone
 PRIVATE int 	setFinished (int n, char **p)
@@ -221,22 +247,29 @@ PRIVATE int 	setSNDSResetSize (int n, char **p)
 PRIVATE int 	setRXListen (int n, char **p)
  	private setRXListen
 PRIVATE int 	getRXListen (int n, char **p)
+
 PRIVATE int 	setRXOn (int n, char **p)
  	private setRXOn
 PRIVATE int 	setRXOff (int n, char **p)
  	private setRXOff
 PRIVATE int 	getRXCount (int n, char **p)
+
 PRIVATE int 	setRXPan (int n, char **p)
  	private setRXPan
 PRIVATE int 	getRXPan (int n, char **p)
+
 PRIVATE int 	setGain (int n, char **p)
  	private setGain
 PRIVATE int 	getRXGain (int n, char **p)
+
 PRIVATE int 	getTXGain (int n, char **p)
+
 PRIVATE int 	setCompandSt (int n, char **p)
  	private setCompandSt
 PRIVATE int 	getRXCompand (int n, char **p)
+
 PRIVATE int 	getTXCompand (int n, char **p)
+
 PRIVATE int 	setCompand (int n, char **p)
  	private setCompand
 PRIVATE int 	setGrphTXEQcmd (int n, char **p)
@@ -254,14 +287,17 @@ PRIVATE int 	setSpectrumWindow (int n, char **p)
 PRIVATE int 	setSpectrumType (int n, char **p)
  	private setSpectrumType
 PRIVATE int 	getSpectrumInfo (int n, char **p)
+
 PRIVATE int 	setDCBlockSt (int n, char **p)
  	private setDCBlockSt
 PRIVATE int 	getDCBlock (int n, char **p)
+
 PRIVATE int 	setDCBlock (int n, char **p)
  	private setDCBlock
 PRIVATE int 	setNewBuflen (int n, char **p)
  	private setNewBuflen
 PRIVATE int 	getBuflen (int n, char **p)
+
 PRIVATE int 	setTEST (int n, char **p)
  	private setTEST
 PRIVATE int 	setTestTone (int n, char **p)
@@ -273,8 +309,11 @@ PRIVATE int 	setTestNoise (int n, char **p)
 PRIVATE int 	setTestThru (int n, char **p)
  	private setTestThru
 PRIVATE int 	getTEST (int n, char **p)
+
 PRIVATE int 	setTXMeterMode (int n, char **p)
+
 PRIVATE int 	getTXMeterMode (int n, char **p)
+
 PRIVATE int 	reqMeter (int n, char **p)
  	private reqMeter
 PRIVATE int 	reqRXMeter (int n, char **p)
