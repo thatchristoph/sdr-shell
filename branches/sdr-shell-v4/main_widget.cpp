@@ -16,6 +16,7 @@
 Main_Widget::Main_Widget(QWidget *parent)
         : QWidget(parent)
 {
+	QString version;
 	setFocusPolicy ( Qt::TabFocus );
 	setMinimumWidth ( 650 );
 	setMinimumHeight ( 300 );
@@ -31,7 +32,8 @@ Main_Widget::Main_Widget(QWidget *parent)
 	loadSettings();
 	bin_bw = sample_rate / 4096.0;
 
-	setWindowTitle("SDR-Shell 4.16 @ " + stationCallsign );
+	version.sprintf("%5.2f", VERSION);
+	setWindowTitle("SDR-Shell " + version + " @ " + stationCallsign );
 
 	font1PointSize = 14;
 	font1 = new QFont ( "Andale Mono", font1PointSize, FALSE );
@@ -445,6 +447,50 @@ Main_Widget::Main_Widget(QWidget *parent)
 	if (fftWindow == 12)
         fftWindow_12->setChecked(true);	
 
+	// Spectrum display 
+	QGroupBox *cfgSpecDisplay = new QGroupBox( cfgFrame3 );
+    cfgSpecDisplay->setTitle("Spectrum Display");	
+	cfgSpecDisplay->setGeometry( 5, 265, 330, 90 );
+
+	// SpecLineFill
+    specLineFillButton = new QRadioButton( tr("Fill Spectrum Line"), cfgSpecDisplay);
+    specLineFillButton->setGeometry ( 10, 18, 200, 20 );
+    connect( specLineFillButton, SIGNAL(clicked()),
+			 this, SLOT ( setLineFill () ) );
+
+	// Spectrum Averaging
+	QLabel *cfgSpecAvgInputLabel = new QLabel ( cfgSpecDisplay );
+	cfgSpecAvgInputLabel->setText ( "Spectrum Averaging" );
+	cfgSpecAvgInputLabel->setGeometry ( 10, 40, 160, 20 );
+	cfgSpecAvgInputLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+	cfgSpecAvgInput = new QSpinBox ( cfgSpecDisplay );
+	cfgSpecAvgInput->setGeometry ( 180, 40, 70, 20 );
+	cfgSpecAvgInput->setMinimum ( 0 );
+	cfgSpecAvgInput->setMaxValue ( 255 );
+	cfgSpecAvgInput->setValue ( specAveraging );
+	connect ( cfgSpecAvgInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateSpecAvg ( int ) ) );
+
+	// filterLine
+	// Spectrum Scale
+	QLabel *cfgSpecScaleLabel = new QLabel ( cfgSpecDisplay );
+	cfgSpecScaleLabel->setText ( "Spectrum Scale" );
+	cfgSpecScaleLabel->setGeometry ( 10, 60, 160, 20 );
+	cfgSpecScaleLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+	cfgSpecLowInput = new QSpinBox ( cfgSpecDisplay );
+	cfgSpecLowInput->setGeometry ( 180, 60, 70, 20 );
+	cfgSpecLowInput->setMinimum ( -140 );
+	cfgSpecLowInput->setMaxValue ( 0 );
+	cfgSpecLowInput->setValue ( -140 );
+	connect ( cfgSpecLowInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateSpecLow ( int ) ) );
+	cfgSpecHighInput = new QSpinBox ( cfgSpecDisplay );
+	cfgSpecHighInput->setGeometry ( 250, 60, 70, 20 );
+	cfgSpecHighInput->setMinimum ( -139 );
+	cfgSpecHighInput->setMaxValue ( 0 );
+	cfgSpecHighInput->setValue ( -40 );
+	connect ( cfgSpecHighInput, SIGNAL ( valueChanged ( int ) ),
+	          this, SLOT ( updateSpecHigh ( int ) ) );
 
 	// IF Settings
 	QGroupBox *cfgIfBox = new QGroupBox ( cfgFrame6 );
@@ -649,7 +695,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 	helpText->setLineWrapMode(QTextEdit::WidgetWidth);
 	aboutText->setReadOnly ( true );
 	aboutText->append (
-	    QString ( "<center><br>SDR-Shell Version 4.16<br>" ) +
+	    QString ( "<center><br>SDR-Shell Version " + version + "<br>" ) +
 	    "Copyright (c) 2006, 2007 & 2009<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
@@ -1379,11 +1425,17 @@ Main_Widget::Main_Widget(QWidget *parent)
 	setTxGain( 1 );
 	processorLoad();
 	hScale = 1.0;
+	vsScale = 1.0;
+	specLineFill = 0;
+	filterLine = 1;
 	if ( useHamlib )
 	{
 		initHamlib();
 	}
 	setMode(mode, FALSE, TRUE);
+	specAveraging = 1;
+	specLow = -140;
+	specHigh = -40;
 
 	QTimer *cpuTimer = new QTimer ( this );
 	connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
@@ -1595,15 +1647,12 @@ void Main_Widget::setTheme ( int t )
 void Main_Widget::paintEvent ( QPaintEvent * )
 {
 	if (updated) {
-		//fprintf( stderr, "+");
 		updateLayout();
 		if ( SPEC_state ) {
 			drawSpectrogram();			// update the spectrogram (middle) display
 			plotSpectrum( spectrum_head );	// plots the spectrum display
 		}
 		drawPassBandScale();
-	} else {
-		//fprintf( stderr, "-");
 	}
 	updated = 0;
 }
@@ -3070,12 +3119,13 @@ void Main_Widget::drawPassBandScale()
 void Main_Widget::plotSpectrum( int y )
 {
 //printf("plotSpectrum( int y ) \n");
-    int x, y1, x1, x2, spectrumFrame_width_less1;
+    int x, y1, x1, x2, n, spectrumFrame_width_less1;
     double kHz_step;
     int f;
     int f1, f2;
     char f_text[10];
     bool debug = false;
+	int spectrum_data[DEFSPEC];
 
     spectrumFrame_width_less1 = spectrum_width - 1;
 
@@ -3083,17 +3133,13 @@ void Main_Widget::plotSpectrum( int y )
     f1 = spectrum_width / 2 + (int)(*filter_l / bin_bw) + 2;	// f1 is low filter
     f2 = spectrum_width / 2 + (int)(*filter_h / bin_bw) + 2;	// f2 is high filter
 
-//tf    x1 = DEFSPEC/2 - spectrogram->width()/2;
-//tf    x2 = x1 + spectrogram->width();
 	// 4096/2 - width/2
     x1 = (DEFSPEC/2 - spectrum_width / 2) -3;
     x2 = x1 + spectrum_width;
 
     if(hScale > 2.0)
-//tf    	kHz_step = 5000 / ( sample_rate / 4096.0 );
     	kHz_step = 5000 / bin_bw;
     else
-//tf    	kHz_step = 1000 / ( sample_rate / 4096.0 );
     	kHz_step = 1000 / bin_bw;
 	
     if(debug)
@@ -3210,32 +3256,58 @@ void Main_Widget::plotSpectrum( int y )
 		if(hScale > 2) {
             p.drawText( spectrum_width - 
 			font2Metrics->maxWidth() * 4 - 2,
-		i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
+				i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
 
 	    } else {
             p.drawText( spectrum_width - 
 			font1Metrics->maxWidth() * 4 - 2,
-		i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
+				i + 19 + spectrogram->height() + PBSFRM_V + TOPFRM_V, f_text );
 	    }
     }    
+
 	////////////////////////////////////////// Finally, Draw the actual Spectrum data
+	// Average the last N samples of spectrum data
+	if (specAveraging > 1) {
+		memset(spectrum_data, 0, sizeof(int) * DEFSPEC);
+		for (y1 = y, n=0; n < specAveraging; n++) {
+    		for ( x = 1; x < DEFSPEC; x++ ) {
+				spectrum_data[x] += spectrum_history[y1][x];
+			}
+			y1--;
+			if (y1 < 0)
+				y1 = spectrogram->height() - 1;
+			}
+    	for ( x = 1; x < DEFSPEC; x++ ) {
+			spectrum_data[x] = spectrum_data[x] / specAveraging;
+		}
+	}
+
     y1 =  spectrogram->height() + PBSFRM_V + TOPFRM_V + spectrumFrame->height();
-//    p.setPen( QColor( 0, 200, 0 ) );
-// tf:change color back to green
-//    p.setPen( Qt::yellow );
     p.setPen( Qt::green );
+
 	// Draw Spectrum                     + 2
     for ( x = 1; x < spectrumFrame_width_less1 ; x++ )
 	{
     	if(specLineFill) {
-        	p.drawLine( x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V,
-           	         x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
-					spectrum_history[y][x + x1 + 1] );
+			if (specAveraging <= 1)
+        		p.drawLine( x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V,
+           	   	      x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_history[y][x + x1 + 1] * vsScale );
+			else
+        		p.drawLine( x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V,
+           	   	      x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_data[x + x1 + 1] *vsScale );
 		} else {
-        	p.drawLine( x - 1, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
-					spectrum_history[y][x + x1],
-                    x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
-					spectrum_history[y][x + x1 + 1] );
+			if (specAveraging <= 1)
+        		p.drawLine( x - 1, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_history[y][x + x1]*vsScale ,
+           	         	x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_history[y][x + x1 + 1] *vsScale );
+			else
+        		p.drawLine( x - 1, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_data[x + x1]*vsScale ,
+                    	x, spectrogram->height() + PBSFRM_V + TOPFRM_V + SPECFRM_V - 
+						spectrum_data[x + x1 + 1] *vsScale );
 		}
     }
 	p.end();   		 
@@ -3652,8 +3724,10 @@ void Main_Widget::displayNCO ( int x )
 
 void Main_Widget::updateCallsign()
 {
+	QString version;
+	version.sprintf("%5.2f", VERSION);
 	stationCallsign = cfgCallInput->text();
-	setWindowTitle("SDR-Shell 4.16 @ " + stationCallsign );
+	setWindowTitle("SDR-Shell " + version + " @ " + stationCallsign );
 }
 
 void Main_Widget::updateLOFreq()
@@ -3801,6 +3875,43 @@ void Main_Widget::setSpectrumDefaults()
 	pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
 	pCmd->sendCommand ("setSpectrumPolyphase %d\n", polyphaseFFT );
 }    
+
+void Main_Widget::updateSpecAvg ( int gain )
+{
+	specAveraging = gain;
+}
+
+void Main_Widget::setLineFill ( )
+{
+    if ( specLineFillButton->isChecked() )
+		specLineFill = 1;
+	else
+		specLineFill = 0;
+}
+
+void Main_Widget::updateSpecLow ( int value )
+{
+	specLow = value;
+	if (specLow >= specHigh)
+		specLow = specHigh - 1;
+	else
+	updateSpecHigh(specHigh);
+}
+
+void Main_Widget::updateSpecHigh ( int value )
+{
+	float a;
+	specHigh = value;
+	if (specHigh <= specLow)
+		specHigh = specLow + 1;
+	// vsScale is the vertical spectrum scale
+	// 1.0 = -40 to -140
+	a = (specLow - specHigh) * -1;
+	if (a > 100)
+		a = 100;
+	vsScale = 100 / a;
+	fprintf(stderr, "vsScale = (%d to %d) %f %f\n", specLow, specHigh, a, vsScale);
+}
 
 void Main_Widget::setAGC ( int type )
 {
