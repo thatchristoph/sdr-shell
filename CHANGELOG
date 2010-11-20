@@ -1,3 +1,12 @@
+Version 4.18
+
+Fixes from Al, nh7o:
+
+ - setFilter_l() was not multiplying by step size
+
+ - the [ and ] keys did not move the filter when on LSB/CWL because of a range
+   check.  Removed the range check.
+
 Version 4.17
 
 Version number is now a number in main_widget.h

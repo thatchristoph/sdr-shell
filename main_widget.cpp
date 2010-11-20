@@ -2338,19 +2338,13 @@ void Main_Widget::process_key ( int key )
 			setFilter_h ( +1 );
 			break;
 		case 91: // [
-			if ( *filter_h <= 6000 && *filter_l > step )
-			{
-				*filter_h -= step;
-				*filter_l -= step;
-			}
+			*filter_h -= step;
+			*filter_l -= step;
 			setFilter();
 			break;
 		case 93: // [
-			if ( *filter_h < 6000 && *filter_l >= step )
-			{
-				*filter_h += step;
-				*filter_l += step;
-			}
+			*filter_h += step;
+			*filter_l += step;
 			setFilter();
 			break;
 		case 81: // q
@@ -2507,10 +2501,10 @@ void Main_Widget::setFilter_l ( int n )
 	step = 10;
 
 	if ( *filter_l > -6000 && n == -1 )
-		*filter_l -= step;
+		*filter_l -= step * n;
 
 	if ( *filter_l < *filter_h - step && n == 1 )
-		*filter_l += step;
+		*filter_l += step * n;
 
 	setFilter();
 }
