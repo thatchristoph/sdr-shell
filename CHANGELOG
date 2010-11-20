@@ -1,3 +1,22 @@
+Version 4.17
+
+Version number is now a number in main_widget.h
+
+- Turn on the 'filterLine' flag to put bandpass filter lines in the spectrogram
+  display.  This should be a config option.
+
+A Spectrum Display box on the Spectrum configuration tab that includes:
+-  Fill spectrum line.
+-  Spectrum Averaging
+  The spectrum display gets averaged of the past (n) values.  This makes it
+  smoother, possibly at the cost of lost detail.  Try 
+- Spectrum Scale
+  This is a start at being able to set the db scale of the spectrum display.
+  Right now the values are used only for setting a scale value against which to
+  plot the spectrum line.  I don't know how to calibrate the spectrum data from
+  dttsp to a dB scale.  When the scale is not 1.0, the db values and
+  spectrogram window are wrong.
+
 Version 4.16
 
 - Separate HELP window from Configuration (the config window still has help in it)

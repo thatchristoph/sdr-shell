@@ -1,6 +1,8 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
+#define	VERSION 4.17
+
 #include <stdlib.h>
 #include <qwidget.h>
 #include <qapplication.h>
@@ -99,20 +101,21 @@ class Main_Widget : public QWidget
         QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
         QDoubleSpinBox *ANF_GainSpinBox, *ANF_LeakageSpinBox; 
         QDoubleSpinBox *NB_ThresholdSpinBox;
-        
+		QSpinBox *cfgSpecAvgInput, *cfgSpecLowInput, *cfgSpecHighInput;
+ 
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
-                hamlibWrapper *ourHamlibWrapper;
+        hamlibWrapper *ourHamlibWrapper;
 		QMutex displayMutex;
 
-                //hamlib parameters.
+        //hamlib parameters.
 		QString portString;
 		rig_model_t rig;
 		QString rigString;
 		int speed;
 		QString speedString;
 		bool useHamlib;
-                void initHamlib ();
+        void initHamlib ();
 		bool useSlopeTune;
 		bool muteXmit;
 
@@ -224,10 +227,11 @@ class Main_Widget : public QWidget
 		QLCDNumber *lcd;
 		QLabel *rit;
 		QTextEdit *textFrame;
-                QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
+        QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
 			*fftWindow_0, *fftWindow_1, *fftWindow_2, *fftWindow_3, *fftWindow_4, *fftWindow_5,
 			*fftWindow_6, *fftWindow_7, *fftWindow_8, *fftWindow_9,*fftWindow_10, *fftWindow_11,
 			*fftWindow_12;
+		QRadioButton *specLineFillButton;
 		QRadioButton *cfgUseUSBsoftrock;
 		QRadioButton *cfgDualConversion;
 
@@ -286,7 +290,7 @@ class Main_Widget : public QWidget
 		int fontlcdPointSize;
 		int theme;
 		int map_flag;
-                int polyphaseFFT;
+        int polyphaseFFT;
 		int fftWindow;
 		int spectrumType;
 		int agcType;
@@ -305,7 +309,10 @@ class Main_Widget : public QWidget
 		float specCal;
 		float metrCal;
 		float hScale;
+		float vsScale;		// vertical Spectrum scale
 		float bin_bw;
+		int specAveraging;		// number of spectrum data points to average on each display
+		int specLow, specHigh;
 
 		int spectrum_history[SPECTRUM_HISTORY_SIZE][DEFSPEC];
 		int spectrum_head;
@@ -436,6 +443,10 @@ class Main_Widget : public QWidget
 		void updateTxOutputGain ( int );
                 void setPolyFFT ( );
 		void setFFTWindow ( );
+		void updateSpecAvg ( int );
+		void updateSpecLow ( int );
+		void updateSpecHigh ( int );
+		void setLineFill ( );
 		void setSpectrumType ( );
 		void setSpectrumDefaults ( );
 		void setAGC ( int );
