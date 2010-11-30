@@ -49,6 +49,10 @@ setRXAGC m (where m is: Long 1, slow 2, medium 3, fast 4)
 
 setGain trx io gain_db where trx is 0 for RX, 1 for TX, io is 0 for input gain, 1 for output gain, and gain_db is the gain in decibels you wish to set that stage to.
 
+setSDROM, 0 is off 1 is on.  SDROM stands for Signal Dependent Rank Order Mean Noise Reduction and I think it is the same as NB2 on some of the GUIs.
+
+getSDROM gets the SDROM state and threshold.
+
 
 At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
 
