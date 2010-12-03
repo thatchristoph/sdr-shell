@@ -22,6 +22,7 @@ class Spectrogram : public QWidget
     signals:
         void tune1( int );
         void tune2( int );
+        void tune3( int );
         void plot( int );
 	void movement( int );
 };

@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.18
+#define	VERSION 4.19
 
 #include <stdlib.h>
 #include <qwidget.h>
@@ -52,6 +52,7 @@
 #include "hamlibwrapper.h"
 #include "dttsp.h"
 #include "freqlabel.h"
+#include "lcdfreq.h"
 
 #include "cmath"
 
@@ -224,7 +225,8 @@ class Main_Widget : public QWidget
 		QString *modeName[NUM_MODES];
 		QString stationCallsign;
 		QString stationQTH;
-		QLCDNumber *lcd;
+		//QLCDNumber *lcd;
+		LCDFreq *lcd;
 		QLabel *rit;
 		QTextEdit *textFrame;
         QRadioButton *polyFFT_button, *preFilter_button, *postFilter_button,
@@ -394,6 +396,8 @@ class Main_Widget : public QWidget
 		void spectrogramClicked ( int );
 		void plotSpectrum ( int );
 		void tune ( int );
+		void tunef ( int );
+		void tunewheel ( int );
 		void processorLoad();
 
 		void setTuneStep ( int );

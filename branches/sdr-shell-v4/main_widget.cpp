@@ -78,6 +78,8 @@ Main_Widget::Main_Widget(QWidget *parent)
         //This seems to occasionally cause a seg fault (just above).  Rob 10/3/10
 	connect ( spectrogram, SIGNAL ( tune2 ( int ) ),
 	          this, SLOT ( tune ( int ) ) );
+	connect ( spectrogram, SIGNAL ( tune3 ( int ) ),
+	          this, SLOT ( tunewheel ( int ) ) );
 	connect ( spectrogram, SIGNAL ( movement ( int ) ),
 	          this, SLOT ( f_at_mousepointer ( int ) ) );
 
@@ -256,7 +258,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 	cfgIQCal->setTitle ( "RX IQ Calibration" );
 	cfgIQCal->setGeometry( 5, 5, 330, 45 );
 
-#if 0
+#if 1
 	QLabel *cfgIQPhaseLabel = new QLabel ( cfgIQCal );
 	cfgIQPhaseLabel->setText ( "IQ Phase: " );
 	cfgIQPhaseLabel->setGeometry ( 10, 18, 70, 20 );
@@ -290,7 +292,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 	cfgTxIQCal->setTitle ( "TX IQ Calibration" );
 	cfgTxIQCal->setGeometry ( 5, 50, 340, 45 );
 
-#if 0
+#if 1
 	QLabel *cfgTxIQPhaseLabel = new QLabel ( cfgTxIQCal );
 	cfgTxIQPhaseLabel->setText ( "IQ Phase: " );
 	cfgTxIQPhaseLabel->setGeometry ( 10, 18, 70, 20 );
@@ -912,7 +914,8 @@ Main_Widget::Main_Widget(QWidget *parent)
     dBmLabel->setPalette(p);
 
     //Frequency display
-    lcd = new QLCDNumber( 12, ctlFrame );
+    //lcd = new QLCDNumber( 12, ctlFrame );
+    lcd = new LCDFreq( 12, ctlFrame );
 	lcd->setFrameStyle ( QFrame::NoFrame );
 	lcd->setSegmentStyle( QLCDNumber::Filled );
     p = lcd->palette();
@@ -921,6 +924,10 @@ Main_Widget::Main_Widget(QWidget *parent)
     p.setColor(QPalette::WindowText, QColor(255, 255, 255) );
     lcd->setPalette(p);
     lcd->setAutoFillBackground(true);
+	connect ( lcd, SIGNAL ( tune3 ( int ) ),
+	          this, SLOT ( tunef ( int ) ) );
+	connect ( lcd, SIGNAL ( tuneStep ( int ) ),
+	          this, SLOT ( setTuneStep ( int ) ) );
 
 	step_1Hz_frame = new QFrame ( ctlFrame );
 	step_1Hz_frame->setGeometry ( 318, 29, 11, 1 );
@@ -1982,9 +1989,9 @@ void Main_Widget::loadMemoryCells()
 	for(int i=0; i<NUM_MEMS; i++) {
 	  char buffer[256], buffer2[256];
 	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
-	  f_cell[i]->setFrequency(settings.value(buffer, "0").toInt());
+	  f_cell[i]->setFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_txfrequency", i+1);
-	  f_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
+	  f_cell[i]->setTxFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
 	  f_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
@@ -1996,9 +2003,9 @@ void Main_Widget::loadMemoryCells()
 	for (int i=0; i<NUM_BANDMEMS; i++) {
 	  char buffer[256], buffer2[256];
 	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
-	  band_cell[i]->setFrequency(settings.value(buffer, "0").toInt());
+	  band_cell[i]->setFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
-	  band_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
+	  band_cell[i]->setTxFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
 	  band_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
@@ -2210,9 +2217,8 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 	switch ( key )
 	{
         case Qt::Key_Down: // Down arrow
-		case 72: // h
-			//if ( tuneStep > 0 ) tuneStep--;
-			setTuneStep ( -1 );
+		case 76: // l
+			setTuneStep ( tuneStep - 1 );
 			break;
         case Qt::Key_Left: // Left arrow
 		case 74: // j
@@ -2241,9 +2247,8 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			}
 			break;
         case Qt::Key_Up: // Up arrow
-		case 76: // l
-			//if ( tuneStep < 3 ) tuneStep++;
-			setTuneStep ( +1 );
+		case 72: // h
+			setTuneStep ( tuneStep + 1 );
 			break;
         case Qt::Key_Right: // Right arrow
 		case 75:  // k
@@ -2571,11 +2576,9 @@ void Main_Widget::setCA_label()
 void Main_Widget::setTuneStep ( int step )
 {
     if ( rock_bound ) {
-	  if ( tuneStep < 3 && step > 0 ) tuneStep++;
-	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+	  if ( step <= 3 && step >= 0 ) tuneStep = step;
 	} else {
-	  if ( tuneStep < 8 && step > 0 ) tuneStep++;
-	  else if ( tuneStep > 0 && step < 0 ) tuneStep--;
+	  if ( step <= 8 && step >= 0 ) tuneStep = step;
 	}
 
 	if (tuneStep != 0) {
@@ -3373,6 +3376,44 @@ void Main_Widget::tune ( int x )
 		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
 		setRxFrequency( 0 );
 	}
+}
+
+void Main_Widget::tunef ( int x )
+{
+	int f_limit = sample_rate/2 - 2000;
+
+	// use usbsoftrock if the tuning step is large enough
+	if (!rock_bound ) {
+		if ( x > 1000 || x < -1000 ) {
+			rx_f -= rx_delta_f;
+			rx_delta_f = tuneCenter;
+			rx_f = rx_f + x;
+			rx_f += rx_delta_f;
+			setRxFrequency( 1 );
+		} else {
+			rx_delta_f += x;
+			// Re-tune when hit the edges
+			if ( rx_delta_f >  f_limit || rx_delta_f < -f_limit ) {
+				rx_f -= rx_delta_f;
+				rx_delta_f = tuneCenter;
+				rx_f += rx_delta_f;
+				setRxFrequency( 1 );
+			} else {
+				setRxFrequency( 0 );
+			}
+		}
+	} else {
+		rx_delta_f += x;
+		if ( rx_delta_f >  f_limit ) rx_delta_f =  f_limit;
+		if ( rx_delta_f < -f_limit ) rx_delta_f = -f_limit;
+		setRxFrequency( 0 );
+	}
+}
+void Main_Widget::tunewheel ( int steps )
+{
+	int x = pow ( 10, tuneStep ) * steps;
+
+	tunef( x );
 }
 
 void Main_Widget::focusInEvent ( QFocusEvent * )
