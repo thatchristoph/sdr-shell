@@ -22,6 +22,7 @@ class Spectrum : public QWidget
     signals:
 		void movement( int );
 		void tune( int );
-        	void tune2( int );
+       	void tune2( int );
+       	void tune3( int );
 };
 #endif
