@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.19
+#define	VERSION 4.20
 
 #include <stdlib.h>
 #include <qwidget.h>
@@ -53,6 +53,8 @@
 #include "dttsp.h"
 #include "freqlabel.h"
 #include "lcdfreq.h"
+#include "command.h"
+#include "idbutton.h"
 
 #include "cmath"
 
@@ -71,6 +73,7 @@ only the upper half of the spectrum in order to omit the 1/f noise near DC */
 
 #define NUM_BANDMEMS 10
 #define NUM_MEMS 8
+#define	NUM_CMD	8
 
 #define TOPFRM_V 35
 #define PBSFRM_V 15
@@ -87,6 +90,7 @@ class Main_Widget : public QWidget
 		QPushButton *quit_button;
 		QPushButton *updateLOFreqButton;
 		QPushButton *updateTuneOffsetButton;
+		QPushButton *cmd0reset;
 		//QScrollView *scroll_view;
 		QFont *font;
 		QLineEdit *cfgCallInput, *cfgLOFreqInput, *cfgIFreqInput, *cfgHamlibRigInput, *cfgHamlibSpeedInput, *cfgHamlibPortInput;
@@ -96,7 +100,6 @@ class Main_Widget : public QWidget
 		QSpinBox *cfgTxMicGainInput, *cfgTxOutputGainInput;
 		QSpinBox *specCalSpinBox, *metrCalSpinBox, *cfgLSBOffsetInput;
 		QSpinBox *cfgSlopeLowOffsetInput, *cfgSlopeHighOffsetInput;
-		//NR Values Glenn VE9GJ
         QSpinBox *NR_TapsSpinBox, *NR_DelaySpinBox; 
         QDoubleSpinBox *NR_GainSpinBox, *NR_LeakageSpinBox; 
         QSpinBox *ANF_TapsSpinBox, *ANF_DelaySpinBox; 
@@ -193,6 +196,12 @@ class Main_Widget : public QWidget
 
 		MemoryCell *band_cell[NUM_BANDMEMS];
 
+		Command		*c_cell[NUM_CMD];
+		QLineEdit	*cmdName[NUM_CMD], *cmdOnCommand[NUM_CMD];
+		QLineEdit	*cmdOffCommand[NUM_CMD];
+		QRadioButton *cmdRXbutton[NUM_CMD], *cmdTXbutton[NUM_CMD];
+		//IdPushButton *cmd0accept; //, *cmd0reset;
+
 		QLabel *af1_label;
 		QLabel *af2_label;
 		QLabel *af3_label;
@@ -215,6 +224,7 @@ class Main_Widget : public QWidget
 		QFrame *ctlFrame;
 		QFrame *ctlFrame2;
 		QFrame *cfgFrame;
+		QFrame *cmdFrame;
 		QFrame *helpFrame;
 		QFrame *dspFrame;
 		QFrame *signalFrame;
@@ -385,6 +395,7 @@ class Main_Widget : public QWidget
 		void setTheme ( int );
 		void updateLayout();
 		void loadMemoryCells();
+		void loadCommandCells();
 
 	public:
 		Main_Widget ( QWidget *parent = 0 );
@@ -429,6 +440,8 @@ class Main_Widget : public QWidget
 		void readMem ( MemoryCell * );
 		void writeMem ( MemoryCell * );
 		void displayMem ( MemoryCell * );
+		void toggleCmd ( Command *);
+		void configCmd ( Command * );
 		void displayNCO ( int );
 
 		void updateCallsign();
@@ -465,15 +478,17 @@ class Main_Widget : public QWidget
         void set_NRvals ( );
         void setANF_Taps ( int );
         void setANF_Delay ( int );
-        void setANF_Gain ( double);
-        void setANF_Leakage ( double);
+        void setANF_Gain ( double );
+        void setANF_Leakage ( double );
         void set_ANFvals ( );
-        void setNB_Threshold ( double);
+        void setNB_Threshold ( double );
         void set_NBvals ( );
 		void updateUseUSBsoftrock ( bool );
 		void updateTransmit ( bool );
 		void updateDualConversion ( bool );
 		void updateTuneOffset ( );
+		void updateCmd (int n);
+		void resetCmd (int n);
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

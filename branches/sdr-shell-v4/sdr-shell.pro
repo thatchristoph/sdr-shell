@@ -19,7 +19,9 @@ HEADERS += main_widget.h \
     text.h \
     hamlibwrapper.h \
     dttsp.h \
-	lcdfreq.h \
+    lcdfreq.h \
+    command.h \
+    idbutton.h \
 
 SOURCES += main.cpp \
     main_widget.cpp \
@@ -30,7 +32,9 @@ SOURCES += main.cpp \
     hamlibwrapper.cpp \
     pbscale.cpp \
     dttsp.cpp \
-	lcdfreq.cpp \
+    lcdfreq.cpp \
+    command.cpp \
+    idbutton.cpp \
 
 DISTFILES += test \
     KL7NA_Notes
