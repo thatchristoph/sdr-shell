@@ -1,3 +1,12 @@
+Version 4.20
+
+Note: this change adds files and modified sdr-shell.pro.  You must rebuild
+your makefile with 'qmake-qt4'.
+
+This adds buttons to send arbitrary commands to DttSP.  There are eight "commands"
+buttons that are new in the window-bottom control frame.  Look in the DttSP Commands
+section of the README for details.
+
 Version 4.19
 
 Note: this change adds files and modified sdr-shell.pro.  You must rebuild

@@ -198,7 +198,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 		cfgUseUSBsoftrock->setChecked (true);
 
 	// USBSoftrock 5/4 tuning for dual-conversion
-	QRadioButton *cfgDualConversion = new QRadioButton ( cfgUSBBox );
+	cfgDualConversion = new QRadioButton ( cfgUSBBox );
 	cfgDualConversion->setText ( "5/4 Tuning" );
 	cfgDualConversion->setGeometry ( 25, 36, 200, 20 );
     cfgDualConversion->setAutoExclusive(false);
@@ -876,8 +876,8 @@ Main_Widget::Main_Widget(QWidget *parent)
 	NB_ThresholdSpinBox->setMinimum( 0 );
 	NB_ThresholdSpinBox->setMaximum( 255 );
 	NB_ThresholdSpinBox->setValue ( ( int ) NB_Threshold );
-	connect ( NB_ThresholdSpinBox, SIGNAL ( valueChanged ( int ) ),
-	          this, SLOT ( setNB_Threshold ( int ) ) );
+	connect ( NB_ThresholdSpinBox, SIGNAL ( valueChanged ( double ) ),
+	          this, SLOT ( setNB_Threshold ( double ) ) );
 
 	// -----------------------------------------------------------------------
 	// S meter
@@ -1202,8 +1202,8 @@ Main_Widget::Main_Widget(QWidget *parent)
     p.setColor(QPalette::Inactive, QPalette::WindowText, QColor( 255, 255, 255) );
     M_label->setPalette(p);
 	M_label->setGeometry (
-	    169,
-//!		f8_cell->x() + f8_cell->width(), 
+//	    169,
+		f_cell[(NUM_MEMS-1)]->x() + f_cell[(NUM_MEMS-1)]->width(),
 	    1,
 	    font1Metrics->maxWidth() * 12,
 	    15 );
@@ -1332,6 +1332,128 @@ Main_Widget::Main_Widget(QWidget *parent)
     Zoom_out_label->setGeometry( Zoom_in_label->x() + 27, 3, 27, 11 );
 	connect ( Zoom_out_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( zoomOUT ( int ) ) );
+
+	// -----------------------------------------------------------------------
+	// Arbitrary DttSP commands
+	for (int i=0; i < NUM_CMD; i++) {
+		char buffer[16];
+		c_cell[i] = new Command(ctlFrame2);
+    	c_cell[i]->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+		c_cell[i]->setFont ( *font1 );
+		snprintf(buffer, 16, "C%d", i);
+		c_cell[i]->setText ( buffer );
+    	c_cell[i]->setPalette( QColor( 0, 0, 0 ) );
+    	c_cell[i]->setAutoFillBackground( true );
+    	p = c_cell[i]->palette();
+    	p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+    	c_cell[i]->setPalette(p);   
+		c_cell[i]->setGeometry (
+			Zoom_label->x() + Zoom_label->width() - 1 + i * (font1Metrics->maxWidth() * 4), 
+			//Zoom_label->x() + Zoom_label->width() - 1 + i * 22, 
+			0, 
+	    	font1Metrics->maxWidth() * 4 + 1,
+			17 );
+		c_cell[i]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
+		connect ( c_cell[i], SIGNAL ( mouseReleaseL ( Command * ) ), 
+			this, SLOT ( toggleCmd ( Command * ) ) );
+		connect ( c_cell[i], SIGNAL ( mouseReleaseR ( Command * ) ),
+			this, SLOT ( configCmd ( Command * ) ) );
+
+		c_cell[i]->setName(buffer);
+		c_cell[i]->setCmd((DttSPcmd*)pCmd, (DttSPcmd*)pTXCmd);
+		c_cell[i]->setID(i);
+		c_cell[i]->setCommand(QString("getTXOsc\n"), QString("getRXOsc\n"));
+		fprintf(stderr, "cmd widget %d\n", i);
+	}
+	loadCommandCells();
+
+	// -----------------------------------------------------------------------
+	//	DttSP Command Configuration
+
+	cmdFrame = new QFrame();
+	cmdFrame->setGeometry ( 50, 50, 200, 400 );
+	cmdFrame->setMinimumWidth ( 380 );
+	cmdFrame->setMaximumWidth ( 380 );
+	cmdFrame->setMinimumHeight ( 200 );
+	cmdFrame->setMaximumHeight ( 200 );
+    cmdFrame->setWindowTitle("SDR-Shell : Command Config ");
+
+	QTabWidget *cmdTab = new QTabWidget ( cmdFrame );
+	cmdTab->setFont ( *font1 );
+	cmdTab->setGeometry ( 2, 2,
+	                         cfgFrame->width() - 4,
+	                         cfgFrame->height() - 2 );
+
+	// >>>Figure out how to put all of this in an object
+	for (int i=0; i < NUM_CMD; i++) {
+		char buffer[8];
+
+		QFrame *cmdFrame = new QFrame( cmdFrame );
+		snprintf(buffer, 8, "C%d", i);
+		cmdTab->addTab ( cmdFrame, buffer );
+		// Name (3 or 4 characters)
+		// displayed in place of C#
+		QLabel *namelabel = new QLabel ( cmdFrame );
+		namelabel->setText ( "Name: " );
+		namelabel->setGeometry ( 10, 15, 50, 20 );
+		namelabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdName[i] = new QLineEdit ( cmdFrame );
+		cmdName[i]->setGeometry( 60, 15, 50, 20 );
+		cmdName[i]->setText ( c_cell[i]->getName() );
+    	cmdName[i]->setEnabled(true);
+
+		// set
+		QLabel *onLabel = new QLabel ( cmdFrame );
+		onLabel->setText ( "On: " );
+		onLabel->setGeometry ( 10, 37, 50, 20 );
+		onLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdOnCommand[i] = new QLineEdit ( cmdFrame );
+		cmdOnCommand[i]->setGeometry( 60, 37, 300, 20 );
+		cmdOnCommand[i]->setText ( c_cell[i]->getOnCommand() );
+    	cmdOnCommand[i]->setEnabled(true);
+
+		// clear
+		QLabel *offLabel = new QLabel ( cmdFrame );
+		offLabel->setText ( "Off: " );
+		offLabel->setGeometry ( 10, 60, 50, 20 );
+		offLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdOffCommand[i] = new QLineEdit ( cmdFrame );
+		cmdOffCommand[i]->setGeometry( 60, 60, 300, 20 );
+		cmdOffCommand[i]->setText ( c_cell[i]->getOffCommand() );
+    	cmdOffCommand[i]->setEnabled(true);
+
+		// send to RX
+		cmdRXbutton[i] = new QRadioButton ( cmdFrame );
+		cmdRXbutton[i]->setText ( "Send to RX DttSP" );
+		cmdRXbutton[i]->setGeometry ( 25, 90, 200, 20 );
+    	cmdRXbutton[i]->setAutoExclusive(false);
+		if (c_cell[i]->getToRX())
+			cmdRXbutton[i]->setChecked ( true );
+
+		cmdTXbutton[i] = new QRadioButton ( cmdFrame );
+		cmdTXbutton[i]->setText ( "Send to TX DttSP" );
+		cmdTXbutton[i]->setGeometry ( 25, 110, 200, 20 );
+    	cmdTXbutton[i]->setAutoExclusive(false);
+		if (c_cell[i]->getToTX())
+			cmdTXbutton[i]->setChecked ( true );
+
+		IdPushButton *cmdAccept = new IdPushButton( cmdFrame );
+		cmdAccept->setID(i);
+		cmdAccept->setText ( "Accept" );
+		cmdAccept->setGeometry( 10, 140, 70, 20 );
+    	cmdAccept->setEnabled(true);
+		connect ( cmdAccept, SIGNAL ( selected(int) ),
+	         	this, SLOT ( updateCmd( int ) ) );
+
+		IdPushButton *cmdReset = new IdPushButton( cmdFrame );
+		//cmd0reset = new QPushButton( cmdFrame );
+		cmdReset->setID(i);
+		cmdReset->setText ( "Reset" );
+		cmdReset->setGeometry( 250, 140, 70, 20 );
+    	cmdReset->setEnabled(true);
+		connect ( cmdReset, SIGNAL ( selected(int) ),
+	 		this, SLOT ( resetCmd( int ) ) );
+	}
 
 	// -----------------------------------------------------------------------
 	// Spacer for filling up empty space
@@ -1723,7 +1845,8 @@ void Main_Widget::updateLayout()
 	    15 );
 	Spacer_label->setGeometry (
 	    //AGC_label->x() + AGC_label->width() + 1,
-	    Zoom_label->x() + Zoom_label->width() + 1,
+	    //Zoom_label->x() + Zoom_label->width() + 1,
+	    c_cell[(NUM_CMD-1)]->x() + c_cell[(NUM_CMD-1)]->width() + 1,
 	    1,
 	    HELP_label->x() - ( AGC_label->x() + AGC_label->width() ) - 2,
 	    15 );
@@ -1991,7 +2114,7 @@ void Main_Widget::loadMemoryCells()
 	  snprintf(buffer, 256, "/sdr-shell/f%d_frequency", i+1);
 	  f_cell[i]->setFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_txfrequency", i+1);
-	  f_cell[i]->setTxFrequency(settings.value(buffer, "10000000").toInt());
+	  f_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_mode", i+1);
 	  f_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/f%d_filter_l", i+1);
@@ -2005,7 +2128,7 @@ void Main_Widget::loadMemoryCells()
 	  snprintf(buffer, 256, "/sdr-shell/b%d_frequency", i+1);
 	  band_cell[i]->setFrequency(settings.value(buffer, "10000000").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_txfrequency", i+1);
-	  band_cell[i]->setTxFrequency(settings.value(buffer, "10000000").toInt());
+	  band_cell[i]->setTxFrequency(settings.value(buffer, "0").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_mode", i+1);
 	  band_cell[i]->setMode((rmode_t)settings.value(buffer, "1").toInt());
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_l", i+1);
@@ -2015,6 +2138,23 @@ void Main_Widget::loadMemoryCells()
 	}
 
 	printf ( "::: Memory Cells loading completed\n" );
+}
+
+void Main_Widget::loadCommandCells()
+{
+	QSettings settings("freesoftware", "sdr-shell");
+	for (int i=0; i<NUM_CMD; i++) {
+		char buffer[256];
+		snprintf(buffer, 256, "/sdr-shell/c%d_name", i);
+		c_cell[i]->setName(settings.value(buffer, "Cx").toString());
+		snprintf(buffer, 256, "/sdr-shell/c%d_On", i);
+		c_cell[i]->setOnCommand(settings.value(buffer, "no-op").toString());
+		snprintf(buffer, 256, "/sdr-shell/c%d_Off", i);
+		c_cell[i]->setOffCommand(settings.value(buffer, "no-op").toString());
+		snprintf(buffer, 256, "/sdr-shell/c%d_Targets", i);
+		c_cell[i]->setTargets(settings.value(buffer, "0").toString());
+		c_cell[i]->setText ( c_cell[i]->getName() );
+	}
 }
 
 
@@ -2056,7 +2196,7 @@ void Main_Widget::saveSettings()
 	settings.setValue ( "/sdr-shell/micGain", micGain );
 	int intEnableTransmit = ( int ) enableTransmit;
 	settings.setValue ( "/sdr-shell/enableTransmit", intEnableTransmit );
-	settings.setValue ( "/sdr-shell/dualConversion", dualConversion );
+	settings.setValue ( "/sdr-shell/dualConversion", dualConversion?1:0 );
 	settings.setValue ( "/sdr-shell/mode", ( int ) mode );
     settings.setValue ( "/sdr-shell/NR_Taps", NR_Taps );
     settings.setValue ( "/sdr-shell/NR_Delay", NR_Delay );
@@ -2144,6 +2284,19 @@ void Main_Widget::saveSettings()
 
 	  snprintf(buffer, 256, "/sdr-shell/b%d_filter_h", i+1);
 	  settings.setValue(buffer, band_cell[i]->getFilter_h() );
+	}
+
+	for (int i=0; i<NUM_CMD; i++) {
+	  char buffer[256];
+
+	  snprintf(buffer, 256, "/sdr-shell/c%d_name", i);
+	  settings.setValue (buffer, c_cell[i]->getName() );
+	  snprintf(buffer, 256, "/sdr-shell/c%d_On", i);
+	  settings.setValue (buffer, c_cell[i]->getOnCommand() );
+	  snprintf(buffer, 256, "/sdr-shell/c%d_Off", i);
+	  settings.setValue (buffer, c_cell[i]->getOffCommand() );
+	  snprintf(buffer, 256, "/sdr-shell/c%d_Targets", i);
+	  settings.setValue (buffer, c_cell[i]->getTo() );
 	}
 
 	settings.setValue ( "/sdr-shell/hamlib_rig", rigString );
@@ -4273,5 +4426,35 @@ void Main_Widget::setSlopeHighOffset ( int value )
 void Main_Widget::setCWPitch ( int pitch )
 {
 	cwPitch = pitch;
+}
+
+// ---------------------------------------------------------------------------
+// Arbitrary DttSP Commands
+void Main_Widget::toggleCmd ( Command *c )
+{
+	c->toggle();
+}
+
+void Main_Widget::configCmd ( Command * )
+{
+	cmdFrame->show();
+}
+
+void Main_Widget::updateCmd ( int n )
+{
+	c_cell[n]->setText ( cmdName[n]->text() );
+	c_cell[n]->setName ( cmdName[n]->text() );
+	c_cell[n]->setTargets(cmdRXbutton[n]->isChecked(), cmdTXbutton[n]->isChecked());
+	c_cell[n]->setOnCommand(cmdOnCommand[n]->text());
+	c_cell[n]->setOffCommand(cmdOffCommand[n]->text());
+}
+
+void Main_Widget::resetCmd ( int i )
+{
+	cmdName[i]->setText ( c_cell[i]->getName() );
+	cmdOnCommand[i]->setText ( c_cell[i]->getOnCommand() );
+	cmdOffCommand[i]->setText ( c_cell[i]->getOffCommand() );
+	cmdRXbutton[i]->setChecked ( c_cell[i]->getToRX() );
+	cmdTXbutton[i]->setChecked ( c_cell[i]->getToTX() );
 }
 

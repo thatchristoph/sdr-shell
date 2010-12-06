@@ -1,16 +1,6 @@
 Ideas for enhancements to sdr-shell
 
-- tuning using the mouse wheel on top of the LCD
-
-position the mouse over one digit in the frequency display and use the
-mouse wheel to tune that digit up/down.  Some code for this is there.
-
 - use a selection widget to select band by name
-
-- spectrum averaging
-
-The spectrum display shows the average of the past (n) spectrum values, not
-just the most recent one.  Smoothens out the display.
 
 - filter settings: error checking interferes with LSB filters
 
@@ -19,9 +9,6 @@ has some error checking that makes it not work
 
 - click mouse button 3 on LCD to zero lower numbers.
 e.g. click on the 1xxxkhz value, and it goes to 1.000 khz.
-
-- click mouse button 2 on LCD to set mouse wheel tuning step in the
-spectrogram or spectrum.
 
 - use usbsoftrock via hamlib instead of a direct socket
 
@@ -32,8 +19,6 @@ spectrogram or spectrum.
 Start-up frequency squashes band 1.
   - alternatively, save the frequency in the band memory and save what band
     was active on exit.
-
-- mute TX dttsp on receive
 
 - set output gain on RX dttsp to as low as possible, instead of muting.
 
