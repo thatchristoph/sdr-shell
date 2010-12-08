@@ -1388,12 +1388,12 @@ Main_Widget::Main_Widget(QWidget *parent)
 	for (int i=0; i < NUM_CMD; i++) {
 		char buffer[8];
 
-		QFrame *cmdFrame = new QFrame( cmdFrame );
+		QFrame *cmdSubTab = new QFrame( cmdFrame );
 		snprintf(buffer, 8, "C%d", i);
-		cmdTab->addTab ( cmdFrame, buffer );
+		cmdTab->addTab ( cmdSubTab, buffer );
 		// Name (3 or 4 characters)
 		// displayed in place of C#
-		QLabel *namelabel = new QLabel ( cmdFrame );
+		QLabel *namelabel = new QLabel ( cmdSubTab );
 		namelabel->setText ( "Name: " );
 		namelabel->setGeometry ( 10, 15, 50, 20 );
 		namelabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -1403,7 +1403,7 @@ Main_Widget::Main_Widget(QWidget *parent)
     	cmdName[i]->setEnabled(true);
 
 		// set
-		QLabel *onLabel = new QLabel ( cmdFrame );
+		QLabel *onLabel = new QLabel ( cmdSubTab );
 		onLabel->setText ( "On: " );
 		onLabel->setGeometry ( 10, 37, 50, 20 );
 		onLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -1413,7 +1413,7 @@ Main_Widget::Main_Widget(QWidget *parent)
     	cmdOnCommand[i]->setEnabled(true);
 
 		// clear
-		QLabel *offLabel = new QLabel ( cmdFrame );
+		QLabel *offLabel = new QLabel ( cmdSubTab );
 		offLabel->setText ( "Off: " );
 		offLabel->setGeometry ( 10, 60, 50, 20 );
 		offLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
@@ -1423,21 +1423,21 @@ Main_Widget::Main_Widget(QWidget *parent)
     	cmdOffCommand[i]->setEnabled(true);
 
 		// send to RX
-		cmdRXbutton[i] = new QRadioButton ( cmdFrame );
+		cmdRXbutton[i] = new QRadioButton ( cmdSubTab );
 		cmdRXbutton[i]->setText ( "Send to RX DttSP" );
 		cmdRXbutton[i]->setGeometry ( 25, 90, 200, 20 );
     	cmdRXbutton[i]->setAutoExclusive(false);
 		if (c_cell[i]->getToRX())
 			cmdRXbutton[i]->setChecked ( true );
 
-		cmdTXbutton[i] = new QRadioButton ( cmdFrame );
+		cmdTXbutton[i] = new QRadioButton ( cmdSubTab );
 		cmdTXbutton[i]->setText ( "Send to TX DttSP" );
 		cmdTXbutton[i]->setGeometry ( 25, 110, 200, 20 );
     	cmdTXbutton[i]->setAutoExclusive(false);
 		if (c_cell[i]->getToTX())
 			cmdTXbutton[i]->setChecked ( true );
 
-		IdPushButton *cmdAccept = new IdPushButton( cmdFrame );
+		IdPushButton *cmdAccept = new IdPushButton( cmdSubTab );
 		cmdAccept->setID(i);
 		cmdAccept->setText ( "Accept" );
 		cmdAccept->setGeometry( 10, 140, 70, 20 );
@@ -1445,7 +1445,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 		connect ( cmdAccept, SIGNAL ( selected(int) ),
 	         	this, SLOT ( updateCmd( int ) ) );
 
-		IdPushButton *cmdReset = new IdPushButton( cmdFrame );
+		IdPushButton *cmdReset = new IdPushButton( cmdSubTab );
 		//cmd0reset = new QPushButton( cmdFrame );
 		cmdReset->setID(i);
 		cmdReset->setText ( "Reset" );

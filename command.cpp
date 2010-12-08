@@ -1,4 +1,5 @@
 
+#include <cstdio>
 #include "command.h"
 
 Command::Command(QWidget *parent) : QLabel(parent)

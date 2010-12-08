@@ -1,4 +1,5 @@
 
+#include <cstdio>
 #include "idbutton.h"
 
 //IdPushButton::IdPushButton(QPushButton *parent)
