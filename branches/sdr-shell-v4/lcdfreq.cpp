@@ -1,4 +1,5 @@
 
+#include <cstdio>
 #include "lcdfreq.h"
 #include "cmath"
 
