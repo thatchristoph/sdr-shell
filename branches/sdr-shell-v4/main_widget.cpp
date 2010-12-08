@@ -1397,7 +1397,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 		namelabel->setText ( "Name: " );
 		namelabel->setGeometry ( 10, 15, 50, 20 );
 		namelabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdName[i] = new QLineEdit ( cmdFrame );
+		cmdName[i] = new QLineEdit ( cmdSubTab );
 		cmdName[i]->setGeometry( 60, 15, 50, 20 );
 		cmdName[i]->setText ( c_cell[i]->getName() );
     	cmdName[i]->setEnabled(true);
@@ -1407,7 +1407,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 		onLabel->setText ( "On: " );
 		onLabel->setGeometry ( 10, 37, 50, 20 );
 		onLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdOnCommand[i] = new QLineEdit ( cmdFrame );
+		cmdOnCommand[i] = new QLineEdit ( cmdSubTab );
 		cmdOnCommand[i]->setGeometry( 60, 37, 300, 20 );
 		cmdOnCommand[i]->setText ( c_cell[i]->getOnCommand() );
     	cmdOnCommand[i]->setEnabled(true);
@@ -1417,7 +1417,7 @@ Main_Widget::Main_Widget(QWidget *parent)
 		offLabel->setText ( "Off: " );
 		offLabel->setGeometry ( 10, 60, 50, 20 );
 		offLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdOffCommand[i] = new QLineEdit ( cmdFrame );
+		cmdOffCommand[i] = new QLineEdit ( cmdSubTab );
 		cmdOffCommand[i]->setGeometry( 60, 60, 300, 20 );
 		cmdOffCommand[i]->setText ( c_cell[i]->getOffCommand() );
     	cmdOffCommand[i]->setEnabled(true);
@@ -1446,7 +1446,6 @@ Main_Widget::Main_Widget(QWidget *parent)
 	         	this, SLOT ( updateCmd( int ) ) );
 
 		IdPushButton *cmdReset = new IdPushButton( cmdSubTab );
-		//cmd0reset = new QPushButton( cmdFrame );
 		cmdReset->setID(i);
 		cmdReset->setText ( "Reset" );
 		cmdReset->setGeometry( 250, 140, 70, 20 );
