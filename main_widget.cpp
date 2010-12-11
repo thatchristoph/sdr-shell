@@ -13,6 +13,8 @@
 
 /* formatting note: in vi :set tab=4 */
 
+static int old_PTT = 1;		// start with checking PTT, and do a rest to Rx
+
 Main_Widget::Main_Widget(QWidget *parent)
         : QWidget(parent)
 {
@@ -1575,7 +1577,13 @@ Main_Widget::Main_Widget(QWidget *parent)
 
 	QTimer *fftTimer = new QTimer ( this );
 	connect ( fftTimer, SIGNAL ( timeout() ), this, SLOT ( readSpectrum() ) );
-    fftTimer->start( 100 );      
+    fftTimer->start( 100 );  
+
+#ifdef PTT_POLL
+    QTimer *pttTimer = new QTimer ( this );							// Added by Alex Lee 21 Oct 2010
+	connect ( pttTimer, SIGNAL ( timeout() ), this, SLOT ( updatePTT() ) );
+    pttTimer->start( 1000 );      
+#endif
 }
 
 void Main_Widget::initConstants()
@@ -4329,6 +4337,43 @@ void Main_Widget::setMuteXmit ( bool value )
 {
 	muteXmit =  value;
 	emit tellMuteXmit ( muteXmit );
+}
+
+void Main_Widget::updatePTT(void)					// Added by Alex Lee 21 Oct 2010
+{
+	int PTT;
+
+	if (!rock_bound && enableTransmit) {
+		if (pUSBCmd->sendCommand("get ptt\n") != 0) {
+			//pttTimer->stop();
+			return;
+		}
+
+		PTT = pUSBCmd->getParam();
+		
+		if (old_PTT == PTT) return;
+		if (PTT && transmit) return;
+
+		fprintf(stderr, "PTT (%d) state triggered from Mobo\n", PTT);
+		if (PTT) {
+			pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
+			// TODO: if enableSPLIT   set USBSoftrock frequency accordingly
+			pTXCmd->sendCommand ("setRunState 2\n");
+			pTXCmd->sendCommand ("setTRX 1\n");
+			set_MUTE ( 1 );
+			TRX_label->setPixmap( QPixmap( tx_xpm ) );
+			TRX_label->setLabel( TX );
+		} else {
+			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+			pTXCmd->sendCommand ("setTRX 0\n");
+			pTXCmd->sendCommand ("setRunState 0\n");
+			fprintf (stderr, "set ptt off\n");
+			TRX_label->setPixmap( QPixmap( rx_xpm ) );
+			TRX_label->setLabel( RX );
+			set_MUTE ( 0 );
+		}
+		old_PTT = PTT;
+	}
 }
 
 

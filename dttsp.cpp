@@ -218,6 +218,8 @@ int DttSP :: send_command ( char *cmdstr )
 	}
 
    	if (buff[0] != 'o' || buff[1] != 'k') return -6;
+	param = ((buff[3]) == '0') ? 0 : 1;
+
     return 0;
 }
 
@@ -284,6 +286,10 @@ int  DttSPspectrum :: fetch ( int *tick, int *label, float *data, int npts)
   return 0;
 }
 
+int USBSoftrockCmd :: getParam()
+{
+	return param;
+}
 
 int USBSoftrockCmd :: sendCommand ( const char *format, ... )
 {

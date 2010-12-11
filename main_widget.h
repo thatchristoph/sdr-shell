@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.20
+#define	VERSION 4.21
 
 #include <stdlib.h>
 #include <qwidget.h>
@@ -489,6 +489,7 @@ class Main_Widget : public QWidget
 		void updateTuneOffset ( );
 		void updateCmd (int n);
 		void resetCmd (int n);
+		void updatePTT();
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );

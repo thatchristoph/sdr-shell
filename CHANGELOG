@@ -1,3 +1,20 @@
+Version 4.21
+
+Add PTT polling code by Alex, 9V1AL.
+
+The PTT polling keeps sdr-shell up-to-date with other program that may
+be setting PTT on the USB Synthesizer.  Sdr-shell sets state for dttsp
+when it sees the PTT line change state.
+
+Reading the PTT state is only available in usbsoftrock for the MOBO.
+If used with usbsoftrock-1.0.1 this will not work due to a bug in
+usbsoftrock.  To make this compatible with all softrock boards, the setting
+of the PTT polling timer is done inside ofan #ifdef.  To turn this on, edit
+sdr-shell.pro and remove the # (comment) character on the line that says:
+
+	DEFINES += PTT_POLL
+
+
 Version 4.20
 
 Note: this change adds files and modified sdr-shell.pro.  You must rebuild
