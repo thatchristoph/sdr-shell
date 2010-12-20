@@ -35,6 +35,9 @@ Ubuntu 10.10
 	sudo apt-get install libfftw3-dev jackd2 libjack-jackd2-dev
 	sudo apt-get install liblo-dev libgsl0-dev
 
+	When installing jack, answer 'yes' to the question about setting up
+	real-time priorities.
+
    Packages needed to build usbsoftrock:
 	sudo apt-get install libusb++-dev libncurses5-dev
 
@@ -49,11 +52,10 @@ Ubuntu 10.10
 	sudo usermod -G audio -a <user>
 	sudo usermod -G video -a <user>
 
-(4) Add these settings to use jack with the real-time kernel scheduler:
+(4) If you did not answer 'yes' to the jack installation question about
+real-time priorities, you may reconfigure it for real-time priorities with:
 
-	sudo su -c 'echo @audio - rtprio 99 >> /etc/security/limits.conf'
-	sudo su -c 'echo @audio - memlock 250000 >> /etc/security/limits.conf'
-	sudo su -c 'echo @audio - nice -10 >> /etc/security/limits.conf'
+	sudo dpkg-reconfigure -p high jackd
 
 (5) Configure udev to set usbsoftrock permissions (see below)
 
