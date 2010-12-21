@@ -39,7 +39,7 @@ setNB 0  (turns off Noise blanker) setNB 1 (turns on Noise Blanker)
 
 getNB returns two numbers; the first is the state of the noise blanker (0 for off, 1 for on);  the second is the threshold value.  Lower values turn on the blanking action sooner.  It seems the default is 3.3.
 
-setNBvals threshold sets the threshold value of the noise blanker or SDROM blanker.
+setNBvals threshold sets the threshold value of the noise blanker.
 
 setFilter fL fH where -sample_rate/2 < fL < fH < sample_rate/2 sets the filter corner frequencies.
 
@@ -56,6 +56,8 @@ setGain trx io gain_db where trx is 0 for RX, 1 for TX, io is 0 for input gain, 
 setSDROM, 0 is off 1 is on.  SDROM stands for Signal Dependent Rank Order Mean Noise Reduction and I think it is the same as NB2 on some of the GUIs.  Bob describes SDROM in his [http://www.tapr.org/pdf/DCC2004-SDR-FutureNow-AC5OG-N4HY-Wachmann.pdf 2004 DCC presentation].
 
 getSDROM gets the SDROM state and threshold.
+
+setSDROMvals threshold sets the threshold value for the SDROM noise blanker.
 
 
 At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
