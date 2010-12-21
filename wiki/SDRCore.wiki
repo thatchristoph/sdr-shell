@@ -37,6 +37,10 @@ where 127.0.0.1 is the IP address of the machine which sdr-core is running and 1
 
 setNB 0  (turns off Noise blanker) setNB 1 (turns on Noise Blanker)
 
+getNB returns two numbers; the first is the state of the noise blanker (0 for off, 1 for on);  the second is the threshold value.  Lower values turn on the blanking action sooner.  It seems the default is 3.3.
+
+setNBvals threshold sets the threshold value of the noise blanker or SDROM blanker.
+
 setFilter fL fH where -sample_rate/2 < fL < fH < sample_rate/2 sets the filter corner frequencies.
 
 setMode m where m denotes: (LSB is 0, USB is 1, DSB is 2, CWL is 3, CWU is 4, FM is 5, AM is 6, SAM is 10) sets the mode.
