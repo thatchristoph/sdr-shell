@@ -47,7 +47,9 @@ setMode m where m denotes: (LSB is 0, USB is 1, DSB is 2, CWL is 3, CWU is 4, FM
 
 setRunState 0 is mute, setRunState 2 is unmuted
 
-setOsc f where -sample_rate/2 < f < sample_rate/2 sets the oscillator frequency.
+setOsc f where -sample_rate/2 < f < sample_rate/2 sets the oscillator frequency.  Negative values tune up, and positive values tune down.
+
+getRXOsc returns a floating point number which is 0.000 when you setOsc 0, and it seems to scale -3.10693 being -48000 and 3.10693 being 48000.
 
 setRXAGC m (where m is: Long 1, slow 2, medium 3, fast 4)
 
