@@ -2665,10 +2665,10 @@ void Main_Widget::setFilter_l ( int n )
 
 	step = 10;
 
-	if ( *filter_l > -6000 && n == -1 )
-		*filter_l -= step * n;
+	if ( *filter_l > -6000 && n <= -1 )
+		*filter_l += step * n;
 
-	if ( *filter_l < *filter_h - step && n == 1 )
+	if ( *filter_l < *filter_h - step && n >= 1 )
 		*filter_l += step * n;
 
 	setFilter();
