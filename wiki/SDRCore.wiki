@@ -80,6 +80,8 @@ getSDROM gets the SDROM state and threshold.
 
 setSDROMvals threshold sets the threshold value for the SDROM noise blanker.
 
+===All Commands===
+
 At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
 
 PRIVATE REAL INLINE 	dB2lin  (REAL dB)
