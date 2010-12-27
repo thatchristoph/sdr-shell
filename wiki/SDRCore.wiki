@@ -16,7 +16,7 @@ This is a start at a man page for sdr-core.
  *`--metering or -m  Turn on meter computation
  *`--load=`<`load-file`>` or -l `<`load-file`>`  Read update commands from load-file at startup (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 `<` `<`load-file`>`" instead.) 
  *`--mode=`<`mode`>` Start radio in mode mode
- *`--buffsize=`<`power-of-2`>`  Use power-of-2 as DSP buffersize
+ *`--buffsize=`<`power-of-2`>`  Use `<`power-of-2`>` as DSP buffersize
  *`--ringmult=`<`num`>` Use `<`num`>` `*` `<`buffsize`>` for ring buffer length
  *`--spectrum-port=`<`portnum`>`  Use port `<`portnum`>` as conduit for spectrum data.  Default is 19002.
  *`--meter-port=`<`portnum`>`  Use port `<`portnum`>` as conduit for meter data.  Default is 19003
