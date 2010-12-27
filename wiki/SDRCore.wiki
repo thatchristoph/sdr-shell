@@ -20,7 +20,7 @@ This is a start at a man page for sdr-core.
 --metering
  -m
 	Turn on meter computation
---load=<load-file>
+--load\=<load-file>
  -l <load-file>  
 	Read update commands from <load-file> at startup (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < load-file" instead.) 
 --mode=<mode>
