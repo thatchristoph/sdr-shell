@@ -61,7 +61,6 @@ getSDROM gets the SDROM state and threshold.
 
 setSDROMvals threshold sets the threshold value for the SDROM noise blanker.
 
-
 At this point the source code is probably the best documentation that exists.  These are from update.c if you want to look more closely. 
 
 PRIVATE REAL INLINE 	dB2lin  (REAL dB)
@@ -354,7 +353,7 @@ PRIVATE int 	reqDump (int n, char **p)
 --command-port=<portnum>
 	Use port <portnum> as a conduit for update commands
 	Default is 19001
---init-path=<init-file>
+--init-path=<init-file> (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < init-file" instead.) 
 	Read update commands from <init-file> at startup. Like -l.
 --replay-path=<path>
 	Write/reread saved update commands to/from <path>
