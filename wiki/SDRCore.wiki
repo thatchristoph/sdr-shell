@@ -14,7 +14,7 @@ This is a start at a man page for sdr-core.
  *`--verbose or -v  Turn on verbose mode (echo commands, etc.)
  *`--spectrum or -s  Turn on spectrum computation
  *`--metering or -m  Turn on meter computation
- *`--load=`<`load-file`>` or -l `<`load-file`>`  Read update commands from load-file at startup (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 `<` load-file" instead.) 
+ *`--load=`<`load-file`>` or -l `<`load-file`>`  Read update commands from load-file at startup (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 `<` `<`load-file`>`" instead.) 
  *`--mode=`<`mode`>` Start radio in mode mode
  *`--buffsize=`<`power-of-2`>`  Use power-of-2 as DSP buffersize
  *`--ringmult=`<`num`>` Use `<`num`>` `*` `<`buffsize`>` for ring buffer length
