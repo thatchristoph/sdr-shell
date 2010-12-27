@@ -21,17 +21,63 @@ This is a start at a man page for sdr-core.
  -m
 	Turn on meter computation
 --load=<load-file>
- -l <load-file>
+ -l <load-file>  (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < load-file" instead.) 
 	Read update commands from <load-file> at startup
+--mode=<mode>
+	Start radio in mode <mode>
+--buffsize=<power-of-2>
+	Use <power-of-2> as DSP buffersize
+--ringmult=<num>
+	Use <num> * <buffsize> for ring buffer length
+--spectrum-port=<portnum>
+	Use port <portnum> as conduit for spectrum data
+	Default is 19002
+--meter-port=<portnum>
+	Use port <portnum> as conduit for meter data
+	Default is 19003
+--command-port=<portnum>
+	Use port <portnum> as a conduit for update commands
+	Default is 19001
+--init-path=<init-file> (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < init-file" instead.) 
+	Read update commands from <init-file> at startup. Like -l.
+--replay-path=<path>
+	Write/reread saved update commands to/from <path>
+--wisdom-path=<path>
+	fftw3 wisdom is in <path>
+--echo-path=<path>
+	Write update command processor output to <path>
+--skewoffs=<+/-num>
+	Correct for audio channel skew by <num>
+--client-name=<Jack Client Name>
+        Set the client name that shows up in Jack.
+--help
+ -h
+	Write this message and exit.
+Environment variables:
+	SDR_DEFMODE
+	SDR_DEFRATE
+	SDR_DEFSIZE
+	SDR_RINGMULT
+	SDR_SKEWOFFS
+	SDR_METERPORT
+	SDR_NAME
+	SDR_PARMPORT
+	SDR_RCBASE
+	SDR_REPLAYPATH
+	SDR_SPECPPORT
+	SDR_WISDOMPATH
 
+===Command to send sdr-core:===
 
-There are a lot of commands that can be put in this file to do a lot of interesting things:  
+There are a lot of commands that can be sent to sdr-core to do a lot of interesting things:  
 
 You can connect the sdr-core to send udp commands from the command line with:
 
 nc -u 127.0.0.1 19001
 
 where 127.0.0.1 is the IP address of the machine which sdr-core is running and 19001 is the port that was set for the commands to be given on.
+
+You can also send UDP commands to sdr-core using other methods.  See the source for sdr-shell for examples of doing this from a program.
 
 ====Tested Commands:====
 
@@ -337,47 +383,3 @@ PRIVATE int 	reqScope (int n, char **p)
  	private reqScope
 PRIVATE int 	reqDump (int n, char **p)
  	private reqDump 
-
---mode=<mode>
-	Start radio in mode <mode>
---buffsize=<power-of-2>
-	Use <power-of-2> as DSP buffersize
---ringmult=<num>
-	Use <num> * <buffsize> for ring buffer length
---spectrum-port=<portnum>
-	Use port <portnum> as conduit for spectrum data
-	Default is 19002
---meter-port=<portnum>
-	Use port <portnum> as conduit for meter data
-	Default is 19003
---command-port=<portnum>
-	Use port <portnum> as a conduit for update commands
-	Default is 19001
---init-path=<init-file> (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < init-file" instead.) 
-	Read update commands from <init-file> at startup. Like -l.
---replay-path=<path>
-	Write/reread saved update commands to/from <path>
---wisdom-path=<path>
-	fftw3 wisdom is in <path>
---echo-path=<path>
-	Write update command processor output to <path>
---skewoffs=<+/-num>
-	Correct for audio channel skew by <num>
---client-name=<Jack Client Name>
-        Set the client name that shows up in Jack.
---help
- -h
-	Write this message and exit.
-Environment variables:
-	SDR_DEFMODE
-	SDR_DEFRATE
-	SDR_DEFSIZE
-	SDR_RINGMULT
-	SDR_SKEWOFFS
-	SDR_METERPORT
-	SDR_NAME
-	SDR_PARMPORT
-	SDR_RCBASE
-	SDR_REPLAYPATH
-	SDR_SPECPPORT
-	SDR_WISDOMPATH
