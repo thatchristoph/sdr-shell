@@ -27,7 +27,7 @@ This is a start at a man page for sdr-core.
  *`--echo-path=`<`path`>`  Write update command processor output to `<`path`>`
  *`--skewoffs=`<`+/-num`>`  Correct for audio channel skew by `<`num`>`
  *`--client-name=`<`Jack Client Name`>`  Set the client name that shows up in Jack.
- *`--help or -h  Write this message and exit.
+ *`--help or -h  Write out the options and exit.
 Environment variables:
 	SDR_DEFMODE
 	SDR_DEFRATE
