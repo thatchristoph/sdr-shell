@@ -20,22 +20,14 @@ This is a start at a man page for sdr-core.
  *--ringmult=`<`num`>` Use `<`num`>` `*` `<`buffsize`>` for ring buffer length
  *--spectrum-port=`<`portnum`>`  Use port `<`portnum`>` as conduit for spectrum data.  Default is 19002.
  *--meter-port=`<`portnum`>`  Use port `<`portnum`>` as conduit for meter data.  Default is 19003
- *--command-port=`<`portnum`>`  Use port `<`portnum`>` as a conduit for update commands
-	Default is 19001
- *--init-path=`<`init-file`>` (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 `<` `<`init-file`>`" instead.) 
-	Read update commands from `<`init-file`>` at startup. Like -l.
- *--replay-path=`<`path`>`
-	Write/reread saved update commands to/from `<`path`>`
- *--wisdom-path=`<`path`>`
-	fftw3 wisdom is in `<`path`>`
- *--echo-path=`<`path`>`
-	Write update command processor output to `<`path`>`
- *--skewoffs=`<`+/-num`>`
-	Correct for audio channel skew by `<`num`>`
- *--client-name=`<`Jack Client Name`>`
-        Set the client name that shows up in Jack.
- *--help or -h
-	Write this message and exit.
+ *--command-port=`<`portnum`>`  Use port `<`portnum`>` as a conduit for update commands.  Default is 19001
+ *--init-path=`<`init-file`>` (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 `<` `<`init-file`>`" instead.)  Read update commands from `<`init-file`>` at startup. Like -l.
+ *--replay-path=`<`path`>`  Write/reread saved update commands to/from `<`path`>`
+ *--wisdom-path=`<`path`>`  fftw3 wisdom is in `<`path`>`
+ *--echo-path=`<`path`>`  Write update command processor output to `<`path`>`
+ *--skewoffs=`<`+/-num`>`  Correct for audio channel skew by `<`num`>`
+ *--client-name=`<`Jack Client Name`>`  Set the client name that shows up in Jack.
+ *--help or -h  Write this message and exit.
 Environment variables:
 	SDR_DEFMODE
 	SDR_DEFRATE
