@@ -21,8 +21,8 @@ This is a start at a man page for sdr-core.
  -m
 	Turn on meter computation
 --load=<load-file>
- -l <load-file>  (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < load-file" instead.) 
-	Read update commands from <load-file> at startup
+ -l <load-file>  
+	Read update commands from <load-file> at startup (Note: this doesn't seem to work for me, so I use "nc -u 127.0.0.1 19001 < load-file" instead.) 
 --mode=<mode>
 	Start radio in mode <mode>
 --buffsize=<power-of-2>
