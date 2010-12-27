@@ -52,6 +52,8 @@ You can connect the sdr-core to send udp commands from the command line with:
 where 127.0.0.1 is the IP address of the machine which sdr-core is running and 19001 is the port that was set for the commands to be given on.  
 You can also send UDP commands to sdr-core using other methods.  See the source for sdr-shell for examples of doing this from a program.
 
+The commands consist of a word followed by either a newline, or a word followed by some numerical data delimited by spaces followed by a newline.  Some examples are given below:
+
 ====Tested Commands:====
 
 setNB 0  (turns off Noise blanker) setNB 1 (turns on Noise Blanker)
