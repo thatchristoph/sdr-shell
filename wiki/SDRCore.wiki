@@ -45,13 +45,11 @@ Environment variables:
 ===Command to send sdr-core:===
 
 There are a lot of commands that can be sent to sdr-core to do a lot of interesting things:  
-
 You can connect the sdr-core to send udp commands from the command line with:
 
-nc -u 127.0.0.1 19001
+{{{nc -u 127.0.0.1 19001}}}
 
-where 127.0.0.1 is the IP address of the machine which sdr-core is running and 19001 is the port that was set for the commands to be given on.
-
+where 127.0.0.1 is the IP address of the machine which sdr-core is running and 19001 is the port that was set for the commands to be given on.  
 You can also send UDP commands to sdr-core using other methods.  See the source for sdr-shell for examples of doing this from a program.
 
 ====Tested Commands:====
