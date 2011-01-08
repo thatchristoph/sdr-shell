@@ -700,11 +700,12 @@ Main_Widget::Main_Widget(QWidget *parent)
 	aboutText->setReadOnly ( true );
 	aboutText->append (
 	    QString ( "<center><br>SDR-Shell Version " + version + "<br>" ) +
-	    "Copyright (c) 2006, 2007 & 2009<br>" +
+	    "Copyright (c) 2006, 2007, 2009 2011<br>" +
 	    "Edson Pereira, PU1JTE, N1VTN<br>" +
 	    "ewpereira@gmail.com<br>" +
 	    "Rob Frohne, KL7NA<br>" +
-	    "kl7na@arrl.net<br></center>" );
+	    "kl7na@arrl.net<br>" +
+		"Glen Overby, KC0IYT<br></center>" );
 	aboutText->append (
 	    QString ( "This program is free software. You can redistribute " ) +
 	    "it and/or modify it under the terms and conditions of the GNU " +
@@ -1566,6 +1567,9 @@ Main_Widget::Main_Widget(QWidget *parent)
 	specAveraging = 1;
 	specLow = -140;
 	specHigh = -40;
+	if (enableTransmit) {
+		TXoff();
+	}
 
 	QTimer *cpuTimer = new QTimer ( this );
 	connect ( cpuTimer, SIGNAL ( timeout() ), this, SLOT ( processorLoad() ) );
@@ -2856,7 +2860,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 	{
 		case RIG_MODE_USB:
 			modeStr = "USB";
-			pCmd->sendCommand ("setMode %d %d\n", USB );
+			pCmd->sendCommand ("setMode %d %d\n", USB, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
 			fprintf ( stderr, "setMode %d\n", USB );
 			filter_l = &USB_filter_l; //20;
@@ -2869,7 +2873,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_LSB:
 			modeStr = "LSB";
-			pCmd->sendCommand ("setMode %d %d\n", LSB );
+			pCmd->sendCommand ("setMode %d %d\n", LSB, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
 			fprintf ( stderr, "setMode %d\n", LSB );
 			filter_l = &LSB_filter_l; //-2400;
@@ -2881,7 +2885,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_DSB:
 			modeStr = "DSB";
-			pCmd->sendCommand ("setMode %d %d\n", DSB );
+			pCmd->sendCommand ("setMode %d %d\n", DSB, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
 			fprintf ( stderr, "setMode %d\n", DSB );
 			filter_l = &DSB_filter_l; //-2400;
@@ -2893,7 +2897,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_AM:
 			modeStr = "AM";
-			pCmd->sendCommand ("setMode %d %d\n", AM );
+			pCmd->sendCommand ("setMode %d %d\n", AM, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
 			fprintf ( stderr, "setMode %d\n", AM );
 			filter_l = &AM_filter_l; //-2400;
@@ -2905,7 +2909,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_CWR:
 			modeStr = "CWR";
-			pCmd->sendCommand ("setMode %d %d\n", CWL );
+			pCmd->sendCommand ("setMode %d %d\n", CWL, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
 			fprintf ( stderr, "setMode %d\n", CWL );
 			filter_l = &CWL_filter_l; //-500;
@@ -2917,7 +2921,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_CW:
 			modeStr = "CW";
-			pCmd->sendCommand ("setMode %d %d\n", CWU );
+			pCmd->sendCommand ("setMode %d %d\n", CWU, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
 			fprintf ( stderr, "setMode %d\n", CWU );
 			filter_l = &CWU_filter_l; //200;
@@ -2929,7 +2933,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_SAM:
 			modeStr = "SAM";
-			pCmd->sendCommand ("setMode %d %d\n", SAM );
+			pCmd->sendCommand ("setMode %d %d\n", SAM, 0 );
 			pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
 			fprintf ( stderr, "setMode %d\n", SAM );
 			filter_l = &SAM_filter_l; //-2400;
@@ -2941,8 +2945,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			break;
 		case RIG_MODE_FM:
 			modeStr = "FM";
-			pCmd->sendCommand ("setMode %d %d\n", FMN );
-			pTXCmd->sendCommand ("setMode %d %d\n", FMN );
+			pCmd->sendCommand ("setMode %d %d\n", FMN, 0 );
+			pTXCmd->sendCommand ("setMode %d %d\n", FMN, 1 );
 			fprintf ( stderr, "setMode %d\n", FMN );
 			filter_l = &FMN_filter_l; //-4000;
 			filter_h = &FMN_filter_h; //4000;
@@ -2992,14 +2996,14 @@ void Main_Widget::setIQPhase()
 
 void Main_Widget::setTxIQGain()
 {
-	pTXCmd->sendCommand ("setcorrectIQgain %d\n", txIQGain );
-	fprintf ( stderr, "(TX)setcorrectIQgain %d\n", txIQGain );
+	pTXCmd->sendCommand ("setcorrectTXIQgain %d\n", txIQGain );
+	fprintf ( stderr, "(TX)setcorrectTXIQgain %d\n", txIQGain );
 }
 
 void Main_Widget::setTxIQPhase()
 {
-	pTXCmd->sendCommand ("setcorrectIQphase %d %d\n", txIQPhase );
-	fprintf ( stderr, "(TX)setcorrectIQphase %d\n", txIQPhase );
+	pTXCmd->sendCommand ("setcorrectTXIQphase %d %d\n", txIQPhase );
+	fprintf ( stderr, "(TX)setcorrectTXIQphase %d\n", txIQPhase );
 }
 
 void Main_Widget::setTxGain( int inout )
@@ -3772,30 +3776,40 @@ void Main_Widget::setDSP ( int )
 	dspFrame->show();
 }
 
+void Main_Widget::TXoff ()
+{
+	transmit = 0;
+	pTXCmd->sendCommand ("setTRX 0\n");
+	pTXCmd->sendCommand ("setRunState 0\n");
+	pUSBCmd->sendCommand("set ptt off\n" );
+	fprintf (stderr, "set ptt off\n");
+	TRX_label->setPixmap( QPixmap( rx_xpm ) );
+	TRX_label->setLabel( RX );
+	set_MUTE ( 0 );
+}
+
+void Main_Widget::TXon ()
+{
+	// if enableSPLIT   set USBSoftrock frequency
+	transmit = 1;
+	pUSBCmd->sendCommand ("set ptt on\n" );
+	pTXCmd->sendCommand ("setRunState 2\n");
+	pTXCmd->sendCommand ("setTRX 1\n");
+	set_MUTE ( 1 );
+	fprintf (stderr, "set ptt on\n");
+	TRX_label->setPixmap( QPixmap( tx_xpm ) );
+	TRX_label->setLabel( TX );
+}
+
 void Main_Widget::toggle_TX ( int )
 {
 	fprintf( stderr, "Toggle TX\n");
 	if (enableTransmit)
 	{
 		if (transmit) {
-			transmit = 0;
-			pTXCmd->sendCommand ("setTRX 0\n");
-			pTXCmd->sendCommand ("setRunState 0\n");
-			pUSBCmd->sendCommand("set ptt off\n" );
-			fprintf (stderr, "set ptt off\n");
-			TRX_label->setPixmap( QPixmap( rx_xpm ) );
-			TRX_label->setLabel( RX );
-			set_MUTE ( 0 );
+			TXoff();
 		} else {
-			// if enableSPLIT   set USBSoftrock frequency
-			transmit = 1;
-			pUSBCmd->sendCommand ("set ptt on\n" );
-			pTXCmd->sendCommand ("setRunState 2\n");
-			pTXCmd->sendCommand ("setTRX 1\n");
-			set_MUTE ( 1 );
-			fprintf (stderr, "set ptt on\n");
-			TRX_label->setPixmap( QPixmap( tx_xpm ) );
-			TRX_label->setLabel( TX );
+			TXon();
 		}
 	} else {
 		fprintf( stderr, "Transmit is not enabled\n");

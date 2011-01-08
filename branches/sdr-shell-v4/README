@@ -1,6 +1,11 @@
 
 Getting started using SDR-Shell with the SoftRock RXTX 6.3
 
+sdr-shell is a graphical user interface for interfacing with the DttSP
+(sdr-core) software-defined radio (SDR).  It can use two sdr-core
+processes, one each for receive and transmit, and usbsoftrock for tuning
+the USB-controllable synthesizer on the SoftRock SDR.
+
 Getting a radio working with sdr-shell, dttsp, and utilities is a lot like
 building your own radio, but with less solder.  Instead of solder wick and
 a solder sucker, you have a reset button.
@@ -69,7 +74,7 @@ for me.
  
 
 3) start jackd using JackPilot.  I've never gotten jackd to start from
-   the commandline due to problems finding shared libraries.
+   the command-line due to problems finding shared libraries.
 
   Configuration:
       Jack Server
@@ -101,15 +106,15 @@ symbol to tx.  Clicking the 'tx' symbol turns transmit off.
      The receive dttsp is muted during transmit.  I found it unnerving to talk
 while hearing myself echoed back with a 1/2 second delay.
 
-     Bands are memories (there are ten of them) that are automaticly saved when
+     Bands are memories (there are ten of them) that are automatically saved when
 a band change occurs.  Bands wrap from ten to one going up, and from one to ten
 when going down.
 
 	Tuning:
 
-	Tuning is done on two levels: within the bandwith of the audio card,
+	Tuning is done on two levels: within the bandwidth of the audio card,
 and by using a programmable oscillator.  For example, the recent SoftRock
-SDRs use an Si570 systhesized oscillator that can be configured over USB.
+SDRs use an Si570 synthesized oscillator that can be configured over USB.
 This is enabled when the "Use usbsoftrock" option is selected (General
 Configuration tab), sdr-shell communicates with the usbsoftrock program
 which in turn communicates with the USB-based controller.
@@ -133,8 +138,8 @@ past the edge of the sound card by retuning usbsoftrock.  Clicking on one of
 the numbers sets the tuning step size for the mouse wheel and arrow keys to
 that value.
 
-By clicking one of the mouse buttons and draging the cursor in the
-spectogram window, tuning on a finger granularity of 1hz, 10hz or 100hz
+By clicking one of the mouse buttons and dragging the cursor in the
+spectrogram window, tuning on a finger granularity of 1hz, 10hz or 100hz
 for the left, right and middle buttons, respectively.  However, this is
 limited to tuning only the dttsp "Oscillator".
 
@@ -169,7 +174,7 @@ click Accept.  The C0 label will change to NR2 and further clicks on the label w
 send the setSDROM command.
 
 Multiple commands can be sent at once by separating the commands with a semicolon
-(resemblence to shell commands is purely cosmetic):
+(resemblance to shell commands is purely cosmetic):
 
 	Name:   NR2
 	On:     setSDROM 1;setSDROMvals 2.5
@@ -258,5 +263,5 @@ I built the dttsp keyers with:
 	gcc  -g -O2   -o iambic-keyer iambic-keyer.o  libDttSP.a -llo \
 		-lpthread -lm -ljack -lfftw3f
 
-Glen Overby, kc0iyt  gpoverby@gmail.com  December, 2010
+Glen Overby, kc0iyt  gpoverby@gmail.com  January, 2011
 
