@@ -1,3 +1,18 @@
+
+Version 4.22
+
+Break out functions for turning TX on and off from toggle_TX(). 
+
+Turn TX off at start-up.  This mutes the transmit dttsp process, which 
+otherwise sends audio to the softrock which is in turn picked up as noise
+by the receive dttsp process.
+
+Fix up arguments to some of the commands.  Several formats had two %d
+strings but only one argument.
+
+Fix setTxIQGain and setTxIQPhase.  They were setting the receive IQ values.
+
+
 Version 4.21
 
 Add PTT polling code by Alex, 9V1AL.

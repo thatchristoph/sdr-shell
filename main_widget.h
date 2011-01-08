@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.21
+#define	VERSION 4.22
 
 #include <stdlib.h>
 #include <qwidget.h>
@@ -423,6 +423,8 @@ class Main_Widget : public QWidget
 		void band_UP ( int );
 		void band_DOWN ( int );
 		void toggle_TX ( int );
+		void TXon();
+		void TXoff();
 		void toggle_RIT ( int );
 		void toggle_SPLIT ( int );
 
