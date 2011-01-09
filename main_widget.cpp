@@ -11,9 +11,11 @@
 #include "text.h"
 #include "dttsp.h"
 
+
 /* formatting note: in vi :set tab=4 */
 
-static int old_PTT = 1;		// start with checking PTT, and do a rest to Rx
+static int old_PTT = 1;		// start with checking PTT, and do a reset to Rx
+
 
 Main_Widget::Main_Widget(QWidget *parent)
         : QWidget(parent)
@@ -1584,11 +1586,18 @@ Main_Widget::Main_Widget(QWidget *parent)
     fftTimer->start( 100 );  
 
 #ifdef PTT_POLL
-    QTimer *pttTimer = new QTimer ( this );							// Added by Alex Lee 21 Oct 2010
+    QTimer *pttTimer = new QTimer ( this );
 	connect ( pttTimer, SIGNAL ( timeout() ), this, SLOT ( updatePTT() ) );
-    pttTimer->start( 1000 );      
+    pttTimer->start( 100 );      
+#endif
+
+#ifdef FREQ_POLL
+    QTimer *freqTimer = new QTimer ( this );
+	connect ( freqTimer, SIGNAL ( timeout() ), this, SLOT ( updateFreq() ) );
+    freqTimer->start( 500 );      
 #endif
 }
+
 
 void Main_Widget::initConstants()
 {
@@ -3530,7 +3539,9 @@ void Main_Widget::tune ( int x )
 	// f_limit = sample_rate / 2 - spectrogram->width() / 2
 
 	// use usbsoftrock if the tuning step is large enough
-	if (!rock_bound && ( x > 10000 || x < -10000 )) {
+//	if (!rock_bound && ( x > 10000 || x < -10000 )) {
+
+	if (!rock_bound && ( x > 500 || x < -500 )) {
 		rx_delta_f = tuneCenter;
 		rx_f = rx_f + x;
 		setRxFrequency( 1 );
@@ -3548,7 +3559,7 @@ void Main_Widget::tunef ( int x )
 
 	// use usbsoftrock if the tuning step is large enough
 	if (!rock_bound ) {
-		if ( x > 1000 || x < -1000 ) {
+		if ( x > 500 || x < -500 ) {
 			rx_f -= rx_delta_f;
 			rx_delta_f = tuneCenter;
 			rx_f = rx_f + x;
@@ -4353,7 +4364,45 @@ void Main_Widget::setMuteXmit ( bool value )
 	emit tellMuteXmit ( muteXmit );
 }
 
-void Main_Widget::updatePTT(void)					// Added by Alex Lee 21 Oct 2010
+void Main_Widget::updateFreq(void)
+{
+	char text[32];
+	double freq;
+
+	if (!update_freqMutex.tryLock()) return;	// cannot lock, give up till next tick
+
+	if (!rock_bound && !transmit){			// only update Freq duing Rx
+		if (pUSBCmd->sendCommand("get freq\n") != 0) return;
+		freq = pUSBCmd->getParam();
+
+		if (freq != 0) {
+			rx_f = freq * 1000000.0;
+			if ( !useIF ){
+				snprintf ( text, 32, "......%11.6lf",
+					( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+				displayMutex.lock();
+				lcd->display ( text );
+
+				if (enableRIT) {
+					tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
+					rit->setText( tx_f_string );
+					}
+
+				displayMutex.unlock();
+				};
+
+			pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
+
+			if (!rock_bound && !enableRIT && !enableSPLIT)
+				pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+			}
+		};
+
+	update_freqMutex.unlock();
+
+}
+
+void Main_Widget::updatePTT(void)
 {
 	int PTT;
 
@@ -4363,22 +4412,65 @@ void Main_Widget::updatePTT(void)					// Added by Alex Lee 21 Oct 2010
 			return;
 		}
 
-		PTT = pUSBCmd->getParam();
+		PTT = pUSBCmd->getParam();		// returned param is a double
 		
 		if (old_PTT == PTT) return;
 		if (PTT && transmit) return;
 
-		fprintf(stderr, "PTT (%d) state triggered from Mobo\n", PTT);
+		fprintf(stderr, "PTT changed to state (%d) \n", PTT);
 		if (PTT) {
-			pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
+			update_freqMutex.lock();
+
 			// TODO: if enableSPLIT   set USBSoftrock frequency accordingly
+			if (mode == RIG_MODE_USB)
+			pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
+			// shift the Tx freq for fldigi Tx
+
+			else if (mode == RIG_MODE_CW){
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f - 600)*1e-6);	// correct for CW tone
+				pCmd->sendCommand ("setMode %d %d\n", USB );
+				pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
+				fprintf ( stderr, "setMode %d\n", USB );
+				filter_l = &USB_filter_l; //20;
+				filter_h = &USB_filter_h; //2400;
+				setFilter();
+				}
+			else if (mode == RIG_MODE_CWR){
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f + 600)*1e-6);	// correct for CW tone
+				pCmd->sendCommand ("setMode %d %d\n", LSB );
+				pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
+				fprintf ( stderr, "setMode %d\n", LSB );
+				filter_l = &LSB_filter_l; //-2400;
+				filter_h = &LSB_filter_h; //-20;
+				setFilter();
+				};
+
 			pTXCmd->sendCommand ("setRunState 2\n");
 			pTXCmd->sendCommand ("setTRX 1\n");
 			set_MUTE ( 1 );
 			TRX_label->setPixmap( QPixmap( tx_xpm ) );
 			TRX_label->setLabel( TX );
 		} else {
+			if (mode == RIG_MODE_CW){
+				pCmd->sendCommand ("setMode %d %d\n", CWU );
+				pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
+				fprintf ( stderr, "setMode %d\n", CWU );
+				filter_l = &CWU_filter_l; //200;
+				filter_h = &CWU_filter_h; //500;
+				setFilter();
+				}
+			else if (mode == RIG_MODE_CWR){
+				pCmd->sendCommand ("setMode %d %d\n", CWL );
+				pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
+				fprintf ( stderr, "setMode %d\n", CWL );
+				filter_l = &CWL_filter_l; //-500;
+				filter_h = &CWL_filter_h; //-200;
+				setFilter();
+				};
+
 			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+			update_freqMutex.unlock();
+
 			pTXCmd->sendCommand ("setTRX 0\n");
 			pTXCmd->sendCommand ("setRunState 0\n");
 			fprintf (stderr, "set ptt off\n");
