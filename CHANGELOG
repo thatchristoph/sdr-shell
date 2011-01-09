@@ -1,3 +1,38 @@
+Version 4.23
+
+Add revised PTT polling, by Alex Lee 9V1AL.
+
+To turn this on, edit
+sdr-shell.pro and remove the # (comment) character on the line that says:
+
+	DEFINES += PTT_POLL
+
+
+   Every 100ms or so, sdr-shell will check
+   the PTT state by sending a UDP message to the usbsoftrock daemon.  The message is a 
+   "get ptt".  You will need a patched version of usbsoftrock to enable "get ptt" to work.
+
+   With PTT polling, when an external
+   program, such the keyboard keyer, iambic keyer, or fldigi. to change the PTT state to Rx
+   or Tx, and sdr-shell will change state accordingly.  The 'center' frequency for Tx and the filter
+   limits may also be changed for CW Tx and flidigi Tx to ensure that the Rx dial freq is the same
+   (or very close to) the actual Tx RF out.
+
+Add FREQ polling, by Alex Lee 9V1AL.
+
+To turn this on, edit
+sdr-shell.pro and remove the # (comment) character on the line that says:
+
+	DEFINES += FREQ_POLL
+
+
+   Every 500ms or so, sdr-shell will check
+   the current "center" frequency of the softrock Si570 (which is usually Si570 freq / 4),
+   and updates the Rx frequency (and display) of sdr-shell accordingly.  This allows external
+   changes of the frequency, eg. by a rotary encoder attached to the Softrock/Mobo, to be
+   reflected automatically in sdr-shell.  There is no need to use a patched version of usbsoftrock,
+   as the "get freq" command is already available.
+
 
 Version 4.22
 
