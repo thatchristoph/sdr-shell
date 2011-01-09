@@ -45,7 +45,7 @@ protected:
 
     char  buff [DTTSP_PORT_CLIENT_BUFSIZE];
     int   size, used;
-    int   param;					// added by Alex Lee 21 Oct 2010
+    double   param;
 
     DttSP (int port, int inbound);
     DttSP (int port, int inbound, char *host);
@@ -119,7 +119,7 @@ class USBSoftrockCmd: public DttSP {
     ~USBSoftrockCmd () {}
 
     int sendCommand ( const char *format, ... );
-    int getParam();
+    double getParam();
 };
 
 class DttSPTXcmd: public DttSP {

@@ -40,6 +40,7 @@ DISTFILES += test \
     KL7NA_Notes
 
 #DEFINES += PTT_POLL
+#DEFINES += FREQ_POLL
 
 # The following line was inserted by qt3to4
 QT += qt3support

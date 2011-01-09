@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.22
+#define	VERSION 4.23
 
 #include <stdlib.h>
 #include <qwidget.h>
@@ -110,7 +110,7 @@ class Main_Widget : public QWidget
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
         hamlibWrapper *ourHamlibWrapper;
-		QMutex displayMutex;
+		QMutex displayMutex, update_freqMutex;
 
         //hamlib parameters.
 		QString portString;
@@ -492,6 +492,7 @@ class Main_Widget : public QWidget
 		void updateCmd (int n);
 		void resetCmd (int n);
 		void updatePTT();
+		void updateFreq();
 		
 		void set_MUTE ( int );
 		void setOurRxFrequency ( double );
