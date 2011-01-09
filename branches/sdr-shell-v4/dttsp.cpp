@@ -160,7 +160,11 @@ DttSP :: ~DttSP ()
 int DttSP :: send_command ( char *cmdstr ) 
 {
    	fd_set fds;
-    struct timeval tv;
+        struct timeval tv;
+
+        char *saveptr;
+        char *token;
+
     // are we pointing at the moon?
     if ((!pSa && !address) || sock == -1 || !cmdstr)
       return -1;
@@ -218,7 +222,14 @@ int DttSP :: send_command ( char *cmdstr )
 	}
 
    	if (buff[0] != 'o' || buff[1] != 'k') return -6;
-	param = ((buff[3]) == '0') ? 0 : 1;
+
+	param = 0.0;
+        token = strtok_r(buff, " ", &saveptr);		// parse the buffer
+        if (token != NULL) {  
+          token = strtok_r(NULL, " ", &saveptr);	// parse the next
+	  if (token != NULL) param = atof(token);	// param is double number
+        }
+
 
     return 0;
 }
@@ -286,7 +297,7 @@ int  DttSPspectrum :: fetch ( int *tick, int *label, float *data, int npts)
   return 0;
 }
 
-int USBSoftrockCmd :: getParam()
+double USBSoftrockCmd :: getParam()
 {
 	return param;
 }
