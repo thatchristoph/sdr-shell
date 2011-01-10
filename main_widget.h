@@ -87,7 +87,17 @@ class Main_Widget : public QWidget
 		Q_OBJECT
 
 	private:
-		QPushButton *quit_button;
+                //Argument variables from main//
+                int rxCMDPort;
+                int txCMDPort;
+                int usbPort;
+                int meterPort;
+                int spectrumPort;
+                char *host;
+                bool verbose;
+                QSettings *settings;
+
+                //QPushButton *quit_button;
 		QPushButton *updateLOFreqButton;
 		QPushButton *updateTuneOffsetButton;
 		QPushButton *cmd0reset;
@@ -265,7 +275,7 @@ class Main_Widget : public QWidget
 		QString tx_f_string;
 		QString	TuneOffset_string;
 		bool specLineFill;	// true=enables spectrum display line filled
-		int sample_rate;
+                int sample_rate;
 		int tuneCenter;		// where to put tune center when using usbsoftrock
 		int spec_width;		// spectrum display width
 		int rx_delta_f;		// relative to center frequeny
@@ -371,8 +381,9 @@ class Main_Widget : public QWidget
 		void setRxFrequency( int );
 		void setTxFrequency();
 		void setDefaultRxFrequency();
-		void loadSettings();
-		void saveSettings();
+                void loadSettings();
+                void setupSDR();
+                void saveSettings();
 		void setScrollBarColors ( QScrollBar * );
 		void setCA_label();
 		void set_NR ( int );
@@ -398,7 +409,18 @@ class Main_Widget : public QWidget
 		void loadCommandCells();
 
 	public:
-		Main_Widget ( QWidget *parent = 0 );
+                Main_Widget();
+               // Main_Widget ( QWidget*, char*);
+                void init( char * );
+                void set_rxCMDPort( int );
+                void set_txCMDPort( int );
+                void set_USBPort( int );
+                void set_SpectrumPort( int );
+                void set_MeterPort( int );
+                void set_SampleRate( int );
+                void set_Host( char * );
+                void set_Verbose( bool );
+                void operate();
 
 	public slots:
 		void finish();
