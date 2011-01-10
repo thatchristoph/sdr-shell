@@ -16,6 +16,7 @@
 
 
 static int old_PTT = 1;		// start with checking PTT, and do a reset to Rx
+int CW_tone = 700;		// default CW tone 700 Hz
 
 
 Main_Widget::Main_Widget()
@@ -4525,6 +4526,8 @@ void Main_Widget::updatePTT(void)
 
                 if(verbose) fprintf(stderr, "PTT changed to state (%d) \n", PTT);
 		if (PTT) {
+			if (pUSBCmd->sendCommand("get tone\n") == 0) CW_tone = pUSBCmd->getParam();
+			
 			update_freqMutex.lock();
 
 			// TODO: if enableSPLIT   set USBSoftrock frequency accordingly
@@ -4533,7 +4536,7 @@ void Main_Widget::updatePTT(void)
 			// shift the Tx freq for fldigi Tx
 
 			else if (mode == RIG_MODE_CW){
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f - 600)*1e-6);	// correct for CW tone
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", USB );
 				pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
                                 if(verbose) fprintf ( stderr, "setMode %d\n", USB );
@@ -4542,7 +4545,7 @@ void Main_Widget::updatePTT(void)
 				setFilter();
 				}
 			else if (mode == RIG_MODE_CWR){
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f + 600)*1e-6);	// correct for CW tone
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", LSB );
 				pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
                                 if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
