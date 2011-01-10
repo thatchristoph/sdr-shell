@@ -35,7 +35,7 @@ hamlibWrapper::hamlibWrapper ( QObject *parent) : QThread ( parent )
 
 hamlibWrapper::~hamlibWrapper()
 {
-	if ( running() )
+        if ( isRunning() )
 	{
 		shouldexit=true;
 		wait();
@@ -92,7 +92,7 @@ int hamlibWrapper::init ( rig_model_t rig, const char* port, int speed )
 	}
 	emit rigPitch ( pitch.i );
 
-	if ( !running() && rRig )  start();
+        if ( !isRunning() && rRig )  start();
 	mutex.unlock();
 	return retval;
 }
@@ -224,7 +224,7 @@ void hamlibWrapper::setPause ( bool p )
 		return;
 
 	shouldexit=p;
-	if ( !p && !running() )
+        if ( !p && !isRunning() )
 		start();
 }
 

@@ -38,6 +38,7 @@ struct sockaddr_in;
 class DttSP {
     
 protected:
+    bool verbose;
     unsigned short      port;
     struct sockaddr_in *pSa;
 	struct addrinfo		*address;
@@ -50,6 +51,9 @@ protected:
     DttSP (int port, int inbound);
     DttSP (int port, int inbound, char *host);
     DttSP (char *host);
+    DttSP (bool verbose, int port, int inbound);
+    DttSP (bool verbose, int port, int inbound, char *host);
+    DttSP (bool verbose, char *host);
 
     int send_command ( char *cmdstr) ;
 public:
@@ -61,11 +65,17 @@ public:
 class DttSPcmd: public DttSP {
 
 public:
-    DttSPcmd (int port = DTTSP_PORT_CLIENT_COMMAND):
-        DttSP (port, 0) 
+    DttSPcmd (int port ): //= DTTSP_PORT_CLIENT_COMMAND
+        DttSP (false, port, 0)
         {}
-    DttSPcmd (char *host):
-        DttSP (DTTSP_PORT_CLIENT_COMMAND, 0, host) 
+    DttSPcmd (int port, char *host):
+        DttSP (false, port, 0, host)
+        {}
+    DttSPcmd (bool verbose, int port ): //= DTTSP_PORT_CLIENT_COMMAND
+        DttSP (verbose, port, 0)
+        {}
+    DttSPcmd (bool verbose, int port, char *host):
+        DttSP (verbose, port, 0, host)
         {}
 
     ~DttSPcmd () {}
@@ -77,11 +87,17 @@ public:
 class DttSPmeter: public DttSP {
 
 public:
-    DttSPmeter (int port = DTTSP_PORT_CLIENT_METER):
-        DttSP (port, 1) 
+    DttSPmeter (int port)://= DTTSP_PORT_CLIENT_METER
+        DttSP (false, port, 1)
     {}
-    DttSPmeter (char *host):
-        DttSP (DTTSP_PORT_CLIENT_METER, 1, host) 
+    DttSPmeter (int port, char *host):
+        DttSP (false, port, 1, host)
+    {}
+    DttSPmeter (bool verbose, int port)://= DTTSP_PORT_CLIENT_METER
+        DttSP (verbose, port, 1)
+    {}
+    DttSPmeter (bool verbose, int port, char *host):
+        DttSP (verbose, port, 1, host)
     {}
 
     ~DttSPmeter () {}
@@ -93,11 +109,17 @@ public:
 class DttSPspectrum: public DttSP {
 
 public:
-    DttSPspectrum (int port = DTTSP_PORT_CLIENT_SPECTRUM):
-        DttSP (port, 1) 
+    DttSPspectrum (int port )://= DTTSP_PORT_CLIENT_SPECTRUM
+        DttSP (false, port, 1)
     {}
-    DttSPspectrum (char *host):
-        DttSP (DTTSP_PORT_CLIENT_SPECTRUM, 1, host) 
+    DttSPspectrum (int port, char *host):
+        DttSP (false, port, 1, host)
+    {}
+    DttSPspectrum (bool verbose, int port )://= DTTSP_PORT_CLIENT_SPECTRUM
+        DttSP (verbose, port, 1)
+    {}
+    DttSPspectrum (bool verbose, int port, char *host):
+        DttSP (verbose, port, 1, host)
     {}
 
     ~DttSPspectrum () {}
@@ -109,12 +131,18 @@ class USBSoftrockCmd: public DttSP {
 
 	public: 
 
-    USBSoftrockCmd (int port = USBSOFTROCK_CLIENT_COMMAND):
-	    DttSP (port, 0)
+    USBSoftrockCmd (int port )://= USBSOFTROCK_CLIENT_COMMAND
+            DttSP (false, port, 0)
 	    {}
-    USBSoftrockCmd (char *host):
-	    DttSP (USBSOFTROCK_CLIENT_COMMAND, 0, host)
+    USBSoftrockCmd (int port, char *host):
+            DttSP (false, port, 0, host)
 	    {}
+    USBSoftrockCmd (bool verbose, int port )://= USBSOFTROCK_CLIENT_COMMAND
+            DttSP (verbose, port, 0)
+            {}
+    USBSoftrockCmd (bool verbose, int port, char *host):
+            DttSP (verbose, port, 0, host)
+            {}
 
     ~USBSoftrockCmd () {}
 
@@ -125,11 +153,17 @@ class USBSoftrockCmd: public DttSP {
 class DttSPTXcmd: public DttSP {
 
 public:
-    DttSPTXcmd (int port = DTTSP_TX_PORT_CLIENT_COMMAND):
-        DttSP (port, 0) 
+    DttSPTXcmd (int port ): //= DTTSP_TX_PORT_CLIENT_COMMAND
+        DttSP (false, port, 0)
         {}
-    DttSPTXcmd (char *host):
-        DttSP (DTTSP_TX_PORT_CLIENT_COMMAND, 0, host) 
+    DttSPTXcmd (int port, char *host):
+        DttSP (false, port, 0, host)
+        {}
+    DttSPTXcmd (bool verbose, int port ): //= DTTSP_TX_PORT_CLIENT_COMMAND
+        DttSP (verbose, port, 0)
+        {}
+    DttSPTXcmd (bool verbose, int port, char *host):
+        DttSP (verbose, port, 0, host)
         {}
 
     ~DttSPTXcmd () {}

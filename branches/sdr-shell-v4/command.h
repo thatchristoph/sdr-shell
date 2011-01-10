@@ -11,7 +11,7 @@ class Command : public QLabel
     Q_OBJECT
     
     public:
-        Command(QWidget *parent = 0);
+        Command(QWidget *parent = 0 );
 
 		void setCmd (DttSPcmd *, DttSPcmd *);
         void setID( int );
@@ -35,7 +35,7 @@ class Command : public QLabel
 
     private:
 		DttSPcmd *rxCmd, *txCmd;
-		bool state;
+                bool state;
         int id;
         QString name;
 		QString OnCommand;
