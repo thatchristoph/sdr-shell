@@ -4469,7 +4469,6 @@ void Main_Widget::updatePTT(void)
 				};
 
 			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
-			update_freqMutex.unlock();
 
 			pTXCmd->sendCommand ("setTRX 0\n");
 			pTXCmd->sendCommand ("setRunState 0\n");
@@ -4477,6 +4476,8 @@ void Main_Widget::updatePTT(void)
 			TRX_label->setPixmap( QPixmap( rx_xpm ) );
 			TRX_label->setLabel( RX );
 			set_MUTE ( 0 );
+
+			update_freqMutex.unlock();
 		}
 		old_PTT = PTT;
 	}
