@@ -1991,7 +1991,7 @@ void Main_Widget::setupSDR()
             // USB-Synth turns PTT on when it powers up.  Turn it off.
             pUSBCmd->sendCommand ("set ptt off\n");
         }
-        if ( enableTransmit ) pTXCmd = new DttSPTXcmd (verbose, txCMDPort, ep);
+        pTXCmd = new DttSPTXcmd (verbose, txCMDPort, ep);
     } else {
         pCmd = new DttSPcmd (verbose, rxCMDPort);
         pMeter = new DttSPmeter (verbose, meterPort);
@@ -2002,7 +2002,7 @@ void Main_Widget::setupSDR()
             // USB-Synth turns PTT on when it powers up.  Turn it off.
             pUSBCmd->sendCommand("set ptt off\n");
         }
-        if ( enableTransmit ) pTXCmd = new DttSPTXcmd (verbose, txCMDPort);
+        pTXCmd = new DttSPTXcmd (verbose, txCMDPort);
     }
  /*   if(txCMDPort != 19005)
     {
