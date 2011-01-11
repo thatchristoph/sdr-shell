@@ -167,6 +167,7 @@ int DttSP :: send_command ( char *cmdstr )
 
     // are we pointing at the moon?
     if ((!pSa && !address) || sock == -1 || !cmdstr)
+//    if (!pSa  || sock == -1 || !cmdstr)
         return -1;
 
     // make local, properly terminated copy of command
