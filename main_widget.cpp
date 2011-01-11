@@ -1620,7 +1620,7 @@ void Main_Widget::operate() {
 #ifdef FREQ_POLL
     QTimer *freqTimer = new QTimer ( this );
 	connect ( freqTimer, SIGNAL ( timeout() ), this, SLOT ( updateFreq() ) );
-    freqTimer->start( 500 );      
+    freqTimer->start( 200 );      
 #endif
 }
 
@@ -4475,18 +4475,30 @@ void Main_Widget::updateFreq(void)
 {
 	char text[32];
 	double freq;
+        unsigned long corrected_f;
 
 	if (!update_freqMutex.tryLock()) return;	// cannot lock, give up till next tick
 
 	if (!rock_bound && !transmit){			// only update Freq duing Rx
 		if (pUSBCmd->sendCommand("get freq\n") != 0) return;
-		freq = pUSBCmd->getParam();
+		freq = pUSBCmd->getParam();		// freq in Mhz
 
 		if (freq != 0) {
-			rx_f = freq * 1000000.0;
+		    rx_f = freq * 1000000.0;
 			if ( !useIF ){
+                            switch (mode){
+                                case RIG_MODE_CW:
+                                    corrected_f = rx_f - rx_delta_f + CW_tone;
+                                    break;
+                                case RIG_MODE_CWR:
+                                    corrected_f = rx_f - rx_delta_f - CW_tone;
+                                    break;
+                                default:
+                                    corrected_f = rx_f - rx_delta_f;
+                                    break;
+                                }    
 				snprintf ( text, 32, "......%11.6lf",
-					( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
+					( double ) ( corrected_f ) / 1000000.0 );
 				displayMutex.lock();
 				lcd->display ( text );
 
@@ -4536,7 +4548,7 @@ void Main_Widget::updatePTT(void)
 			// shift the Tx freq for fldigi Tx
 
 			else if (mode == RIG_MODE_CW){
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
+//				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", USB );
 				pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
                                 if(verbose) fprintf ( stderr, "setMode %d\n", USB );
@@ -4545,7 +4557,7 @@ void Main_Widget::updatePTT(void)
 				setFilter();
 				}
 			else if (mode == RIG_MODE_CWR){
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
+//				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", LSB );
 				pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
                                 if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
@@ -4578,7 +4590,7 @@ void Main_Widget::updatePTT(void)
 				};
 
                         pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
-
+                        update_freqMutex.unlock();
 
 			pTXCmd->sendCommand ("setTRX 0\n");
 			pTXCmd->sendCommand ("setRunState 0\n");
@@ -4586,7 +4598,7 @@ void Main_Widget::updatePTT(void)
 			TRX_label->setPixmap( QPixmap( rx_xpm ) );
 			TRX_label->setLabel( RX );
 			set_MUTE ( 0 );
-                        update_freqMutex.unlock();
+
 		}
 		old_PTT = PTT;
 	}
