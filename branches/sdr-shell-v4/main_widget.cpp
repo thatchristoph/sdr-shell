@@ -1620,7 +1620,7 @@ void Main_Widget::operate() {
 #ifdef FREQ_POLL
     QTimer *freqTimer = new QTimer ( this );
 	connect ( freqTimer, SIGNAL ( timeout() ), this, SLOT ( updateFreq() ) );
-    freqTimer->start( 200 );      
+    freqTimer->start( 150 );      
 #endif
 }
 
@@ -2701,23 +2701,27 @@ void Main_Widget::setDefaultRxFrequency ( )
 //
 void Main_Widget::setRxFrequency( int synth )
 {
+#ifndef FREQ_POLL
 	char text[32];
+#endif
 	if ( !useIF )
 	{
+#ifndef FREQ_POLL
 		snprintf ( text, 32, "......%11.6lf",
 			( double ) ( rx_f - rx_delta_f ) / 1000000.0 );
-                if(verbose) fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
+		fprintf ( stderr, "Set the frequency (!IF): %lld - %d = %11.6lf '%s'\n",
 			rx_f, rx_delta_f, 
 			( rx_f - rx_delta_f) / 1000000.0, text);
 		displayMutex.lock();
 		lcd->display ( text );
+                displayMutex.unlock();
+#endif
 
 		if (enableRIT) {
 			tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
 			rit->setText( tx_f_string );
                         if(verbose) fprintf ( stderr, "RIT %s\n", qPrintable(tx_f_string));
 		}
-		displayMutex.unlock();
 	}
         if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
