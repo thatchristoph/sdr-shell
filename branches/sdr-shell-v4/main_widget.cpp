@@ -2003,6 +2003,7 @@ void Main_Widget::setupSDR()
             pUSBCmd->sendCommand("set ptt off\n");
         }
         pTXCmd = new DttSPTXcmd (verbose, txCMDPort);
+        if (verbose) fprintf(stderr, "pTXCmd created.  Port = %d", txCMDPort);
     }
  /*   if(txCMDPort != 19005)
     {
@@ -2726,8 +2727,8 @@ void Main_Widget::setRxFrequency( int synth )
         if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
 
-        if (!rock_bound && !enableRIT && !enableSPLIT && enableTransmit ) {
-		pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+        if (!rock_bound && !enableRIT && !enableSPLIT) {
+		if (enableTransmit) pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 		if ( synth ) {
 			if (dualConversion) {
                                 if(verbose) fprintf (stderr, "set freq dual conversion %f %f %f\n",
@@ -3877,8 +3878,10 @@ void Main_Widget::setDSP ( int )
 void Main_Widget::TXoff ()
 {
 	transmit = 0;
+	if (enableTransmit){
 	pTXCmd->sendCommand ("setTRX 0\n");
 	pTXCmd->sendCommand ("setRunState 0\n");
+	}
 	pUSBCmd->sendCommand("set ptt off\n" );
         if(verbose) fprintf (stderr, "set ptt off\n");
 	TRX_label->setPixmap( QPixmap( rx_xpm ) );
@@ -3891,8 +3894,10 @@ void Main_Widget::TXon ()
 	// if enableSPLIT   set USBSoftrock frequency
 	transmit = 1;
 	pUSBCmd->sendCommand ("set ptt on\n" );
+	if (enableTransmit){
 	pTXCmd->sendCommand ("setRunState 2\n");
 	pTXCmd->sendCommand ("setTRX 1\n");
+	}
 	set_MUTE ( 1 );
         if(verbose) fprintf (stderr, "set ptt on\n");
 	TRX_label->setPixmap( QPixmap( tx_xpm ) );
@@ -4442,7 +4447,7 @@ void Main_Widget::updateTransmit ( bool value )
 {
 	enableTransmit = value;
 	if ( enableTransmit ) {
-		pTXCmd->on();
+//		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
 		setTxGain( 0 );
@@ -4516,7 +4521,7 @@ void Main_Widget::updateFreq(void)
 
 			pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
 
-			if (!rock_bound && !enableRIT && !enableSPLIT)
+			if (!rock_bound && !enableRIT && !enableSPLIT && enableTransmit)
 				pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 			}
 		};
