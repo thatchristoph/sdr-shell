@@ -3088,8 +3088,8 @@ void Main_Widget::setIQGain()
 
 void Main_Widget::setIQPhase()
 {
-        if(enableTransmit) pTXCmd->sendCommand ("setcorrectIQphase %d\n", iqPhase );
-        if ( verbose) fprintf ( stderr, "(TX)setcorrectIQphase %d\n", iqPhase );
+	pCmd->sendCommand ("setcorrectIQphase %d\n", iqPhase );
+	if ( verbose) fprintf ( stderr, "(TX)setcorrectIQphase %d\n", iqPhase );
 }
 
 void Main_Widget::setTxIQGain()
@@ -4466,6 +4466,7 @@ void Main_Widget::updateTransmit ( bool value )
 	static bool first_Time = true;
 	enableTransmit = value;
 	if ( enableTransmit ) {
+		//This keeps it from setting up before sample_rate is had.
 		if((pTXCmd == NULL)&&(!first_Time)) setupSDR();
 		pTXCmd->on();
 		setTxIQGain();
