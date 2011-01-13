@@ -10,7 +10,8 @@ Command::Command(QWidget *parent) : QLabel(parent)
 void Command::setCmd(DttSPcmd *rx, DttSPcmd *tx)
 {
 	rxCmd = rx;
-	txCmd = tx;
+	if(txCmd != NULL) txCmd = tx;
+	else fprintf(stderr, "TX not enabled.");
 }
 
 void Command::setID(int v)
