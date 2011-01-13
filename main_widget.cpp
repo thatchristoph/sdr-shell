@@ -4440,15 +4440,18 @@ if(verbose) fprintf(stderr, "setIF: %d\n", value);
 
 void Main_Widget::updateUseUSBsoftrock ( bool value )
 {
+	static bool first_Time = true;
 	rock_bound = !value;
 	if (value) {
 		rx_f -= rx_delta_f;
 		rx_delta_f = tuneCenter;
 		rx_f += rx_delta_f;
-	}
-		if(pUSBCmd == NULL) setupSDR();
+
+		if((pUSBCmd == NULL)&&(!first_Time)) setupSDR();
         if(verbose) fprintf ( stderr, "useUSBsoftrock: %s\n",
 		value ? "enabled" : "disabled");
+	}
+	first_Time = false;
 }
 
 void Main_Widget::updateDualConversion ( bool value )
@@ -4460,9 +4463,10 @@ void Main_Widget::updateDualConversion ( bool value )
 
 void Main_Widget::updateTransmit ( bool value )
 {
+	static bool first_Time = true;
 	enableTransmit = value;
 	if ( enableTransmit ) {
-		if(pTXCmd == NULL) setupSDR();
+		if((pTXCmd == NULL)&&(!first_Time)) setupSDR();
 		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
