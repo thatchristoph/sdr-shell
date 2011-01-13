@@ -1979,33 +1979,36 @@ void Main_Widget::setupSDR()
     //mp = new_dttsp_port_client(DTTSP_PORT_CLIENT_METER, 1);
 
 
-    pUSBCmd = NULL;
-    pTXCmd = NULL;
+	//pUSBCmd = NULL;
+	//pTXCmd = NULL;
 
     if ( ( ep = getenv ( "SDR_HOST" ) )||(host != NULL) ) {
         if (host != NULL) ep=host;
-        pCmd = new DttSPcmd (verbose, rxCMDPort, ep );
-        pMeter = new DttSPmeter (verbose, meterPort, ep );
+		if (pCmd == NULL) pCmd = new DttSPcmd (verbose, rxCMDPort, ep );
+		if ( pMeter == NULL ) pMeter = new DttSPmeter (verbose, meterPort, ep );
         pSpectrum = new DttSPspectrum (verbose, spectrumPort, ep );
         if ( !rock_bound)
         {
-            pUSBCmd = new USBSoftrockCmd (usbPort, ep);
+			if ( pUSBCmd == NULL ) pUSBCmd = new USBSoftrockCmd (usbPort, ep);
             // USB-Synth turns PTT on when it powers up.  Turn it off.
             pUSBCmd->sendCommand ("set ptt off\n");
         }
-        pTXCmd = new DttSPTXcmd (verbose, txCMDPort, ep);
+		if ( enableTransmit ) pTXCmd = new DttSPTXcmd (verbose, txCMDPort, ep);
     } else {
-        pCmd = new DttSPcmd (verbose, rxCMDPort);
-        pMeter = new DttSPmeter (verbose, meterPort);
-        pSpectrum = new DttSPspectrum (verbose, spectrumPort);
+		if (pCmd == NULL) pCmd = new DttSPcmd (verbose, rxCMDPort);
+		if (pMeter == NULL) pMeter = new DttSPmeter (verbose, meterPort);
+		if (pSpectrum ==NULL) pSpectrum = new DttSPspectrum (verbose, spectrumPort);
         if ( !rock_bound )
         {
-            pUSBCmd = new USBSoftrockCmd (usbPort);
+			if(pUSBCmd == NULL) pUSBCmd = new USBSoftrockCmd (verbose, usbPort);
             // USB-Synth turns PTT on when it powers up.  Turn it off.
             pUSBCmd->sendCommand("set ptt off\n");
         }
-        pTXCmd = new DttSPTXcmd (verbose, txCMDPort);
-        if (verbose) fprintf(stderr, "pTXCmd created.  Port = %d", txCMDPort);
+		if ( (enableTransmit) && (pTXCmd == NULL))
+		{
+			pTXCmd = new DttSPTXcmd (verbose, txCMDPort);
+			if (verbose) fprintf(stderr, "pTXCmd created.  Port = %d", txCMDPort);
+		}
     }
  /*   if(txCMDPort != 19005)
     {
@@ -2418,6 +2421,7 @@ void Main_Widget::finish()
     delete pMeter;
     delete pCmd;
     delete pUSBCmd;
+	delete pTXCmd;
     if(verbose) fprintf (stderr, "sdr-shell exiting.\n");
 	exit ( 0 );
 }
@@ -2654,8 +2658,11 @@ void Main_Widget::process_key ( int key )
 			break;
 		case 32: // space turn transmit off
 			transmit = 0;
-			pUSBCmd->sendCommand("set ptt off\n" );
-                        if(verbose) fprintf (stderr, "set ptt off\n");
+			if (!rock_bound)
+			{
+				pUSBCmd->sendCommand("set ptt off\n" );
+				if(verbose) fprintf (stderr, "set ptt off\n");
+			}
 			break;
 		default:
 			break;
@@ -2732,16 +2739,17 @@ void Main_Widget::setRxFrequency( int synth )
         if (!rock_bound && !enableRIT && !enableSPLIT) {
 		if (enableTransmit) pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 		if ( synth ) {
-			if (dualConversion) {
-                                if(verbose) fprintf (stderr, "set freq dual conversion %f %f %f\n",
+			if (dualConversion)
+			{
+				if(verbose) fprintf (stderr, "set freq dual conversion %f %f %f\n",
 					(rx_f)*1e-6, 
 					((rx_f)*1e-6)/1.25,
 					((rx_f)*1e-6)/1.25/4); 
-				pUSBCmd->sendCommand("set freq %f\n", 
+				if (!rock_bound) pUSBCmd->sendCommand("set freq %f\n",
 					((rx_f)*1e-6)/1.25/4);
 			} else {
                                 if(verbose) fprintf (stderr, "USBsoftrock: set freq %f\n", (rx_f)*1e-6);
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+				if (!rock_bound) pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
 			}
 		}
 	}
@@ -3095,7 +3103,7 @@ void Main_Widget::setTxIQGain()
 
 void Main_Widget::setTxIQPhase()
 {
-        if(enableTransmit)
+	if(enableTransmit)
     {
         pTXCmd->sendCommand ("setcorrectIQphase %d %d\n", txIQPhase );
         if ( verbose) fprintf ( stderr, "(TX)setcorrectIQphase %d\n", txIQPhase );
@@ -3880,7 +3888,8 @@ void Main_Widget::setDSP ( int )
 void Main_Widget::TXoff ()
 {
 	transmit = 0;
-	if (enableTransmit){
+	if (enableTransmit)
+	{
 		pTXCmd->sendCommand ("setTRX 0\n");
 		pTXCmd->sendCommand ("setRunState 0\n");
 	}
@@ -3897,7 +3906,7 @@ void Main_Widget::TXon ()
 	{
 		// if enableSPLIT   set USBSoftrock frequency
 		transmit = 1;
-		pUSBCmd->sendCommand ("set ptt on\n" );
+		if (!rock_bound) pUSBCmd->sendCommand ("set ptt on\n" );
 
 		pTXCmd->sendCommand ("setRunState 2\n");
 		pTXCmd->sendCommand ("setTRX 1\n");
@@ -3918,8 +3927,8 @@ void Main_Widget::toggle_TX ( int )
 			transmit = 0;
 			pTXCmd->sendCommand ("setTRX 0\n");
 			pTXCmd->sendCommand ("setRunState 0\n");
-			pUSBCmd->sendCommand("set ptt off\n" );
-                        if(verbose) fprintf (stderr, "set ptt off\n");
+			if (!rock_bound) pUSBCmd->sendCommand("set ptt off\n" );
+			if(verbose) fprintf (stderr, "set ptt off\n");
 			TRX_label->setPixmap( QPixmap( rx_xpm ) );
 			TRX_label->setLabel( RX );
 			set_MUTE ( 0 );
@@ -3927,7 +3936,7 @@ void Main_Widget::toggle_TX ( int )
 		} else {
 			// if enableSPLIT   set USBSoftrock frequency
 			transmit = 1;
-			pUSBCmd->sendCommand ("set ptt on\n" );
+			if (!rock_bound) pUSBCmd->sendCommand ("set ptt on\n" );
 			pTXCmd->sendCommand ("setRunState 2\n");
 			pTXCmd->sendCommand ("setTRX 1\n");
 			set_MUTE ( 1 );
@@ -4437,6 +4446,7 @@ void Main_Widget::updateUseUSBsoftrock ( bool value )
 		rx_delta_f = tuneCenter;
 		rx_f += rx_delta_f;
 	}
+		if(pUSBCmd == NULL) setupSDR();
         if(verbose) fprintf ( stderr, "useUSBsoftrock: %s\n",
 		value ? "enabled" : "disabled");
 }
@@ -4452,6 +4462,7 @@ void Main_Widget::updateTransmit ( bool value )
 {
 	enableTransmit = value;
 	if ( enableTransmit ) {
+		if(pTXCmd == NULL) setupSDR();
 		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
