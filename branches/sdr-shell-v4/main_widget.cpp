@@ -25,14 +25,14 @@ Main_Widget::Main_Widget()
 }
 void Main_Widget::init(char *path)
 {
-        sample_rate = 0; //Set Default Values//
-        rxCMDPort=19001;
-        txCMDPort=19005;
-        meterPort=19003;
-        spectrumPort=19002;
-        host = NULL;
-        usbPort =19004;
-        verbose = false;
+	sample_rate = 0; //Set Default Values//
+	rxCMDPort=19001;
+	txCMDPort=19005;
+	meterPort=19003;
+	spectrumPort=19002;
+	host = NULL;
+	usbPort =19004;
+	verbose = false;
 	QString version;
 	setFocusPolicy ( Qt::TabFocus );
 	setMinimumWidth ( 650 );
@@ -46,16 +46,17 @@ void Main_Widget::init(char *path)
     setMinimumHeight( 300 );
 	initConstants();
 	slopeTuneOffset = 0;
-        if(path == NULL)
-        {
-            settings = new QSettings("freesoftware", "sdr-shell");
-        }
-        else
-        {
-            settings = new QSettings("freesoftware", QString(path));
-            //settings->setPath(QSettings::IniFormat,QSettings::UserScope, QString( path ));
-        }
-        loadSettings();
+	if(path == NULL)
+	{
+		settings = new QSettings("freesoftware", "sdr-shell");
+	}
+	else
+	{
+		settings = new QSettings("freesoftware", QString(path));
+		//settings->setPath(QSettings::IniFormat,QSettings::UserScope, QString( path ));
+	}
+	loadSettings();
+
 	bin_bw = sample_rate / 4096.0;
 
 
@@ -1361,171 +1362,52 @@ void Main_Widget::init(char *path)
 	connect ( Zoom_out_label, SIGNAL ( mouseRelease ( int ) ),
 	          this, SLOT ( zoomOUT ( int ) ) );
 
-	// -----------------------------------------------------------------------
-	// Arbitrary DttSP commands
-	for (int i=0; i < NUM_CMD; i++) {
-		char buffer[16];
-                c_cell[i] = new Command(ctlFrame2);
-    	c_cell[i]->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
-		c_cell[i]->setFont ( *font1 );
-		snprintf(buffer, 16, "C%d", i);
-		c_cell[i]->setText ( buffer );
-    	c_cell[i]->setPalette( QColor( 0, 0, 0 ) );
-    	c_cell[i]->setAutoFillBackground( true );
-    	p = c_cell[i]->palette();
-    	p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
-    	c_cell[i]->setPalette(p);   
-		c_cell[i]->setGeometry (
-			Zoom_label->x() + Zoom_label->width() - 1 + i * (font1Metrics->maxWidth() * 4), 
-			//Zoom_label->x() + Zoom_label->width() - 1 + i * 22, 
-			0, 
-	    	font1Metrics->maxWidth() * 4 + 1,
-			17 );
-		c_cell[i]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-		connect ( c_cell[i], SIGNAL ( mouseReleaseL ( Command * ) ), 
-			this, SLOT ( toggleCmd ( Command * ) ) );
-		connect ( c_cell[i], SIGNAL ( mouseReleaseR ( Command * ) ),
-			this, SLOT ( configCmd ( Command * ) ) );
 
-		c_cell[i]->setName(buffer);
-		c_cell[i]->setCmd((DttSPcmd*)pCmd, (DttSPcmd*)pTXCmd);
-		c_cell[i]->setID(i);
-		c_cell[i]->setCommand(QString("getTXOsc\n"), QString("getRXOsc\n"));
-                if(verbose) fprintf(stderr, "cmd widget %d\n", i);
-	}
-	loadCommandCells();
-
-	// -----------------------------------------------------------------------
-	//	DttSP Command Configuration
-
-	cmdFrame = new QFrame();
-	cmdFrame->setGeometry ( 50, 50, 200, 400 );
-	cmdFrame->setMinimumWidth ( 380 );
-	cmdFrame->setMaximumWidth ( 380 );
-	cmdFrame->setMinimumHeight ( 200 );
-	cmdFrame->setMaximumHeight ( 200 );
-    cmdFrame->setWindowTitle("SDR-Shell : Command Config ");
-
-	QTabWidget *cmdTab = new QTabWidget ( cmdFrame );
-	cmdTab->setFont ( *font1 );
-	cmdTab->setGeometry ( 2, 2,
-	                         cfgFrame->width() - 4,
-	                         cfgFrame->height() - 2 );
-
-	// >>>Figure out how to put all of this in an object
-	for (int i=0; i < NUM_CMD; i++) {
-		char buffer[8];
-
-		QFrame *cmdSubTab = new QFrame( cmdFrame );
-		snprintf(buffer, 8, "C%d", i);
-		cmdTab->addTab ( cmdSubTab, buffer );
-		// Name (3 or 4 characters)
-		// displayed in place of C#
-		QLabel *namelabel = new QLabel ( cmdSubTab );
-		namelabel->setText ( "Name: " );
-		namelabel->setGeometry ( 10, 15, 50, 20 );
-		namelabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdName[i] = new QLineEdit ( cmdSubTab );
-		cmdName[i]->setGeometry( 60, 15, 50, 20 );
-		cmdName[i]->setText ( c_cell[i]->getName() );
-    	cmdName[i]->setEnabled(true);
-
-		// set
-		QLabel *onLabel = new QLabel ( cmdSubTab );
-		onLabel->setText ( "On: " );
-		onLabel->setGeometry ( 10, 37, 50, 20 );
-		onLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdOnCommand[i] = new QLineEdit ( cmdSubTab );
-		cmdOnCommand[i]->setGeometry( 60, 37, 300, 20 );
-		cmdOnCommand[i]->setText ( c_cell[i]->getOnCommand() );
-    	cmdOnCommand[i]->setEnabled(true);
-
-		// clear
-		QLabel *offLabel = new QLabel ( cmdSubTab );
-		offLabel->setText ( "Off: " );
-		offLabel->setGeometry ( 10, 60, 50, 20 );
-		offLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
-		cmdOffCommand[i] = new QLineEdit ( cmdSubTab );
-		cmdOffCommand[i]->setGeometry( 60, 60, 300, 20 );
-		cmdOffCommand[i]->setText ( c_cell[i]->getOffCommand() );
-    	cmdOffCommand[i]->setEnabled(true);
-
-		// send to RX
-		cmdRXbutton[i] = new QRadioButton ( cmdSubTab );
-		cmdRXbutton[i]->setText ( "Send to RX DttSP" );
-		cmdRXbutton[i]->setGeometry ( 25, 90, 200, 20 );
-    	cmdRXbutton[i]->setAutoExclusive(false);
-		if (c_cell[i]->getToRX())
-			cmdRXbutton[i]->setChecked ( true );
-
-		cmdTXbutton[i] = new QRadioButton ( cmdSubTab );
-		cmdTXbutton[i]->setText ( "Send to TX DttSP" );
-		cmdTXbutton[i]->setGeometry ( 25, 110, 200, 20 );
-    	cmdTXbutton[i]->setAutoExclusive(false);
-		if (c_cell[i]->getToTX())
-			cmdTXbutton[i]->setChecked ( true );
-
-		IdPushButton *cmdAccept = new IdPushButton( cmdSubTab );
-		cmdAccept->setID(i);
-		cmdAccept->setText ( "Accept" );
-		cmdAccept->setGeometry( 10, 140, 70, 20 );
-    	cmdAccept->setEnabled(true);
-		connect ( cmdAccept, SIGNAL ( selected(int) ),
-	         	this, SLOT ( updateCmd( int ) ) );
-
-		IdPushButton *cmdReset = new IdPushButton( cmdSubTab );
-		cmdReset->setID(i);
-		cmdReset->setText ( "Reset" );
-		cmdReset->setGeometry( 250, 140, 70, 20 );
-    	cmdReset->setEnabled(true);
-		connect ( cmdReset, SIGNAL ( selected(int) ),
-	 		this, SLOT ( resetCmd( int ) ) );
-	}
 
 	// -----------------------------------------------------------------------
 	// Spacer for filling up empty space
 	Spacer_label = new QLabel ( ctlFrame2 );
 	Spacer_label->setFont ( *font1 );
 	Spacer_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
-    //Spacer_label->setPalette( QColor( 0, 0, 255 ) );    
-    Spacer_label->setPalette( QColor( 0, 0, 0 ) );    
-    Spacer_label->setAutoFillBackground( true );
+	//Spacer_label->setPalette( QColor( 0, 0, 255 ) );
+	Spacer_label->setPalette( QColor( 0, 0, 0 ) );
+	Spacer_label->setAutoFillBackground( true );
 
 	// -----------------------------------------------------------------------
 	CFG_label = new Varilabel ( ctlFrame2 );
-    CFG_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+	CFG_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	CFG_label->setFont ( *font1 );
 	CFG_label->setText ( "CFG" );
-    CFG_label->setPalette( QColor( 0, 0, 0 ) );
-    CFG_label->setAutoFillBackground( true );
-    p = CFG_label->palette();
-    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
-    CFG_label->setPalette(p);   
+	CFG_label->setPalette( QColor( 0, 0, 0 ) );
+	CFG_label->setAutoFillBackground( true );
+	p = CFG_label->palette();
+	p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+	CFG_label->setPalette(p);
 	CFG_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	connect ( CFG_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setCfg ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	HELP_label = new Varilabel ( ctlFrame2 );
-    HELP_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+	HELP_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	HELP_label->setFont ( *font1 );
 	HELP_label->setText ( "Help" );
-    HELP_label->setPalette( QColor( 0, 0, 0 ) );
-    HELP_label->setAutoFillBackground( true );
-    p = HELP_label->palette();
-    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
-    HELP_label->setPalette(p);   
+	HELP_label->setPalette( QColor( 0, 0, 0 ) );
+	HELP_label->setAutoFillBackground( true );
+	p = HELP_label->palette();
+	p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+	HELP_label->setPalette(p);
 	HELP_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 	connect ( HELP_label, SIGNAL ( mouseRelease ( int ) ), this, SLOT ( setHelp ( int ) ) );
 
 	// -----------------------------------------------------------------------
 	CPU_label = new QLabel ( ctlFrame2 );
-    CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );    
+	CPU_label->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
 	CPU_label->setFont ( *font1 );
-    CPU_label->setPalette( QColor( 0, 0, 0 ) );    
-    CPU_label->setAutoFillBackground( true );    
-    p = CPU_label->palette();
-    p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255) );
-    CPU_label->setPalette(p);
+	CPU_label->setPalette( QColor( 0, 0, 0 ) );
+	CPU_label->setAutoFillBackground( true );
+	p = CPU_label->palette();
+	p.setColor(QPalette::Active, QPalette::WindowText, QColor( 0, 180, 255) );
+	CPU_label->setPalette(p);
 	CPU_label->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
 
 	// -----------------------------------------------------------------------
@@ -1543,18 +1425,138 @@ void Main_Widget::init(char *path)
 	rit->setGeometry ( 625, 1, 130, 31 );
 
 	logoFrame = new QFrame ( ctlFrame );
-    logoFrame->setPalette( QColor( 0, 0, 0 ) );
-    logoFrame->setAutoFillBackground(true);
+	logoFrame->setPalette( QColor( 0, 0, 0 ) );
+	logoFrame->setAutoFillBackground(true);
 
 	QPixmap logo_pix ( logo_xpm );
 	logoLabel = new QLabel ( logoFrame );
 	logoLabel->setPixmap ( logo_pix );
-    logoLabel->setPalette( QColor( 0, 0, 0 ) );
-    logoLabel->setAutoFillBackground(true);
+	logoLabel->setPalette( QColor( 0, 0, 0 ) );
+	logoLabel->setAutoFillBackground(true);
 }
 
 void Main_Widget::operate() {
-        setupSDR();
+	setupSDR();
+	// -----------------------------------------------------------------------
+	// Arbitrary SSP commands
+	for (int i=0; i < NUM_CMD; i++) {
+		char buffer[16];
+		c_cell[i] = new Command(ctlFrame2);
+		c_cell[i]->setFrameStyle( QFrame::StyledPanel | QFrame::Plain );
+		c_cell[i]->setFont ( *font1 );
+		snprintf(buffer, 16, "C%d", i);
+		c_cell[i]->setText ( buffer );
+		c_cell[i]->setPalette( QColor( 0, 0, 0 ) );
+		c_cell[i]->setAutoFillBackground( true );
+		p = c_cell[i]->palette();
+		p.setColor(QPalette::Active, QPalette::WindowText, QColor( 255, 255, 255) );
+		c_cell[i]->setPalette(p);
+		c_cell[i]->setGeometry (
+			Zoom_label->x() + Zoom_label->width() - 1 + i * (font1Metrics->maxWidth() * 4),
+			//Zoom_label->x() + Zoom_label->width() - 1 + i * 22,
+			0,
+			font1Metrics->maxWidth() * 4 + 1,
+			17 );
+		c_cell[i]->setAlignment ( Qt::AlignHCenter | Qt::AlignVCenter );
+		connect ( c_cell[i], SIGNAL ( mouseReleaseL ( Command * ) ),
+			this, SLOT ( toggleCmd ( Command * ) ) );
+		connect ( c_cell[i], SIGNAL ( mouseReleaseR ( Command * ) ),
+			this, SLOT ( configCmd ( Command * ) ) );
+
+		c_cell[i]->setName(buffer);
+		c_cell[i]->setCmd((DttSPcmd*)pCmd, (DttSPcmd*)pTXCmd);
+		c_cell[i]->setID(i);
+		c_cell[i]->setCommand(QString("getTXOsc\n"), QString("getRXOsc\n"));
+				if(verbose) fprintf(stderr, "cmd widget %d\n", i);
+	}
+	loadCommandCells();
+
+	// -----------------------------------------------------------------------
+	//	DttSP Command Configuration
+
+	cmdFrame = new QFrame();
+	cmdFrame->setGeometry ( 50, 50, 200, 400 );
+	cmdFrame->setMinimumWidth ( 380 );
+	cmdFrame->setMaximumWidth ( 380 );
+	cmdFrame->setMinimumHeight ( 200 );
+	cmdFrame->setMaximumHeight ( 200 );
+	cmdFrame->setWindowTitle("SDR-Shell : Command Config ");
+
+	QTabWidget *cmdTab = new QTabWidget ( cmdFrame );
+	cmdTab->setFont ( *font1 );
+	cmdTab->setGeometry ( 2, 2,
+							 cfgFrame->width() - 4,
+							 cfgFrame->height() - 2 );
+
+	// >>>Figure out how to put all of this in an object
+	for (int i=0; i < NUM_CMD; i++) {
+		char buffer[8];
+
+		QFrame *cmdSubTab = new QFrame( cmdFrame );
+		snprintf(buffer, 8, "C%d", i);
+		cmdTab->addTab ( cmdSubTab, buffer );
+		// Name (3 or 4 characters)
+		// displayed in place of C#
+		QLabel *namelabel = new QLabel ( cmdSubTab );
+		namelabel->setText ( "Name: " );
+		namelabel->setGeometry ( 10, 15, 50, 20 );
+		namelabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdName[i] = new QLineEdit ( cmdSubTab );
+		cmdName[i]->setGeometry( 60, 15, 50, 20 );
+		cmdName[i]->setText ( c_cell[i]->getName() );
+		cmdName[i]->setEnabled(true);
+
+		// set
+		QLabel *onLabel = new QLabel ( cmdSubTab );
+		onLabel->setText ( "On: " );
+		onLabel->setGeometry ( 10, 37, 50, 20 );
+		onLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdOnCommand[i] = new QLineEdit ( cmdSubTab );
+		cmdOnCommand[i]->setGeometry( 60, 37, 300, 20 );
+		cmdOnCommand[i]->setText ( c_cell[i]->getOnCommand() );
+		cmdOnCommand[i]->setEnabled(true);
+
+		// clear
+		QLabel *offLabel = new QLabel ( cmdSubTab );
+		offLabel->setText ( "Off: " );
+		offLabel->setGeometry ( 10, 60, 50, 20 );
+		offLabel->setAlignment ( Qt::AlignRight | Qt::AlignVCenter );
+		cmdOffCommand[i] = new QLineEdit ( cmdSubTab );
+		cmdOffCommand[i]->setGeometry( 60, 60, 300, 20 );
+		cmdOffCommand[i]->setText ( c_cell[i]->getOffCommand() );
+		cmdOffCommand[i]->setEnabled(true);
+
+		// send to RX
+		cmdRXbutton[i] = new QRadioButton ( cmdSubTab );
+		cmdRXbutton[i]->setText ( "Send to RX DttSP" );
+		cmdRXbutton[i]->setGeometry ( 25, 90, 200, 20 );
+		cmdRXbutton[i]->setAutoExclusive(false);
+		if (c_cell[i]->getToRX())
+			cmdRXbutton[i]->setChecked ( true );
+
+		cmdTXbutton[i] = new QRadioButton ( cmdSubTab );
+		cmdTXbutton[i]->setText ( "Send to TX DttSP" );
+		cmdTXbutton[i]->setGeometry ( 25, 110, 200, 20 );
+		cmdTXbutton[i]->setAutoExclusive(false);
+		if (c_cell[i]->getToTX())
+			cmdTXbutton[i]->setChecked ( true );
+
+		IdPushButton *cmdAccept = new IdPushButton( cmdSubTab );
+		cmdAccept->setID(i);
+		cmdAccept->setText ( "Accept" );
+		cmdAccept->setGeometry( 10, 140, 70, 20 );
+		cmdAccept->setEnabled(true);
+		connect ( cmdAccept, SIGNAL ( selected(int) ),
+				this, SLOT ( updateCmd( int ) ) );
+
+		IdPushButton *cmdReset = new IdPushButton( cmdSubTab );
+		cmdReset->setID(i);
+		cmdReset->setText ( "Reset" );
+		cmdReset->setGeometry( 250, 140, 70, 20 );
+		cmdReset->setEnabled(true);
+		connect ( cmdReset, SIGNAL ( selected(int) ),
+			this, SLOT ( resetCmd( int ) ) );
+	}
 	setRxFrequency( 1 );
 	if (useIF)
 	{
@@ -3879,11 +3881,11 @@ void Main_Widget::TXoff ()
 {
 	transmit = 0;
 	if (enableTransmit){
-	pTXCmd->sendCommand ("setTRX 0\n");
-	pTXCmd->sendCommand ("setRunState 0\n");
+		pTXCmd->sendCommand ("setTRX 0\n");
+		pTXCmd->sendCommand ("setRunState 0\n");
 	}
-	pUSBCmd->sendCommand("set ptt off\n" );
-        if(verbose) fprintf (stderr, "set ptt off\n");
+	if(!rock_bound) pUSBCmd->sendCommand("set ptt off\n" );
+	if(verbose) fprintf (stderr, "set ptt off\n");
 	TRX_label->setPixmap( QPixmap( rx_xpm ) );
 	TRX_label->setLabel( RX );
 	set_MUTE ( 0 );
@@ -3891,24 +3893,27 @@ void Main_Widget::TXoff ()
 
 void Main_Widget::TXon ()
 {
-	// if enableSPLIT   set USBSoftrock frequency
-	transmit = 1;
-	pUSBCmd->sendCommand ("set ptt on\n" );
-	if (enableTransmit){
-	pTXCmd->sendCommand ("setRunState 2\n");
-	pTXCmd->sendCommand ("setTRX 1\n");
+	if (enableTransmit)
+	{
+		// if enableSPLIT   set USBSoftrock frequency
+		transmit = 1;
+		pUSBCmd->sendCommand ("set ptt on\n" );
+
+		pTXCmd->sendCommand ("setRunState 2\n");
+		pTXCmd->sendCommand ("setTRX 1\n");
+
+		set_MUTE ( 1 );
+		if(verbose) fprintf (stderr, "set ptt on\n");
+		TRX_label->setPixmap( QPixmap( tx_xpm ) );
+		TRX_label->setLabel( TX );
 	}
-	set_MUTE ( 1 );
-        if(verbose) fprintf (stderr, "set ptt on\n");
-	TRX_label->setPixmap( QPixmap( tx_xpm ) );
-	TRX_label->setLabel( TX );
 }
 
 void Main_Widget::toggle_TX ( int )
-{
-        if(verbose) fprintf( stderr, "Toggle TX\n");
+{     
 	if (enableTransmit)
 	{
+		if(verbose) fprintf( stderr, "Toggle TX\n");
 		if (transmit) {
 			transmit = 0;
 			pTXCmd->sendCommand ("setTRX 0\n");
@@ -3932,7 +3937,7 @@ void Main_Widget::toggle_TX ( int )
 			TXon();
 		}
 	} else {
-                if(verbose) fprintf( stderr, "Transmit is not enabled\n");
+		if(verbose) fprintf( stderr, "Transmit is not enabled\n");
 	}
 }
 
@@ -4447,15 +4452,15 @@ void Main_Widget::updateTransmit ( bool value )
 {
 	enableTransmit = value;
 	if ( enableTransmit ) {
-//		pTXCmd->on();
+		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
 		setTxGain( 0 );
 		setTxGain( 1 );
 		setTxFrequency();
-        } /*else {
+		} else {
                 pTXCmd->off();
-        }*/
+		}
         if(verbose) fprintf ( stderr, "Transmit: %s\n",
 		enableTransmit ? "enabled" : "disabled");
 }
@@ -4534,7 +4539,8 @@ void Main_Widget::updatePTT(void)
 {
 	int PTT;
 
-	if (!rock_bound && enableTransmit) {
+	if (!rock_bound && enableTransmit)
+	{
 		if (pUSBCmd->sendCommand("get ptt\n") != 0) {
 			//pttTimer->stop();
 			return;
@@ -4545,7 +4551,7 @@ void Main_Widget::updatePTT(void)
 		if (old_PTT == PTT) return;
 		if (PTT && transmit) return;
 
-                if(verbose) fprintf(stderr, "PTT changed to state (%d) \n", PTT);
+		if(verbose) fprintf(stderr, "PTT changed to state (%d) \n", PTT);
 		if (PTT) {
 			if (pUSBCmd->sendCommand("get tone\n") == 0) CW_tone = pUSBCmd->getParam();
 			
@@ -4553,27 +4559,27 @@ void Main_Widget::updatePTT(void)
 
 			// TODO: if enableSPLIT   set USBSoftrock frequency accordingly
 			if (mode == RIG_MODE_USB)
-			pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
+				pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
 			// shift the Tx freq for fldigi Tx
 
 			else if (mode == RIG_MODE_CW){
-//				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
+				//				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", USB );
 				pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
-                                if(verbose) fprintf ( stderr, "setMode %d\n", USB );
+				if(verbose) fprintf ( stderr, "setMode %d\n", USB );
 				filter_l = &USB_filter_l; //20;
 				filter_h = &USB_filter_h; //2400;
 				setFilter();
-				}
+			}
 			else if (mode == RIG_MODE_CWR){
-//				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
+				//				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", LSB );
 				pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
-                                if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
+				if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
 				filter_l = &LSB_filter_l; //-2400;
 				filter_h = &LSB_filter_h; //-20;
 				setFilter();
-				};
+			};
 
 			pTXCmd->sendCommand ("setRunState 2\n");
 			pTXCmd->sendCommand ("setTRX 1\n");
@@ -4584,26 +4590,26 @@ void Main_Widget::updatePTT(void)
 			if (mode == RIG_MODE_CW){
 				pCmd->sendCommand ("setMode %d %d\n", CWU );
 				pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
-                                if(verbose) fprintf ( stderr, "setMode %d\n", CWU );
+				if(verbose) fprintf ( stderr, "setMode %d\n", CWU );
 				filter_l = &CWU_filter_l; //200;
 				filter_h = &CWU_filter_h; //500;
 				setFilter();
-				}
+			}
 			else if (mode == RIG_MODE_CWR){
 				pCmd->sendCommand ("setMode %d %d\n", CWL );
 				pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
-                                if(verbose) fprintf ( stderr, "setMode %d\n", CWL );
+				if(verbose) fprintf ( stderr, "setMode %d\n", CWL );
 				filter_l = &CWL_filter_l; //-500;
 				filter_h = &CWL_filter_h; //-200;
 				setFilter();
-				};
+			};
 
-                        pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
-                        update_freqMutex.unlock();
+			pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+			update_freqMutex.unlock();
 
 			pTXCmd->sendCommand ("setTRX 0\n");
 			pTXCmd->sendCommand ("setRunState 0\n");
-                        if(verbose) fprintf (stderr, "set ptt off\n");
+			if(verbose) fprintf (stderr, "set ptt off\n");
 			TRX_label->setPixmap( QPixmap( rx_xpm ) );
 			TRX_label->setLabel( RX );
 			set_MUTE ( 0 );

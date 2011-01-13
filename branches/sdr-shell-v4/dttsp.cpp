@@ -355,7 +355,7 @@ void DttSPTXcmd :: on ( )
     if (pSa) {
         // create socket 
         if ((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-          perror("Couldn't create dttsp_port_client socket");
+		  perror("Couldn't create dttsp_port_client socket for DttSPTXcmd");
           exit(1);
         }
 
