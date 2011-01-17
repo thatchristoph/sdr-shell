@@ -25,6 +25,7 @@ Main_Widget::Main_Widget()
 }
 void Main_Widget::init(char *path)
 {
+    char *ep;
 	sample_rate = 0; //Set Default Values//
 	rxCMDPort=19001;
 	txCMDPort=19005;
@@ -56,9 +57,6 @@ void Main_Widget::init(char *path)
 		//settings->setPath(QSettings::IniFormat,QSettings::UserScope, QString( path ));
 	}
 	loadSettings();
-
-	bin_bw = sample_rate / 4096.0;
-
 
 	version.sprintf("%5.2f", VERSION);
 	setWindowTitle("SDR-Shell " + version + " @ " + stationCallsign );
@@ -1433,9 +1431,26 @@ void Main_Widget::init(char *path)
 	logoLabel->setPixmap ( logo_pix );
 	logoLabel->setPalette( QColor( 0, 0, 0 ) );
 	logoLabel->setAutoFillBackground(true);
+
+    if ( ( ep = getenv ( "SDR_DEFRATE" ) ) )
+    {
+        sample_rate = atoi ( ep );
+        if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
+        tuneCenter = -sample_rate / 4;
+    }
+
 }
 
 void Main_Widget::operate() {
+    if (sample_rate == 0)
+    {
+        fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
+                 "Use the -f or --sample-rate option or\n"
+                 "you can set SDR_DEFRATE as follows:\n"
+                 "bash$ export SDR_DEFRATE=48000\n" );
+        exit ( 1 );
+    }
+    bin_bw = sample_rate / 4096.0;
 	setupSDR();
 	// -----------------------------------------------------------------------
 	// Arbitrary SSP commands
@@ -1467,7 +1482,7 @@ void Main_Widget::operate() {
 		c_cell[i]->setCmd((DttSPcmd*)pCmd, (DttSPcmd*)pTXCmd);
 		c_cell[i]->setID(i);
 		c_cell[i]->setCommand(QString("getTXOsc\n"), QString("getRXOsc\n"));
-				if(verbose) fprintf(stderr, "cmd widget %d\n", i);
+        if(verbose) fprintf(stderr, "cmd widget %d\n", i);
 	}
 	loadCommandCells();
 
@@ -1577,7 +1592,7 @@ void Main_Widget::operate() {
 	setCA_label();
 	setTuneStep ( 0 );
 	setTheme ( 2 );
-        setPolyFFT ( );
+    setPolyFFT ( );
 	setSpectrumDefaults();
 	setAGC ( agcType );
 	setTxIQGain();
@@ -1945,43 +1960,12 @@ void Main_Widget::updateLayout()
 	spectrum_width = int(spectrumFrame->width() * hScale);
 }
 
+
 void Main_Widget::setupSDR()
 {
-    // SDR-Core Environment
+    // SDR-Core Environment and Classes
+
     char *ep;
-    if( sample_rate == 0 )
-    {
-        if ( ( ep = getenv ( "SDR_DEFRATE" ) ) )
-        {
-            sample_rate = atoi ( ep );
-            if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
-            tuneCenter = -sample_rate / 4;
-        }
-        else
-        {
-            fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
-                     "Use the -f or --sample-rate option or\n"
-                     "you can set SDR_DEFRATE as follows:\n"
-                     "bash$ export SDR_DEFRATE=48000\n" );
-            exit ( 1 );
-        }
-    }
-
-    // create the command, spectrum, and meter ports
-
-    // this does a blind send to a port that's already bound,
-    // so it's outbound == !inbound -> inbound = 0
-    //cp = new_dttsp_port_client(DTTSP_PORT_CLIENT_COMMAND, 0);
-
-    // these need to suck up blind sends from elsewhere,
-    // so they need to be bound, hence inbound = 1
-    //sp = new_dttsp_port_client(DTTSP_PORT_CLIENT_SPECTRUM, 1);
-    //mp = new_dttsp_port_client(DTTSP_PORT_CLIENT_METER, 1);
-
-
-	//pUSBCmd = NULL;
-	//pTXCmd = NULL;
-
     if ( ( ep = getenv ( "SDR_HOST" ) )||(host != NULL) ) {
         if (host != NULL) ep=host;
 		if (pCmd == NULL) pCmd = new DttSPcmd (verbose, rxCMDPort, ep );
@@ -2010,16 +1994,6 @@ void Main_Widget::setupSDR()
 			if (verbose) fprintf(stderr, "pTXCmd created.  Port = %d", txCMDPort);
 		}
     }
- /*   if(txCMDPort != 19005)
-    {
-        // The value is the transmit port's CMD
-        if ( ( ep = getenv ( "SDR_TRANSMIT" ) ) )
-        {
-            int port = atoi(ep);
-            if (port)
-                pTXCmd->setPort(port);
-        }
-    }  This section commented out because there is a Settings Value for this on the advice of Glen.*/
 
     sdr_mode = NULL;
     if ( ( ep = getenv ( "SDR_MODE" ) ) )
@@ -2126,9 +2100,9 @@ void Main_Widget::loadSettings()
 		"/sdr-shell/SPEC_state", 1 ).toInt();
     filterLine = settings->value(
 		"/sdr-shell/filterLine", 0 ).toInt();
-        my_lat = settings->value (
+    my_lat = settings->value (
 	    "/sdr-shell/my_lat", "0" ).toDouble();
-        my_lon = settings->value (
+    my_lon = settings->value (
 	    "/sdr-shell/my_lon", "0" ).toDouble();
     font1PointSize = settings->value(
 		"/sdr-shell/font1PointSize", 8 ).toInt();		
@@ -2189,9 +2163,9 @@ void Main_Widget::loadSettings()
 		"/sdr-shell/AM_filter_l", -2400 ).toInt();
     AM_filter_h = settings->value(
 		"/sdr-shell/AM_filter_h", 2400 ).toInt();
-        useHamlib = settings->value (
+    useHamlib = settings->value (
 	    "/sdr-shell/useHamlib", "0" ).toInt();
-        rigString = settings->value (
+    rigString = settings->value (
 	    "/sdr-shell/hamlib_rig", "1901" ).toString();
 	rig = rigString.toInt();
         portString =  settings->value (
@@ -2201,12 +2175,12 @@ void Main_Widget::loadSettings()
         speedString = settings->value (
 	    "/sdr-shell/hamlib_speed", "4800" ).toString();
 	speed = speedString.toInt();
-        rock_bound = ( bool ) settings->value (
+    rock_bound = ( bool ) settings->value (
 			  "/sdr-shell/rock_bound", "false" ).toInt();
 
 	map_flag = 1;
 
-        if(verbose) fprintf (stderr, "::: Configuration loading completed\n" );
+    if(verbose) fprintf (stderr, "::: Configuration loading completed\n" );
 }
 
 void Main_Widget::loadMemoryCells()
@@ -3089,7 +3063,7 @@ void Main_Widget::setIQGain()
 void Main_Widget::setIQPhase()
 {
 	pCmd->sendCommand ("setcorrectIQphase %d\n", iqPhase );
-	if ( verbose) fprintf ( stderr, "(TX)setcorrectIQphase %d\n", iqPhase );
+    if ( verbose) fprintf ( stderr, "(RX)setcorrectIQphase %d\n", iqPhase );
 }
 
 void Main_Widget::setTxIQGain()
@@ -3338,8 +3312,8 @@ void Main_Widget::drawPassBandScale()
 		// x2 is the upper-BP filter location  
   x1 = spectrogram->width() / 2 + ((int)((*filter_l / bin_bw)+2) / hScale);
   x2 = spectrogram->width() / 2 + ((int)((*filter_h / bin_bw)+2) / hScale);
-
-//printf("dPBS x1 = %d, x2 = %d\n", x1, x2);
+  //printf("dPBS filter_l=%d, filter_h=%d, bin_bw=%f, hScale=%f \n",*filter_l, *filter_h, bin_bw,hScale);
+  //printf("dPBS x1 = %d, x2 = %d\n", x1, x2);
   QPainter p;
   p.begin( this );
 
@@ -4440,18 +4414,19 @@ if(verbose) fprintf(stderr, "setIF: %d\n", value);
 
 void Main_Widget::updateUseUSBsoftrock ( bool value )
 {
-	static bool first_Time = true;
+    //static bool first_Time = true;
 	rock_bound = !value;
 	if (value) {
 		rx_f -= rx_delta_f;
 		rx_delta_f = tuneCenter;
 		rx_f += rx_delta_f;
 
-		if((pUSBCmd == NULL)&&(!first_Time)) setupSDR();
+        //if((pUSBCmd == NULL)&&(!first_Time)) setupSDR();
+        if(pUSBCmd == NULL) setupSDR();
         if(verbose) fprintf ( stderr, "useUSBsoftrock: %s\n",
 		value ? "enabled" : "disabled");
 	}
-	first_Time = false;
+    //first_Time = false;
 }
 
 void Main_Widget::updateDualConversion ( bool value )
@@ -4463,11 +4438,12 @@ void Main_Widget::updateDualConversion ( bool value )
 
 void Main_Widget::updateTransmit ( bool value )
 {
-	static bool first_Time = true;
+    //static bool first_Time = true;
 	enableTransmit = value;
 	if ( enableTransmit ) {
 		//This keeps it from setting up before sample_rate is had.
-		if((pTXCmd == NULL)&&(!first_Time)) setupSDR();
+        //if((pTXCmd == NULL)&&(!first_Time)) setupSDR();
+        if(pTXCmd == NULL) setupSDR();
 		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();
@@ -4479,6 +4455,7 @@ void Main_Widget::updateTransmit ( bool value )
 		}
         if(verbose) fprintf ( stderr, "Transmit: %s\n",
 		enableTransmit ? "enabled" : "disabled");
+        //first_time=false;
 }
 
 void Main_Widget::setHamlib ( bool value )
