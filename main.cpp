@@ -27,12 +27,12 @@ int main (int argc, char **argv)
         {0, 0, 0, 0}
     };
 
-    int i;
-    bool found_init_file = false;
+    //int i;
+    //bool found_init_file = false;
 
     QApplication app(argc, argv);
     Main_Widget* w = new Main_Widget;
-
+/*
     for ( i = 1; i < argc; i++ )  // Look for the configuration file first.
     {
         if((strcmp(argv[i],"-l")==0))
@@ -52,7 +52,7 @@ int main (int argc, char **argv)
     {
         w->init( (char *) 0 );
     }
-
+*/
     // Iterate over options and handle each one as appropriate
     char c;
     // The function getopt_long stores the option index here.
@@ -78,6 +78,7 @@ int main (int argc, char **argv)
             w->set_MeterPort(atoi(optarg));
             break;
         case 'l':
+            w->set_InitFile(optarg);
             break;
         case 'r':
             w->set_rxCMDPort(atoi(optarg));
@@ -123,9 +124,8 @@ int main (int argc, char **argv)
         exit ( 0 );
     }
     }
+    w->init();
     app.setWindowIcon( QIcon(app_xpm) );
     w->show();
-    w->operate();
-
     return app.exec();
 }

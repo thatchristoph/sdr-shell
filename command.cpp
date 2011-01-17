@@ -5,6 +5,8 @@
 Command::Command(QWidget *parent) : QLabel(parent)
 {
         state = FALSE;
+        rxCmd = txCmd = NULL;
+
 }
 
 void Command::setCmd(DttSPcmd *rx, DttSPcmd *tx)
@@ -21,7 +23,7 @@ void Command::setID(int v)
 
 void Command::setName(QString n)
 {
-        // fprintf(stderr, "setName '%s'\n", qPrintable(n));
+    // fprintf(stderr, "setName '%s'\n", qPrintable(n));
 	name = n;
 }
 void Command::setTargets(bool r, bool t)

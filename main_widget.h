@@ -410,8 +410,7 @@ class Main_Widget : public QWidget
 
 	public:
                 Main_Widget();
-               // Main_Widget ( QWidget*, char*);
-                void init( char * );
+                void init();
                 void set_rxCMDPort( int );
                 void set_txCMDPort( int );
                 void set_USBPort( int );
@@ -420,7 +419,7 @@ class Main_Widget : public QWidget
                 void set_SampleRate( int );
                 void set_Host( char * );
                 void set_Verbose( bool );
-                void operate();
+                void set_InitFile(char *);
 
 	public slots:
 		void finish();
