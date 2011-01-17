@@ -11,7 +11,7 @@ void Command::setCmd(DttSPcmd *rx, DttSPcmd *tx)
 {
 	rxCmd = rx;
 	if(txCmd != NULL) txCmd = tx;
-	else fprintf(stderr, "TX not enabled.");
+    else fprintf(stderr, "TX not enabled.\n");
 }
 
 void Command::setID(int v)
