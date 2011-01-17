@@ -102,6 +102,9 @@ bool Command::sendCmd(DttSPcmd *p, QString *str)
 	char *s;
 	bool error = FALSE;
 
+    if (p == NULL)
+        return 1;
+
 	//printf("Send: '%s'\n", qPrintable(*str));
 	list = str->split(tr(";"), QString::KeepEmptyParts);
 	//printf("list is %d items\n", list.size());
