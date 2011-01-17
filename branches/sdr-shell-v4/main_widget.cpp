@@ -22,19 +22,21 @@ int CW_tone = 700;		// default CW tone 700 Hz
 Main_Widget::Main_Widget()
         : QWidget()
 {
+    sample_rate = 0; //Set Default Values//
+    rxCMDPort=19001;
+    txCMDPort=19005;
+    meterPort=19003;
+    spectrumPort=19002;
+    host = NULL;
+    usbPort =19004;
+    verbose = false;
+    settings = new QSettings("freesoftware", "sdr-shell");
+
 }
-void Main_Widget::init(char *path)
+void Main_Widget::init()
 {
     char *ep;
-	sample_rate = 0; //Set Default Values//
-	rxCMDPort=19001;
-	txCMDPort=19005;
-	meterPort=19003;
-	spectrumPort=19002;
-	host = NULL;
-	usbPort =19004;
-	verbose = false;
-	QString version;
+    QString version;
 	setFocusPolicy ( Qt::TabFocus );
 	setMinimumWidth ( 650 );
 	setMinimumHeight ( 300 );
@@ -47,15 +49,7 @@ void Main_Widget::init(char *path)
     setMinimumHeight( 300 );
 	initConstants();
 	slopeTuneOffset = 0;
-	if(path == NULL)
-	{
-		settings = new QSettings("freesoftware", "sdr-shell");
-	}
-	else
-	{
-		settings = new QSettings("freesoftware", QString(path));
-		//settings->setPath(QSettings::IniFormat,QSettings::UserScope, QString( path ));
-	}
+
 	loadSettings();
 
 	version.sprintf("%5.2f", VERSION);
@@ -1439,9 +1433,9 @@ void Main_Widget::init(char *path)
         tuneCenter = -sample_rate / 4;
     }
 
-}
 
-void Main_Widget::operate() {
+
+
     if (sample_rate == 0)
     {
         fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
@@ -1641,6 +1635,11 @@ void Main_Widget::operate() {
 #endif
 }
 
+void Main_Widget::set_InitFile(char *path)
+{
+
+    settings = new QSettings("freesoftware", QString(path));
+}
 
 void Main_Widget::set_rxCMDPort(int port){
     rxCMDPort = port;
@@ -1879,7 +1878,7 @@ void Main_Widget::setTheme ( int t )
 void Main_Widget::paintEvent ( QPaintEvent * )
 {
 	if (updated) {
-                //if(verbose) fprintf( stderr, "+");
+        //if(verbose) fprintf( stderr, "+");
 		updateLayout();
 		if ( SPEC_state ) {
 			drawSpectrogram();			// update the spectrogram (middle) display
@@ -1887,7 +1886,7 @@ void Main_Widget::paintEvent ( QPaintEvent * )
 		}
 		drawPassBandScale();
 	} else {
-                //if(verbose) fprintf( stderr, "-");
+        //if(verbose) fprintf( stderr, "-");
 	}
 	updated = 0;
 }
@@ -2394,8 +2393,8 @@ void Main_Widget::finish()
     delete pSpectrum;
     delete pMeter;
     delete pCmd;
-    delete pUSBCmd;
-	delete pTXCmd;
+    if(pUSBCmd != NULL) delete pUSBCmd;
+    if(pTXCmd != NULL) delete pTXCmd;
     if(verbose) fprintf (stderr, "sdr-shell exiting.\n");
 	exit ( 0 );
 }
@@ -2450,7 +2449,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
         case Qt::Key_Left: // Left arrow
 		case 74: // j
-                        if(verbose) fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
+            if(verbose) fprintf ( stderr, "Left arrow rx_delta_f is: %d.\n",rx_delta_f);
 			if ( rock_bound )
 			{
 				if ( rx_delta_f < sample_rate / 2 - 2000 )  //rx_delta_f > 0 when you tune down!
@@ -2480,7 +2479,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			break;
         case Qt::Key_Right: // Right arrow
 		case 75:  // k
-                        if(verbose) fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
+            if(verbose) fprintf ( stderr, "Right arrow rx_delta_f is: %d.\n",rx_delta_f);
 			if ( rock_bound )
 			{
 				if ( rx_delta_f > -( sample_rate / 2 - 2000 ) )  //rx_delta_f < 0 when you tune up!
@@ -2509,7 +2508,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 		case 4119:	// Page Down
 			// ^B = 4129 (ctl) 66
 			// spectrogram->width()
-                        if(verbose) fprintf(stderr, "width = %d\n", width());
+            if(verbose) fprintf(stderr, "width = %d\n", width());
 			break;
 		case 71: //g
 			if (useIF)
@@ -2627,7 +2626,7 @@ void Main_Widget::process_key ( int key )
 			{
 				toggle_TX(0);
 			} else {
-                                if(verbose) fprintf( stderr, "Transmit is not enabled\n");
+                if(verbose) fprintf( stderr, "Transmit is not enabled\n");
 			}
 			break;
 		case 32: // space turn transmit off
@@ -2704,10 +2703,10 @@ void Main_Widget::setRxFrequency( int synth )
 		if (enableRIT) {
 			tx_f_string.sprintf ("%11.0lf", ( double ) ( tx_delta_f - rx_delta_f ) );
 			rit->setText( tx_f_string );
-                        if(verbose) fprintf ( stderr, "RIT %s\n", qPrintable(tx_f_string));
+            if(verbose) fprintf ( stderr, "RIT %s\n", qPrintable(tx_f_string));
 		}
 	}
-        if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
+    if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
 	pCmd->sendCommand ("setOsc %d %d\n", rx_delta_f, 0 );
 
         if (!rock_bound && !enableRIT && !enableSPLIT) {
@@ -2722,7 +2721,7 @@ void Main_Widget::setRxFrequency( int synth )
 				if (!rock_bound) pUSBCmd->sendCommand("set freq %f\n",
 					((rx_f)*1e-6)/1.25/4);
 			} else {
-                                if(verbose) fprintf (stderr, "USBsoftrock: set freq %f\n", (rx_f)*1e-6);
+                if(verbose) fprintf (stderr, "USBsoftrock: set freq %f\n", (rx_f)*1e-6);
 				if (!rock_bound) pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
 			}
 		}
@@ -2731,8 +2730,8 @@ void Main_Widget::setRxFrequency( int synth )
 
 void Main_Widget::setTxFrequency()
 {
-        if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
-        if (enableTransmit) pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
+    if(verbose) fprintf ( stderr, "setOsc %d\n", rx_delta_f );
+    if (enableTransmit) pTXCmd->sendCommand ("setOsc %d %d\n", -rx_delta_f, 1 );
 }
 
 void Main_Widget::setFilter_l ( int n )
@@ -2768,8 +2767,8 @@ void Main_Widget::setFilter_h ( int n )
 void Main_Widget::setFilter()
 {
 	pCmd->sendCommand ("setFilter %d %d\n", *filter_l, *filter_h );
-        if(enableTransmit) pTXCmd->sendCommand ("setFilter %d %d 1\n", *filter_l, *filter_h );
-        if(verbose) fprintf ( stderr, "setFilter %d %d\n", *filter_l, *filter_h );
+    if(enableTransmit) pTXCmd->sendCommand ("setFilter %d %d 1\n", *filter_l, *filter_h );
+    if(verbose) fprintf ( stderr, "setFilter %d %d\n", *filter_l, *filter_h );
 }
 
 void Main_Widget::setLowerFilterScale ( int x )
@@ -2902,7 +2901,7 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 	QString	modeStr;
 
 	if (mode == m && ! force) {
-                if(verbose) fprintf(stderr, "set mode: no mode change\n");
+        if(verbose) fprintf(stderr, "set mode: no mode change\n");
 		return;
 	}
 	
@@ -2933,21 +2932,21 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_USB:
 			modeStr = "USB";
 			pCmd->sendCommand ("setMode %d %d\n", USB, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", USB );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", USB );
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
 			USB_label->setPalette( c_on );
 			USB_label->setAutoFillBackground(true);
 			if ( !displayOnly && useHamlib )
-                                //if(verbose) fprintf ( stderr, "emitted changeRigMode at USB. \n" );
+            //if(verbose) fprintf ( stderr, "emitted changeRigMode at USB. \n" );
 				emit changeRigMode ( RIG_MODE_USB, 2700 );
 			break;
 		case RIG_MODE_LSB:
 			modeStr = "LSB";
 			pCmd->sendCommand ("setMode %d %d\n", LSB, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
 			filter_l = &LSB_filter_l; //-2400;
 			filter_h = &LSB_filter_h; //-20;
             LSB_label->setPalette( c_on );
@@ -2958,8 +2957,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_DSB:
 			modeStr = "DSB";
 			pCmd->sendCommand ("setMode %d %d\n", DSB, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", DSB );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", DSB, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", DSB );
 			filter_l = &DSB_filter_l; //-2400;
 			filter_h = &DSB_filter_h; //2400;
             DSB_label->setPalette( c_on );
@@ -2970,8 +2969,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_AM:
 			modeStr = "AM";
 			pCmd->sendCommand ("setMode %d %d\n", AM, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", AM );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", AM, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", AM );
 			filter_l = &AM_filter_l; //-2400;
 			filter_h = &AM_filter_h; //2400;
             AM_label->setPalette( c_on );
@@ -2982,8 +2981,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_CWR:
 			modeStr = "CWR";
 			pCmd->sendCommand ("setMode %d %d\n", CWL, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", CWL );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", CWL, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", CWL );
 			filter_l = &CWL_filter_l; //-500;
 			filter_h = &CWL_filter_h; //-200;
             CWL_label->setPalette( c_on );
@@ -2994,8 +2993,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_CW:
 			modeStr = "CW";
 			pCmd->sendCommand ("setMode %d %d\n", CWU, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", CWU );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", CWU, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", CWU );
 			filter_l = &CWU_filter_l; //200;
 			filter_h = &CWU_filter_h; //500;
             CWU_label->setPalette( c_on );
@@ -3006,8 +3005,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_SAM:
 			modeStr = "SAM";
 			pCmd->sendCommand ("setMode %d %d\n", SAM, 0 );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", SAM );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", SAM, 1 );
+            if(verbose) fprintf ( stderr, "setMode %d\n", SAM );
 			filter_l = &SAM_filter_l; //-2400;
 			filter_h = &SAM_filter_h; //2400;
             SAM_label->setPalette( c_on );
@@ -3018,8 +3017,8 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 		case RIG_MODE_FM:
 			modeStr = "FM";
 			pCmd->sendCommand ("setMode %d %d\n", FMN );
-                        if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", FMN );
-                        if(verbose) fprintf ( stderr, "setMode %d\n", FMN );
+            if(enableTransmit) pTXCmd->sendCommand ("setMode %d %d\n", FMN );
+            if(verbose) fprintf ( stderr, "setMode %d\n", FMN );
 			filter_l = &FMN_filter_l; //-4000;
 			filter_h = &FMN_filter_h; //4000;
             FMN_label->setPalette( c_on );
@@ -3032,14 +3031,14 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 			filter_l = &USB_filter_l; //20;
 			filter_h = &USB_filter_h; //2400;
 	}
-        if(verbose) fprintf( stderr, "Set mode: %s\n", qPrintable(modeStr));
+    if(verbose) fprintf( stderr, "Set mode: %s\n", qPrintable(modeStr));
 
 	// call external mode setting hook.
 	if (sdr_mode != NULL) {
 		QString cmd = sdr_mode;
 		cmd += " ";
 		cmd += modeStr;
-                if(verbose) fprintf( stderr, "Set mode: %s\n", qPrintable(cmd));
+        if(verbose) fprintf( stderr, "Set mode: %s\n", qPrintable(cmd));
 		system(qPrintable(cmd));
 	}
 	setFilter();
@@ -3051,13 +3050,13 @@ void Main_Widget::setMode ( rmode_t m, bool displayOnly, bool force )
 void Main_Widget::setIQGain()
 {
 	pCmd->sendCommand ("setcorrectIQgain %d\n", iqGain );
-        if ( verbose) fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
+    if ( verbose) fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
 	// The following sets the output gain.
 	pCmd->sendCommand ("setGain %d %d\n", 0,1,0 );
 	//pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
-        if(verbose) fprintf ( stderr, "setGain %d %d %d\n",0,1,0 );
+    if(verbose) fprintf ( stderr, "setGain %d %d %d\n",0,1,0 );
 	//fprintf ( stderr, "setMode %d %d %d\n",0,0,0 );
-        if(verbose) fprintf (stderr, "Set the RX Gain.\n" );
+    if(verbose) fprintf (stderr, "Set the RX Gain.\n" );
 }
 
 void Main_Widget::setIQPhase()
@@ -3566,7 +3565,7 @@ void Main_Widget::spectrogramClicked ( int x )
 		//f = ( int ) ( ( sample_rate/(float)spec_width ) * ( spectrogram->width() /2 - x ) );
 		f = (int)(bin_bw * (spectrogram->width() / 2 - x) * hScale);
 		
-                if(verbose) fprintf(stderr, "spectrogramClicked: x = %d f = %d rx_f = %lld freq = %.6lf\n", x, f, rx_f,
+        if(verbose) fprintf(stderr, "spectrogramClicked: x = %d f = %d rx_f = %lld freq = %.6lf\n", x, f, rx_f,
 			(double)( (rx_f - rx_delta_f) - f ) / 1000000.0);
 
 		if ( rock_bound )
@@ -3700,7 +3699,7 @@ void Main_Widget::set_NR ( int state )
     NR_label->setAutoFillBackground( true );
     set_NRvals();
 	pCmd->sendCommand ("setNR %d\n", state );
-        if(verbose) fprintf ( stderr, "setNR %d\n", state );
+    if(verbose) fprintf ( stderr, "setNR %d\n", state );
 
 }
 
@@ -3733,7 +3732,7 @@ void Main_Widget::set_ANF ( int state )
     ANF_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setANF %d\n", ANF_state );
-        if(verbose) fprintf ( stderr, "setANF %d\n", ANF_state );
+    if(verbose) fprintf ( stderr, "setANF %d\n", ANF_state );
 }
 
 void Main_Widget::toggle_NB ( int )
@@ -3749,7 +3748,7 @@ void Main_Widget::set_NB ( int state )
     NB_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setNB %d\n", NB_state );
-        if(verbose) fprintf ( stderr, "setNB %d\n", NB_state );
+    if(verbose) fprintf ( stderr, "setNB %d\n", NB_state );
 }
 
 void Main_Widget::toggle_BIN ( int )
@@ -3765,7 +3764,7 @@ void Main_Widget::set_BIN ( int state )
     BIN_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setBIN %d\n", BIN_state );
-        if(verbose) fprintf ( stderr, "setBIN %d\n", BIN_state );
+    if(verbose) fprintf ( stderr, "setBIN %d\n", BIN_state );
 }
 
 void Main_Widget::toggle_MUTE ( int )
@@ -3781,7 +3780,7 @@ void Main_Widget::set_MUTE ( int state )
     MUTE_label->setAutoFillBackground( true );
 
 	pCmd->sendCommand ("setRunState %d\n", MUTE_state ? 0: 2 );
-        if(verbose) fprintf ( stderr, "setRunState %d\n", MUTE_state ? 0 : 2 );
+    if(verbose) fprintf ( stderr, "setRunState %d\n", MUTE_state ? 0 : 2 );
 }
 
 void Main_Widget::toggle_SPEC ( int )
@@ -3800,13 +3799,13 @@ void Main_Widget::set_SPEC ( int state )
 
 void Main_Widget::leave_band( int band )
 {
-        if(verbose) fprintf( stderr, "leave band %d\n", band );
+    if(verbose) fprintf( stderr, "leave band %d\n", band );
 	writeMem( band_cell[band-1] );
 }
 
 void Main_Widget::enter_band(int band)
 {
-        if(verbose) fprintf( stderr, "enter band %d\n", band );
+    if(verbose) fprintf( stderr, "enter band %d\n", band );
 	readMem( band_cell[band-1] );
 
 	if (sdr_band != NULL) {
@@ -3819,14 +3818,14 @@ void Main_Widget::enter_band(int band)
 		b.sprintf ("%lld", rx_f - rx_delta_f);
 		cmd += " ";
 		cmd += b;
-                if(verbose) fprintf( stderr, "Set band: %s\n", qPrintable(cmd));
+        if(verbose) fprintf( stderr, "Set band: %s\n", qPrintable(cmd));
 		system(qPrintable(cmd));
 	}
 }
 
 void Main_Widget::band_UP ( int )
 {
-        if(verbose) fprintf( stderr, "Band UP\n");
+    if(verbose) fprintf( stderr, "Band UP\n");
 	leave_band( band );
 	band++;
 	if (band > 10)
@@ -3836,7 +3835,7 @@ void Main_Widget::band_UP ( int )
 
 void Main_Widget::band_DOWN ( int )
 {
-        if(verbose) fprintf( stderr, "Band DOWN\n");
+    if(verbose) fprintf( stderr, "Band DOWN\n");
 	leave_band( band );
 	band--;
 	if (band < 1)
@@ -3914,7 +3913,7 @@ void Main_Widget::toggle_TX ( int )
 			pTXCmd->sendCommand ("setRunState 2\n");
 			pTXCmd->sendCommand ("setTRX 1\n");
 			set_MUTE ( 1 );
-                        if(verbose) fprintf (stderr, "set ptt on\n");
+            if(verbose) fprintf (stderr, "set ptt on\n");
 			TRX_label->setPixmap( QPixmap( tx_xpm ) );
 			TRX_label->setLabel( TX );
 			TXon();
@@ -3951,7 +3950,7 @@ void Main_Widget::set_SPLIT ( int state )
 		set_RIT( 0 );
 		tx_f_string.sprintf ("%11.6lf", 
 			( double ) ( tx_f - tx_delta_f ) / 1000000.0 );
-                if(verbose) fprintf(stderr, "set_SPLIT %s\n", qPrintable(tx_f_string));
+        if(verbose) fprintf(stderr, "set_SPLIT %s\n", qPrintable(tx_f_string));
 		rit->setText( tx_f_string );
 	} else {
     	SPLIT_label->setPalette(QColor(0, 0, 0) );
@@ -3969,12 +3968,12 @@ void Main_Widget::toggle_SPLIT ( int )
 
 void Main_Widget::readMem ( MemoryCell *m )
 {
-        if(verbose) printf("readMem %d = %lld %lld\n", m->getID(), m->getFrequency(), m->getTxFrequency());
+    if(verbose) printf("readMem %d = %lld %lld\n", m->getID(), m->getFrequency(), m->getTxFrequency());
 	setMode ( ( rmode_t ) m->getMode(), FALSE, FALSE );
 	if ( rock_bound ) {
 		rx_delta_f = m->getFrequency();
 		if ((rx_delta_f > spec_width) || (rx_delta_f < -spec_width)) {
-                        if(verbose) fprintf(stderr, "Error: frequency outside spectrum (%d <-> %d).  Reset it to 0\n",
+        if(verbose) fprintf(stderr, "Error: frequency outside spectrum (%d <-> %d).  Reset it to 0\n",
 				rx_delta_f, spec_width);
 			rx_delta_f = 0;
 		}
@@ -3983,7 +3982,7 @@ void Main_Widget::readMem ( MemoryCell *m )
 		rx_delta_f = tuneCenter;
 		rx_f = m->getFrequency();
 		rx_f += rx_delta_f;
-                if(verbose) fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 );
+        if(verbose) fprintf (stderr, "set freq %f\n", (rx_f)*1e-6 );
 		pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
 		tx_f = m->getTxFrequency();
 		set_RIT( 0 );	// do this before set_SPLIT, as it clears the RIT text
@@ -4003,7 +4002,7 @@ void Main_Widget::readMem ( MemoryCell *m )
 
 void Main_Widget::writeMem ( MemoryCell *m )
 {
-        if(verbose) printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
+    if(verbose) printf("writeMem %d = (%lld - %d) %lld\n", m->getID(), rx_f, rx_delta_f,
 		rx_f - rx_delta_f);
 	if (rock_bound) {
 		m->setFrequency ( rx_delta_f );
@@ -4024,7 +4023,7 @@ void Main_Widget::displayMem ( MemoryCell *m )
 	char temp[32];
 	snprintf ( temp, 32, "%lf", ( double ) ( m->getFrequency() ) / 1000000.0 );
 	M_label->setText ( temp );
-        if(verbose) printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
+    if(verbose) printf("displayMem %d, %lld\n", m->getID(), m->getFrequency());
 }
 
 void Main_Widget::displayNCO ( int x )
@@ -4057,9 +4056,9 @@ void Main_Widget::updateLOFreq()
 
 void Main_Widget::updateTuneOffset()
 {
-        //if(verbose) fprintf(stderr, "updateTuneOffset = %s\n", qPrintable(cfgTuneOffsetInput->text()));
+    //if(verbose) fprintf(stderr, "updateTuneOffset = %s\n", qPrintable(cfgTuneOffsetInput->text()));
 	tuneCenter = cfgTuneOffsetInput->text().toInt();
-        if(verbose) fprintf(stderr, "updateTuneOffset = %d\n", tuneCenter);
+    if(verbose) fprintf(stderr, "updateTuneOffset = %d\n", tuneCenter);
 	rx_f -= rx_delta_f;
 	rx_delta_f =  tuneCenter;	//Make it not tuned to the center
 	rx_f += rx_delta_f;
@@ -4169,7 +4168,7 @@ void Main_Widget::setFFTWindow ( )
                   {  fftWindow = 12; };
            
 	pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
-        if(verbose) fprintf ( stderr, "setSpectrumWindow %d\n", fftWindow );
+    if(verbose) fprintf ( stderr, "setSpectrumWindow %d\n", fftWindow );
 }
 
 void Main_Widget::setSpectrumType()
@@ -4179,15 +4178,15 @@ void Main_Widget::setSpectrumType()
 	else
 	   { spectrumType = 2; };		// SPEC_POST_FILT
 	pCmd->sendCommand ("setSpectrumType %d\n", spectrumType );
-        if(verbose) fprintf ( stderr, "setSpectrumType %d\n", spectrumType );
+    if(verbose) fprintf ( stderr, "setSpectrumType %d\n", spectrumType );
 
 }
 
 void Main_Widget::setSpectrumDefaults()
 {
-        if(verbose) fprintf(stderr, "setSpectrumType %d\n", spectrumType );
-        if(verbose) fprintf(stderr, "setSpectrumWindow %d\n", fftWindow );
-        if(verbose) fprintf(stderr, "setSpectrumPolyphase %d\n", polyphaseFFT );
+    if(verbose) fprintf(stderr, "setSpectrumType %d\n", spectrumType );
+    if(verbose) fprintf(stderr, "setSpectrumWindow %d\n", fftWindow );
+    if(verbose) fprintf(stderr, "setSpectrumPolyphase %d\n", polyphaseFFT );
 	pCmd->sendCommand ("setSpectrumType %d\n", spectrumType );
 	pCmd->sendCommand ("setSpectrumWindow %d\n", fftWindow );
 	pCmd->sendCommand ("setSpectrumPolyphase %d\n", polyphaseFFT );
@@ -4227,14 +4226,14 @@ void Main_Widget::updateSpecHigh ( int value )
 	if (a > 100)
 		a = 100;
 	vsScale = 100 / a;
-        if(verbose) fprintf(stderr, "vsScale = (%d to %d) %f %f\n", specLow, specHigh, a, vsScale);
+    if(verbose) fprintf(stderr, "vsScale = (%d to %d) %f %f\n", specLow, specHigh, a, vsScale);
 }
 
 void Main_Widget::setAGC ( int type )
 {
 	agcType = type;
 	pCmd->sendCommand ("setRXAGC %d\n", type );
-        if(verbose) fprintf ( stderr, "setRXAGC %d\n", type );
+    if(verbose) fprintf ( stderr, "setRXAGC %d\n", type );
 
 	QColor on ( 150, 50, 50 );
 	QColor off ( 0, 0, 0 );
@@ -4301,20 +4300,20 @@ void Main_Widget::zoomIN ( int )
 		hScale = 0.25;
 	else if (hScale == 0.25)
         {
-                if(verbose) fprintf(stderr, "Zoom in furthest\n");
+            if(verbose) fprintf(stderr, "Zoom in furthest\n");
         }
 	else
         {
-                if(verbose) fprintf(stderr, "Zoom in from %f\n", hScale);
+            if(verbose) fprintf(stderr, "Zoom in from %f\n", hScale);
         }
 }
 
 void Main_Widget::zoomOUT ( int )
 {
 	if (hScale >= 3.0)
-            {
-                if(verbose) fprintf(stderr, "Zoom out furthest\n");
-            }
+    {
+        if(verbose) fprintf(stderr, "Zoom out furthest\n");
+    }
 	else if (hScale == 3.0)
 			hScale = hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
 	else if (hScale == 2.0)
@@ -4328,7 +4327,7 @@ void Main_Widget::zoomOUT ( int )
 	else if (hScale == 0.25)
 		hScale = 0.5;
 	else
-                if(verbose) fprintf(stderr, "Zoom out from %f\n", hScale);
+    if(verbose) fprintf(stderr, "Zoom out from %f\n", hScale);
 }
 
 void Main_Widget::calibrateSpec ( int value )
@@ -4344,63 +4343,63 @@ void Main_Widget::calibrateMetr ( int value )
 // NR_Settings Glenn VE9GJ
 void Main_Widget::setNR_Taps ( int value )
 {
-        if(verbose) fprintf ( stderr, "NR_Taps spinbox changed to %d\n",value );
+    if(verbose) fprintf ( stderr, "NR_Taps spinbox changed to %d\n",value );
     NR_Taps = value;
     set_NRvals();
 }
 
 void Main_Widget::setNR_Delay ( int value )
 {
-        if(verbose) fprintf ( stderr, "NR_Delay spinbox changed to %d\n",value );
+    if(verbose) fprintf ( stderr, "NR_Delay spinbox changed to %d\n",value );
     NR_Delay = value;
     set_NRvals();
 }
 
 void Main_Widget::setNR_Gain ( double value )
 {
-        if(verbose) fprintf ( stderr, "NR_Gain spinbox changed to %f\n",float(value) );
+    if(verbose) fprintf ( stderr, "NR_Gain spinbox changed to %f\n",float(value) );
     NR_Gain = float(value);
     set_NRvals();
 }
 
 void Main_Widget::setNR_Leakage ( double value )
 {
-        if(verbose) fprintf ( stderr, "NR_Leakage spinbox changed to %f\n",float(value) );
+    if(verbose) fprintf ( stderr, "NR_Leakage spinbox changed to %f\n",float(value) );
     NR_Leakage = float(value);
     set_NRvals();
 }
 
 void Main_Widget::setANF_Taps ( int value )
 {
-        if(verbose) fprintf ( stderr, "ANF_Taps spinbox changed to %d\n",value );
+    if(verbose) fprintf ( stderr, "ANF_Taps spinbox changed to %d\n",value );
     ANF_Taps = value;
     set_ANFvals();
 }
 
 void Main_Widget::setANF_Delay ( int value )
 {
-        if(verbose) fprintf ( stderr, "ANF_Delay spinbox changed to %d\n",value );
+    if(verbose) fprintf ( stderr, "ANF_Delay spinbox changed to %d\n",value );
     ANF_Delay = value;
     set_ANFvals();
 }
 
 void Main_Widget::setANF_Gain ( double value )
 {
-        if(verbose) fprintf ( stderr, "ANF_Gain spinbox changed to %f\n",float(value) );
+    if(verbose) fprintf ( stderr, "ANF_Gain spinbox changed to %f\n",float(value) );
     ANF_Gain = float(value);
     set_ANFvals();
 }
 
 void Main_Widget::setANF_Leakage ( double value )
 {
-        if(verbose) fprintf ( stderr, "ANF_Leakage spinbox changed to %f\n",float(value) );
+    if(verbose) fprintf ( stderr, "ANF_Leakage spinbox changed to %f\n",float(value) );
     ANF_Leakage = float(value);
     set_ANFvals();
 }
 
 void Main_Widget::setNB_Threshold ( double value )
 {
-        if(verbose) fprintf ( stderr, "NB_Threshold spinbox changed to %f\n",value );
+    if(verbose) fprintf ( stderr, "NB_Threshold spinbox changed to %f\n",value );
     NB_Threshold = value;
     set_NBvals();
 }
@@ -4408,41 +4407,36 @@ void Main_Widget::setNB_Threshold ( double value )
 
 void Main_Widget::setIF ( bool value )
 {
-if(verbose) fprintf(stderr, "setIF: %d\n", value);
+    if(verbose) fprintf(stderr, "setIF: %d\n", value);
 	useIF =  value;
 }
 
 void Main_Widget::updateUseUSBsoftrock ( bool value )
 {
-    //static bool first_Time = true;
+
 	rock_bound = !value;
 	if (value) {
 		rx_f -= rx_delta_f;
 		rx_delta_f = tuneCenter;
 		rx_f += rx_delta_f;
 
-        //if((pUSBCmd == NULL)&&(!first_Time)) setupSDR();
         if(pUSBCmd == NULL) setupSDR();
         if(verbose) fprintf ( stderr, "useUSBsoftrock: %s\n",
 		value ? "enabled" : "disabled");
 	}
-    //first_Time = false;
 }
 
 void Main_Widget::updateDualConversion ( bool value )
 {
 	dualConversion =  value;
-        if(verbose) fprintf ( stderr, "DualConversion: %s\n",
+    if(verbose) fprintf ( stderr, "DualConversion: %s\n",
 		value ? "enabled" : "disabled");
 }
 
 void Main_Widget::updateTransmit ( bool value )
 {
-    //static bool first_Time = true;
 	enableTransmit = value;
 	if ( enableTransmit ) {
-		//This keeps it from setting up before sample_rate is had.
-        //if((pTXCmd == NULL)&&(!first_Time)) setupSDR();
         if(pTXCmd == NULL) setupSDR();
 		pTXCmd->on();
 		setTxIQGain();
@@ -4455,7 +4449,6 @@ void Main_Widget::updateTransmit ( bool value )
 		}
         if(verbose) fprintf ( stderr, "Transmit: %s\n",
 		enableTransmit ? "enabled" : "disabled");
-        //first_time=false;
 }
 
 void Main_Widget::setHamlib ( bool value )
@@ -4615,7 +4608,7 @@ void Main_Widget::updatePTT(void)
 
 void Main_Widget::initHamlib ()
 {
-        rig_errcode_e error;
+    rig_errcode_e error;
 	ourHamlibWrapper = new hamlibWrapper ( this );
 
 	connect ( ourHamlibWrapper, SIGNAL ( nowTransmit ( int ) ), this, SLOT ( set_MUTE ( int ) ) );
@@ -4625,14 +4618,14 @@ void Main_Widget::initHamlib ()
 	connect ( ourHamlibWrapper, SIGNAL ( slopeHighChangedByRig ( int ) ), this, SLOT ( setSlopeHighOffset ( int ) ) );
 	connect ( ourHamlibWrapper, SIGNAL ( rigPitch ( int ) ), this, SLOT ( setCWPitch ( int ) ) );
 
-       // hl_port = "localhost";  //Debugging fix.
-        QByteArray myarray = portString.toAscii();
-        char *hl_port = myarray.data();
-        if ( (error = (rig_errcode_e)ourHamlibWrapper->init ( rig, hl_port, speed )) != RIG_OK )
+    // hl_port = "localhost";  //Debugging fix.
+    QByteArray myarray = portString.toAscii();
+    char *hl_port = myarray.data();
+    if ( (error = (rig_errcode_e)ourHamlibWrapper->init ( rig, hl_port, speed )) != RIG_OK )
 	{
-                if(verbose) fprintf( stderr, "Hamlib initialization error: %d. \n", error);
-                if(verbose) fprintf( stderr, "Hamlib would not initialize.  Fix the hamlib set up and re-enable hamblib via the CFG option. \n");
-                setHamlib ( FALSE );
+        if(verbose) fprintf( stderr, "Hamlib initialization error: %d. \n", error);
+        if(verbose) fprintf( stderr, "Hamlib would not initialize.  Fix the hamlib set up and re-enable hamblib via the CFG option. \n");
+        setHamlib ( FALSE );
 	}
 	emit changeSlopeTune ( useSlopeTune );
 	emit tellMuteXmit ( muteXmit );
@@ -4675,7 +4668,7 @@ void Main_Widget::setSlopeLowOffset ( int value )
 			slopeTuneOffset = ( int ) 1.000 * value * slopeLowOffset / SLOPE_TUNE_MAX_CW;
 			break;
 		default:	
-                if(verbose) fprintf(stderr, "Hit default: value is: %d \n", value );
+        if(verbose) fprintf(stderr, "Hit default: value is: %d \n", value );
 	}
 	setDefaultRxFrequency();
 }
@@ -4698,7 +4691,7 @@ void Main_Widget::setSlopeHighOffset ( int value )
 			slopeTuneOffset = ( int ) 1.000 * value * slopeHighOffset / SLOPE_TUNE_MAX_CW;
 			break;
 		default:	
-                        if(verbose) fprintf(stderr, "Hit default: value is: %d \n", value );
+        if(verbose) fprintf(stderr, "Hit default: value is: %d \n", value );
 	}
 	setDefaultRxFrequency();
 }
