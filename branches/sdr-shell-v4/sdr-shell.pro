@@ -42,6 +42,6 @@ DISTFILES += test \
 #DEFINES += PTT_POLL
 #DEFINES += FREQ_POLL
 
-# The following line was inserted by qt3to4
-QT += qt3support
 
+OTHER_FILES += \
+    CHANGELOG

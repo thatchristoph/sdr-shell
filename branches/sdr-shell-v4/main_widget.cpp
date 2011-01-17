@@ -4438,6 +4438,8 @@ void Main_Widget::updateTransmit ( bool value )
 	enableTransmit = value;
 	if ( enableTransmit ) {
         if(pTXCmd == NULL) setupSDR();
+        for (int i=0; i < NUM_CMD; i++)
+            c_cell[i]->setCmd((DttSPcmd*)pCmd, (DttSPcmd*)pTXCmd);
 		pTXCmd->on();
 		setTxIQGain();
 		setTxIQPhase();

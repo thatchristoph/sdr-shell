@@ -27,32 +27,10 @@ int main (int argc, char **argv)
         {0, 0, 0, 0}
     };
 
-    //int i;
-    //bool found_init_file = false;
 
     QApplication app(argc, argv);
     Main_Widget* w = new Main_Widget;
-/*
-    for ( i = 1; i < argc; i++ )  // Look for the configuration file first.
-    {
-        if((strcmp(argv[i],"-l")==0))
-        {
-            w->init( (char *) argv[i+1] );
-            found_init_file = true;
-            break;
-        }
-        if(strncmp(argv[i],"--conf-file=",11)==0)
-        {
-            w->init( (char *) ((argv[i])+12) );
-            found_init_file = true;
-            break;
-        }
-    }
-    if (!found_init_file)
-    {
-        w->init( (char *) 0 );
-    }
-*/
+
     // Iterate over options and handle each one as appropriate
     char c;
     // The function getopt_long stores the option index here.
@@ -122,7 +100,7 @@ int main (int argc, char **argv)
                         "   \n"
                         );
         exit ( 0 );
-    }
+        }
     }
     w->init();
     app.setWindowIcon( QIcon(app_xpm) );
