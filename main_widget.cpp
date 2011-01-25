@@ -22,6 +22,7 @@ int CW_tone = 700;		// default CW tone 700 Hz
 Main_Widget::Main_Widget()
         : QWidget()
 {
+    char *ep;
     sample_rate = 0; //Set Default Values//
     rxCMDPort=19001;
     txCMDPort=19005;
@@ -31,11 +32,15 @@ Main_Widget::Main_Widget()
     usbPort =19004;
     verbose = false;
     settings = new QSettings("freesoftware", "sdr-shell");
-
+    if ( ( ep = getenv ( "SDR_DEFRATE" ) ) )
+    {
+        sample_rate = atoi ( ep );
+        if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
+        tuneCenter = -sample_rate / 4;
+    }
 }
 void Main_Widget::init()
 {
-    char *ep;
     QString version;
 	setFocusPolicy ( Qt::TabFocus );
 	setMinimumWidth ( 650 );
@@ -51,6 +56,15 @@ void Main_Widget::init()
 	slopeTuneOffset = 0;
 
 	loadSettings();
+    if (sample_rate == 0) {
+        fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
+                 "Use the -f or --sample-rate option or\n"
+                 "you can set SDR_DEFRATE as follows:\n"
+                 "bash$ export SDR_DEFRATE=48000\n" );
+        exit ( 1 );
+    }
+    bin_bw = sample_rate / 4096.0;
+	setupSDR();
 
 	version.sprintf("%5.2f", VERSION);
 	setWindowTitle("SDR-Shell " + version + " @ " + stationCallsign );
@@ -670,7 +684,6 @@ void Main_Widget::init()
 	cfgTransmit->setGeometry ( 25, 18, 200, 20 );
 	connect ( cfgTransmit, SIGNAL ( toggled ( bool ) ),
 	          this, SLOT ( updateTransmit ( bool ) ) );
-	cfgTransmit->setChecked ( enableTransmit );
 
 	// TX Microphone Gain and Output Gain
 	QGroupBox *cfgTxGain = new QGroupBox ( cfgFrame7 );
@@ -810,7 +823,7 @@ void Main_Widget::init()
     NR_GainSpinBox = new QDoubleSpinBox ( nrvaluesBox );
 	NR_GainSpinBox->setGeometry ( 260, 78, 70, 20 );
 	NR_GainSpinBox->setMinimum( 0 );
-	NR_GainSpinBox->setMaximum( 255 );
+	NR_GainSpinBox->setMaximum( 1 );
     NR_GainSpinBox->setDecimals( 2 );
     NR_GainSpinBox->setSingleStep( 0.01);
     NR_GainSpinBox->setValue ( ( double ) NR_Gain );
@@ -823,7 +836,7 @@ void Main_Widget::init()
     NR_LeakageSpinBox = new QDoubleSpinBox ( nrvaluesBox );
 	NR_LeakageSpinBox->setGeometry ( 260, 108, 70, 20 );
 	NR_LeakageSpinBox->setMinimum( 0 );
-	NR_LeakageSpinBox->setMaximum( 255 );
+	NR_LeakageSpinBox->setMaximum( 1 );
     NR_LeakageSpinBox->setDecimals( 2 );
     NR_LeakageSpinBox->setSingleStep( 0.01);
     NR_LeakageSpinBox->setValue ( ( double ) NR_Leakage );
@@ -834,7 +847,7 @@ void Main_Widget::init()
 	// ANF Values
 	QGroupBox *anfvaluesBox = new QGroupBox ( dspFrame2 );
 	anfvaluesBox->setTitle ( "ANF Values" );
-    anfvaluesBox->setGeometry( 5, 5, 330, 200 );
+    anfvaluesBox->setGeometry( 5, 5, 340, 200 );
 	QLabel *ANF_TapsLabel = new QLabel ( anfvaluesBox );
 	ANF_TapsLabel->setText ( "Adaptive Filter Size:" );
 	ANF_TapsLabel->setGeometry ( 10, 18, 250, 20 );
@@ -875,11 +888,11 @@ void Main_Widget::init()
 	ANF_LeakageLabel->setGeometry ( 10, 108, 250, 20 );
   	ANF_LeakageLabel->setAlignment ( Qt::AlignLeft | Qt::AlignVCenter );
     ANF_LeakageSpinBox = new QDoubleSpinBox ( anfvaluesBox );
-	ANF_LeakageSpinBox->setGeometry ( 260, 108, 70, 20 );
+	ANF_LeakageSpinBox->setGeometry ( 260, 108, 75, 20 );
 	ANF_LeakageSpinBox->setMinimum( 0 );
 	ANF_LeakageSpinBox->setMaximum( 255 );
-    ANF_LeakageSpinBox->setDecimals( 2 );
-    ANF_LeakageSpinBox->setSingleStep( 0.01);
+    ANF_LeakageSpinBox->setDecimals( 5 );
+    ANF_LeakageSpinBox->setSingleStep( 0.00001);
     ANF_LeakageSpinBox->setValue ( ( double ) ANF_Leakage );
 	connect ( ANF_LeakageSpinBox, SIGNAL ( valueChanged (double ) ),
 	          this, SLOT ( setANF_Leakage (double ) ) );
@@ -1426,26 +1439,6 @@ void Main_Widget::init()
 	logoLabel->setPalette( QColor( 0, 0, 0 ) );
 	logoLabel->setAutoFillBackground(true);
 
-    if ( ( ep = getenv ( "SDR_DEFRATE" ) ) )
-    {
-        sample_rate = atoi ( ep );
-        if(verbose) fprintf ( stderr, "sample_rate = %d\n", sample_rate );
-        tuneCenter = -sample_rate / 4;
-    }
-
-
-
-
-    if (sample_rate == 0)
-    {
-        fprintf ( stderr, "Unable to get SDR_DEFRATE environment variable.\n"
-                 "Use the -f or --sample-rate option or\n"
-                 "you can set SDR_DEFRATE as follows:\n"
-                 "bash$ export SDR_DEFRATE=48000\n" );
-        exit ( 1 );
-    }
-    bin_bw = sample_rate / 4096.0;
-	setupSDR();
 	// -----------------------------------------------------------------------
 	// Arbitrary SSP commands
 	for (int i=0; i < NUM_CMD; i++) {
@@ -1606,6 +1599,7 @@ void Main_Widget::init()
 	specAveraging = 1;
 	specLow = -140;
 	specHigh = -40;
+	cfgTransmit->setChecked ( enableTransmit );
 	if (enableTransmit) {
 		TXoff();
 	}
@@ -2087,12 +2081,30 @@ void Main_Widget::loadSettings()
         slopeHighOffset = settings->value (
 	    "/sdr-shell/slopeHighOffset", "3500" ).toInt();
     NR_state = settings->value(
-    // NR_val settings defaults: 128, 75, 1.0, 1.0
 		"/sdr-shell/NR_state", 0 ).toInt();
+    // NR_val settings defaults: 128, 75, 1.0, 1.0
+    NR_Taps = settings->value( 
+		"/sdr-shell/NR_Taps", 128 ).toInt();  
+    NR_Delay = settings->value( 
+		"/sdr-shell/NR_Delay", 75 ).toInt();
+    NR_Gain = settings->value( 
+		"/sdr-shell/NR_Gain", 1.0 ).toDouble();
+    NR_Leakage = settings->value( 
+		"/sdr-shell/NR_Leakage", 1.0 ).toDouble();
     ANF_state = settings->value(
 		"/sdr-shell/ANF_state", 0 ).toInt();
+    ANF_Taps = settings->value( 
+		"/sdr-shell/ANF_Taps", 45 ).toInt();  
+    ANF_Delay = settings->value( 
+		"/sdr-shell/ANF_Delay", 64 ).toInt();
+    ANF_Gain = settings->value( 
+		"/sdr-shell/ANF_Gain", 0.01 ).toDouble();
+    ANF_Leakage = settings->value( 
+		"/sdr-shell/ANF_Leakage", 0.000010 ).toDouble();
     NB_state = settings->value(
 		"/sdr-shell/NB_state", 0 ).toInt();
+    NB_Threshold = settings->value( 
+		"/sdr-shell/NB_Threshold", 3.3 ).toDouble();
     BIN_state = settings->value(
 		"/sdr-shell/BIN_state", 0 ).toInt();
     SPEC_state = settings->value(
@@ -2526,7 +2538,7 @@ void Main_Widget::rx_cmd ( int key ) // Leave for IF shift now.
 			hScale=3.0;
 			break;
 		case '4':
-			hScale = hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
+			hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
 			break;
 		case '0':
 			hScale = 0.25;
@@ -3053,10 +3065,7 @@ void Main_Widget::setIQGain()
     if ( verbose) fprintf ( stderr, "setcorrectIQgain %d\n", iqGain );
 	// The following sets the output gain.
 	pCmd->sendCommand ("setGain %d %d\n", 0,1,0 );
-	//pCmd->sendCommand ("setMode %d %d\n", 0,0,0 );
     if(verbose) fprintf ( stderr, "setGain %d %d %d\n",0,1,0 );
-	//fprintf ( stderr, "setMode %d %d %d\n",0,0,0 );
-    if(verbose) fprintf (stderr, "Set the RX Gain.\n" );
 }
 
 void Main_Widget::setIQPhase()
@@ -3069,8 +3078,8 @@ void Main_Widget::setTxIQGain()
 {
     if(enableTransmit)
     {
-        pTXCmd->sendCommand ("setcorrectIQgain %d\n", txIQGain );
-        if ( verbose) fprintf ( stderr, "(TX)setcorrectIQgain %d\n", txIQGain );
+        pTXCmd->sendCommand ("setcorrectTXIQgain %d\n", txIQGain );
+        if ( verbose) fprintf ( stderr, "(TX)setcorrectTXIQgain %d\n", txIQGain );
     }
 }
 
@@ -3078,8 +3087,8 @@ void Main_Widget::setTxIQPhase()
 {
 	if(enableTransmit)
     {
-        pTXCmd->sendCommand ("setcorrectIQphase %d %d\n", txIQPhase );
-        if ( verbose) fprintf ( stderr, "(TX)setcorrectIQphase %d\n", txIQPhase );
+        pTXCmd->sendCommand ("setcorrectTXIQphase %d %d\n", txIQPhase );
+        if ( verbose) fprintf ( stderr, "(TX)setcorrectTXIQphase %d\n", txIQPhase );
     }
 }
 
@@ -4315,7 +4324,7 @@ void Main_Widget::zoomOUT ( int )
         if(verbose) fprintf(stderr, "Zoom out furthest\n");
     }
 	else if (hScale == 3.0)
-			hScale = hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
+			hScale = sample_rate / (bin_bw * (geometry().width()-20)); // spectrumFrame->width());
 	else if (hScale == 2.0)
 		hScale = 3.0;
 	else if (hScale == 1.0)

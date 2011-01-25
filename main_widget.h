@@ -1,7 +1,7 @@
 #ifndef SDXCVR_MAINWIDGET_H
 #define SDXCVR_MAINWIDGET_H
 
-#define	VERSION 4.24
+#define	VERSION 4.25
 
 #include <stdlib.h>
 #include <qwidget.h>
