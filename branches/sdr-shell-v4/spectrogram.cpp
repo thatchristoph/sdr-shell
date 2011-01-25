@@ -81,9 +81,9 @@ void Spectrogram::wheelEvent(QWheelEvent *event)
 		numDegrees, numSteps, orientation, shift, ctl, alt);
 
     if (event->orientation() == Qt::Horizontal) {
-    	emit tune2( orient * numSteps +  10000 * shift + 100000 * alt);
+    	emit tune2( orient * -numSteps +  10000 * shift + 100000 * alt);
 	} else {
-    	emit tune3( numSteps );
+    	emit tune3( -numSteps );
 	}
 }
 

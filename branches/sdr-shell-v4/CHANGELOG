@@ -1,3 +1,34 @@
+
+Version 4.25
+
+1. The NR, ANF and NB values were not being read from the config file.  The
+code that reads those from the saved configuration were deleted in svn #136.
+Restored.
+
+2. To deal with the usbsoftrock offset setup, I moved some code around.  I'm
+a bit uncertain if I'm breaking something here, but it runs okay.  I moved
+the getenv of SDR_DEFRATE into the main_widget constructor, and set the
+tuneCenter there.  I would also move getting SDR_HOST there, also, but I'm
+not too certain of what I would be getting into with that.
+
+3. Moved the setting of cfgTransmit->setChecked to after where all the
+command ports will be set up.
+
+4. Fixed the hScale related compile errors.
+
+5. I fixed the spectrogram area mouse scroll wheel tuning to be consistant
+with the way tuning in the spectrum and frequency display widgets.  It was
+backwards from the way the other windows operated.  Does anyone else use mouse
+wheel tuning?  I've been thinking of gutting a mouse to make a "big knob" out
+of the mouse wheel.
+
+6. Set maximum values for the NR LeakageSpinBox and NR_GainSpinBox to values
+that will keep dttsp from going mute and not coming out of it.
+
+7. Set the value and step of the ANF_Leakage to the dttsp default, which
+requires more digits (and tweeking of the GUI widget widths).
+
+
 Version 4.24
 
 Added command line options.
