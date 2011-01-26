@@ -50,6 +50,7 @@
 #include "memorycell.h"
 #include "pbscale.h"
 #include "hamlibwrapper.h"
+#include "rigctl.h"
 #include "dttsp.h"
 #include "freqlabel.h"
 #include "lcdfreq.h"
@@ -120,6 +121,7 @@ class Main_Widget : public QWidget
 		QPixmap *rxPix, *txPix;
 		QFrame *trxFrame;
         hamlibWrapper *ourHamlibWrapper;
+		RigCtlServer *rigCtl;
 		QMutex displayMutex, update_freqMutex;
 
         //hamlib parameters.
@@ -130,6 +132,7 @@ class Main_Widget : public QWidget
 		QString speedString;
 		bool useHamlib;
         void initHamlib ();
+		void initRigCtl();
 		bool useSlopeTune;
 		bool muteXmit;
 
@@ -420,6 +423,12 @@ class Main_Widget : public QWidget
                 void set_Host( char * );
                 void set_Verbose( bool );
                 void set_InitFile(char *);
+
+		rmode_t rigGetMode();
+		int rigGetFilterWidth();
+                unsigned long long int rigGetFrequency();
+                void rigSetFrequency(unsigned long long int rigctlfreq);
+                void rigSetPTT ( int );
 
 	public slots:
 		void finish();
