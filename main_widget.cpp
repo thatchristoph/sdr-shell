@@ -1595,6 +1595,7 @@ void Main_Widget::init()
 	{
 		initHamlib();
 	}
+	initRigCtl();
 	setMode(mode, FALSE, TRUE);
 	specAveraging = 1;
 	specLow = -140;
@@ -4642,6 +4643,11 @@ void Main_Widget::initHamlib ()
 	emit tellMuteXmit ( muteXmit );
 }
 
+void Main_Widget::initRigCtl ()
+{
+	rigCtl = new RigCtlServer ( this, this );
+}
+
 void Main_Widget::updateUSBOffset ( int offset )
 {
 	usbOffset = offset;
@@ -4742,3 +4748,40 @@ void Main_Widget::resetCmd ( int i )
 	cmdTXbutton[i]->setChecked ( c_cell[i]->getToTX() );
 }
 
+rmode_t Main_Widget::rigGetMode () {
+	return mode;
+}
+
+int Main_Widget::rigGetFilterWidth () {
+	return (*filter_h) - (*filter_l);
+}
+
+unsigned long long int Main_Widget::rigGetFrequency () {
+	return rx_f - rx_delta_f;
+}
+
+void Main_Widget::rigSetFrequency(unsigned long long int rigctlfreq){
+
+    rx_delta_f = tuneCenter;
+    rx_f = rigctlfreq;
+    rx_f += rx_delta_f;
+    fprintf (stderr, "Hamlib cmd set freq %f\n", (rx_f)*1e-6 );
+    pUSBCmd->sendCommand("set freq %f\n", (rx_f)*1e-6);
+    tx_f = rigctlfreq;
+    set_RIT( 0 );	// do this before set_SPLIT, as it clears the RIT text
+     if (tx_f != 0) {
+             tx_delta_f = tuneCenter;
+             tx_f += tx_delta_f;
+             set_SPLIT ( TRUE );
+     } else {
+             set_SPLIT ( FALSE );
+     }
+     setRxFrequency( 1 );
+
+}
+
+void Main_Widget::rigSetPTT ( int enabled ) {
+	if (transmit != enabled) {
+		toggle_TX( enabled );
+	}
+}

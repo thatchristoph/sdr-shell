@@ -9,6 +9,8 @@ LIBS += `pkg-config \
     --libs \
     hamlib`
 
+QT += network
+
 # Input
 HEADERS += main_widget.h \
     spectrogram.h \
@@ -18,6 +20,7 @@ HEADERS += main_widget.h \
     spectrum.h \
     text.h \
     hamlibwrapper.h \
+    rigctl.h \
     dttsp.h \
     lcdfreq.h \
     command.h \
@@ -30,6 +33,7 @@ SOURCES += main.cpp \
     memorycell.cpp \
     spectrum.cpp \
     hamlibwrapper.cpp \
+    rigctl.cpp \
     pbscale.cpp \
     dttsp.cpp \
     lcdfreq.cpp \
