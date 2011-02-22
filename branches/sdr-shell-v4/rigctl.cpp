@@ -151,7 +151,8 @@ RigCtlServer::RigCtlServer(QObject *parent, Main_Widget *main)
 	: QObject(parent),
 	  main(main) {
 	server = new QTcpServer(this);
-	if (!server->listen(QHostAddress::LocalHost, 19090)) {
+//	if (!server->listen(QHostAddress::LocalHost, 19090)) {
+	if (!server->listen(QHostAddress::Any, 19090)) {
 		fprintf(stderr, "rigctl: failed to bind socket\n");
 		return;
 	}
