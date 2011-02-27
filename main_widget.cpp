@@ -4556,12 +4556,8 @@ void Main_Widget::updatePTT(void)
 			update_freqMutex.lock();
 
 			// TODO: if enableSPLIT   set USBSoftrock frequency accordingly
-			if (mode == RIG_MODE_USB)
-				pUSBCmd->sendCommand("set freq %f\n", (rx_f - rx_delta_f)*1e-6);
-			// shift the Tx freq for fldigi Tx
 
-			else if (mode == RIG_MODE_CW){
-				//				pUSBCmd->sendCommand("set freq %f\n", (rx_f - CW_tone)*1e-6);	// correct for CW tone
+			if (mode == RIG_MODE_CW){
 				pCmd->sendCommand ("setMode %d %d\n", USB );
 				pTXCmd->sendCommand ("setMode %d %d\n", USB, 1 );
 				if(verbose) fprintf ( stderr, "setMode %d\n", USB );
@@ -4570,7 +4566,6 @@ void Main_Widget::updatePTT(void)
 				setFilter();
 			}
 			else if (mode == RIG_MODE_CWR){
-				//				pUSBCmd->sendCommand("set freq %f\n", (rx_f + CW_tone)*1e-6);	// correct for CW tone
 				pCmd->sendCommand ("setMode %d %d\n", LSB );
 				pTXCmd->sendCommand ("setMode %d %d\n", LSB, 1 );
 				if(verbose) fprintf ( stderr, "setMode %d\n", LSB );
