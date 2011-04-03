@@ -148,6 +148,9 @@ int DttSPcmd :: sendCommand ( const char *format, ... )
     vsprintf ( szBuf, format, ap );
     rc = send_command (szBuf);
 
+    if (!strstr(szBuf, "req"))
+       printf ("+++++++++++++ %s\n", szBuf);
+
     va_end(ap);
 
     return rc;
