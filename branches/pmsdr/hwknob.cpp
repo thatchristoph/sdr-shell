@@ -33,8 +33,61 @@ Qt3Knob * Qt3Knob::Create (void)
       fprintf (stderr, "FIFO knob\n");
       return new Qt3KnobFifo(pn);
    }
+   if ((pn = getenv("HW_KNOB_SERIAL"))) {
+      fprintf (stderr, "SERIAL knob\n");
+      return new Qt3KnobSerial(pn);
+   }
    return 0;
 }
+
+Qt3KnobSerial :: Qt3KnobSerial (const char *pszSerPort):
+   Qt3Knob(), value(0)
+{
+    if (getenv("REALTIME")) {
+       int rtpri =90;
+       struct sched_param param;
+       printf("using realtime, priority: %d\n",rtpri);
+       param.sched_priority = rtpri;
+       /* enable realtime fifo scheduling */
+       if(sched_setscheduler(0, SCHED_FIFO, &param)==-1){
+           perror("sched_setscheduler failed");
+           exit(-1);
+       }
+    }
+    fd = open (pszSerPort, O_RDWR);
+    if (fd == -1) {
+       perror ("open");
+       return;
+    }    
+    pF = fdopen (fd, "rw");
+    if (pF == 0) {
+       perror ("open");
+       return; 
+    }
+}
+
+int Qt3KnobSerial :: processEvent(void)
+{
+   char szBuf[BUFSIZ];
+   int  delta = 0;
+   int  v;
+
+   // read data
+   if (fgets (szBuf, sizeof(szBuf), pF)) {
+      sscanf (szBuf, "%d", &v);
+      fprintf (stderr, "%s: %d\n", __FUNCTION__, v);
+      if (value != 0) {
+         delta = v - value;
+      }
+      value = v;
+   }
+   return delta;
+}
+
+
+void Qt3KnobSerial :: postProcessEvent(void)
+{}
+
 
 Qt3KnobFifo :: Qt3KnobFifo (const char *pszFifo):
    Qt3Knob()
@@ -197,7 +250,7 @@ void HwKnobWidget::hwKnobRotated( void )
 
       pMw->tune( delta );
 
-      //printf ("%s: DELTA: %d\n", __FUNCTION__, delta); fflush(stdout);
+      printf ("%s: DELTA: %d\n", __FUNCTION__, delta); fflush(stdout);
    }
 }
 

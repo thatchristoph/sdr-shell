@@ -99,6 +99,12 @@ class Main_Widget : public QWidget
         Varilabel *PMSDR_NoFilter_label;
         Varilabel *PMSDR_Filter_label;
 
+        Varilabel *PMSDR_DcVhfFilter_label;
+        Varilabel *PMSDR_DcUhfFilter_label;
+        Varilabel *PMSDR_DcNoFilter_label;
+        Varilabel *PMSDR_DcBypass_label;
+        Varilabel *PMSDR_Dc_label;
+
 		Varilabel *LSB_label;
 		Varilabel *USB_label;
 		Varilabel *DSB_label;
@@ -300,14 +306,22 @@ class Main_Widget : public QWidget
             PMSDR_FILTER_3 = 3,
             PMSDR_FILTER_4 = 4,
         };
+        enum pmsdr_dc {
+            PMSDR_DC_BYPASS       = 0,
+            PMSDR_DC_VHF_FILTER   = 1,
+            PMSDR_DC_UHF_FILTER   = 2,
+            PMSDR_DC_NO_FILTER    = 3,
+        };
 
         Frequency *pF;
 
-        void setPMSDRifGain ( int newIfGain );
-        void setPMSDRfilter ( int newFilter );
-        int  dttsp38;
-        int  pmsdr_gain_state;
-        int  pmsdr_filter_state;
+        void  setPMSDRifGain ( int newIfGain );
+        void  setPMSDRfilter ( int newFilter );
+        void  setPMSDRdownConverter ( int newDc );
+        int   dttsp38;
+        int   pmsdr_gain_state;
+        int   pmsdr_filter_state;
+        int   pmsdr_dc_state;
 
         HwKnobWidget    *pHwKnob;
 
@@ -335,6 +349,7 @@ class Main_Widget : public QWidget
           
         void setPMSDR_IfGain (int) ;
         void setPMSDR_Filter (int) ;
+        void setPMSDR_DownConverter (int) ;
 
         void setFilter_l( int );
         void setFilter_h( int );

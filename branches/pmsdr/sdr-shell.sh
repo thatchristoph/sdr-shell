@@ -24,6 +24,12 @@ function trapped {
    echo "Killing....... jackd ($JACKD_PID)"
    kill  $JACKD_PID
 
+
+   PMSDR_PID=`cat $VARRUN/pmsdr.pid`
+   echo "Killing....... pmsdr ($PMSDR_PID)"
+   kill  $PMSDR_PID
+
+
    if [ ! -z "$HW_KNOB_FIFO" ]; then
       kill "$HW_KNOB_FIFO_PROGRAM_PID"
       rm -f "$HW_KNOB_FIFO"
@@ -67,7 +73,7 @@ function make_connection {
 # Detect the sound card id from name
 #
 
-ALSAH_ID=$(aplay -l | grep "^card.*$ALSAH_NAME" | cut -f 1 -d: | cut -f 2 -d' ')
+ALSAH_ID=$(aplay -l | grep "^card.*$ALSAH_NAME" | cut -f 1 -d: | cut -f 2 -d' ' | sort | uniq)
 
 if [ -z "$ALSAH_ID" ]; then
    echo "Can't find soundcard $ALSAH_NAME"
@@ -79,7 +85,7 @@ fi
 ALSAH="hw:$ALSAH_ID"
 
 echo "ALSA Sound card id: $ALSAH" 
-
+echo "............................."
 
 #
 # Sound Card Sampling Rate
@@ -92,7 +98,8 @@ fi
 export SDR_DEFRATE="$DEFRATE"
 
 
-JACKD_PARAM=" -dalsa -d$ALSAH -r$SDR_DEFRATE "
+JACKD_PARAM=" -r -dalsa -d$ALSAH -r$SDR_DEFRATE "
+
 
 ##############################################################################
 
@@ -173,9 +180,10 @@ fi
 
 ##########################################################################
 # Start jackd
-echo ">>>> Starting jack: $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM"
+echo ">>>> Starting jack: $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM ."
 
-$JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM &
+pasuspender -- $JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM &
+#$JACKD $JACKD_PARAM $JACKD_CUSTOM_PARAM &
 
 JACKD_PID=$!
 if [ $JACKD_PID ] 
@@ -264,8 +272,8 @@ make_connection sdr-$DTTSP_PID:or  alsa_pcm:playback_2
 #
 # Input channel reversed to comply with PMSDR 2.1
 #
-make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:ir
-make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:il
+make_connection alsa_pcm:capture_1 sdr-$DTTSP_PID:il
+make_connection alsa_pcm:capture_2 sdr-$DTTSP_PID:ir
 
 ##########################################################################
 #

@@ -43,6 +43,21 @@ private:
 };
 
 
+class Qt3KnobSerial: public Qt3Knob {
+
+public:
+
+   Qt3KnobSerial (const char *pszSerialPort);
+   ~Qt3KnobSerial () {} 
+   int processEvent(void);
+   void postProcessEvent(void);
+   
+private:
+   FILE *pF;
+   int   value;
+};
+
+
 
 
 class Qt3KnobIoctl: public Qt3Knob {

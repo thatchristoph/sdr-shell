@@ -674,6 +674,10 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 
     }
 
+    //
+    // PMSDR Filters
+    //
+
     QPixmap ifNoFilter_pix( nofilter_xpm ); 
     PMSDR_NoFilter_label = new Varilabel( PmsdrIfGainFrame );
     PMSDR_NoFilter_label->setPixmap( ifNoFilter_pix  );
@@ -756,6 +760,71 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
        pPmsdrLayout->addWidget (PMSDR_Filter_label);
     }
     pPmsdrLayout->addLayout (pPmsdrFilterLayout);
+
+    //
+    // PMSDR downconverter filters
+    //
+    QFrame *PmsdrDcFrame = new QFrame( ctlFrame, "D_pmsdr" );
+    PmsdrDcFrame->setBackgroundColor( QColor( 0, 80, 0 ) );
+    PmsdrDcFrame->setFixedSize ( 130, 31 ) ;
+
+    QPixmap ifDcNoFilter_pix( dcNofilter_xpm ); 
+    PMSDR_DcNoFilter_label = new Varilabel( PmsdrDcFrame );
+    PMSDR_DcNoFilter_label->setPixmap( ifDcNoFilter_pix  );
+    PMSDR_DcNoFilter_label->setLabel( PMSDR_DC_NO_FILTER );
+    //PMSDR_NoFilter_label->setGeometry( 3, 17, 27, 11 );
+    PMSDR_NoFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    connect( PMSDR_DcNoFilter_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_DownConverter(int)) );
+
+    QPixmap ifDcVhfFilter_pix( dcVhf_xpm ); 
+    PMSDR_DcVhfFilter_label = new Varilabel( PmsdrDcFrame );
+    PMSDR_DcVhfFilter_label->setPixmap( ifDcVhfFilter_pix );
+    PMSDR_DcVhfFilter_label->setLabel( PMSDR_DC_VHF_FILTER );
+    //PMSDR_Filter1_label->setGeometry( 33, 17, 27, 11 );
+    PMSDR_DcVhfFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    connect( PMSDR_DcVhfFilter_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_DownConverter(int)) );
+
+    QPixmap ifDcUhfFilter_pix( dcUhf_xpm ); 
+    PMSDR_DcUhfFilter_label = new Varilabel( PmsdrDcFrame );
+    PMSDR_DcUhfFilter_label->setPixmap( ifDcUhfFilter_pix );
+    PMSDR_DcUhfFilter_label->setLabel( PMSDR_DC_UHF_FILTER );
+    //PMSDR_Filter1_label->setGeometry( 33, 17, 27, 11 );
+    PMSDR_DcUhfFilter_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    connect( PMSDR_DcUhfFilter_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_DownConverter(int)) );
+
+    QPixmap ifDcBypass_pix( dcBypass_xpm ); 
+    PMSDR_DcBypass_label = new Varilabel( PmsdrDcFrame );
+    PMSDR_DcBypass_label->setPixmap( ifDcBypass_pix );
+    PMSDR_DcBypass_label->setLabel( PMSDR_DC_BYPASS );
+    //PMSDR_Filter1_label->setGeometry( 33, 17, 27, 11 );
+    PMSDR_DcBypass_label->setSizePolicy (QSizePolicy::Fixed, QSizePolicy::Fixed);
+    connect( PMSDR_DcBypass_label, SIGNAL(mouseRelease(int)), 
+			 this, SLOT(setPMSDR_DownConverter(int)) );
+
+    QHBoxLayout *pPmsdrDcLayout = new QHBoxLayout;
+    pPmsdrDcLayout->addWidget (PMSDR_DcNoFilter_label);
+    pPmsdrDcLayout->addWidget (PMSDR_DcVhfFilter_label);
+    pPmsdrDcLayout->addWidget (PMSDR_DcUhfFilter_label);
+    pPmsdrDcLayout->addWidget (PMSDR_DcBypass_label);
+
+
+    PMSDR_Dc_label = new Varilabel( PmsdrDcFrame );
+    PMSDR_Dc_label->setLabel( 100 );
+    PMSDR_Dc_label->setFont( *font3 );
+    PMSDR_Dc_label->setPaletteForegroundColor( QColor( 0, 255, 0 ) );
+    PMSDR_Dc_label->setPaletteBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_Dc_label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+    PMSDR_Dc_label->setText( "Downconverter" );
+
+    QVBoxLayout *pPmsdrVbDcLayout = new QVBoxLayout (PmsdrDcFrame);
+    pPmsdrVbDcLayout->setMargin(1);
+    pPmsdrVbDcLayout->setSpacing(1);
+    pPmsdrVbDcLayout->addWidget (PMSDR_Dc_label);
+    pPmsdrVbDcLayout->addLayout (pPmsdrDcLayout);
+
 
     // -----------------------------------------------------------------------
     // Display remote station data
@@ -1044,6 +1113,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
     pUpperLayout->addWidget (modeFrame);
     pUpperLayout->addWidget (swFrame);
     pUpperLayout->addWidget (PmsdrIfGainFrame);
+    pUpperLayout->addWidget (PmsdrDcFrame);
     pUpperLayout->addWidget (pStationDataFrame);
 
     QHBoxLayout *pLogoLayout = new  QHBoxLayout ;
@@ -1075,6 +1145,7 @@ Main_Widget::Main_Widget(QWidget *parent, const char *name)
 
     setPMSDR_IfGain ( pmsdr_gain_state   );
     setPMSDR_Filter ( pmsdr_filter_state );
+    setPMSDR_DownConverter ( pmsdr_dc_state );
 
     //worldmap->setObserver( my_lat, my_lon );
     //worldmap->plot();
@@ -1428,8 +1499,9 @@ void Main_Widget::loadSettings()
 	}
 
 
-    pF = new FrequencyPMSDRudp ( sample_rate, pmsdrFile, pCmd );
-    pF->set (settings.readEntry("/sdr-shell/rx_f", "14060000" ).toLongLong());
+    //pF = new FrequencyPMSDRudp ( sample_rate, pmsdrFile, pCmd );
+    pF = new FrequencyPMSDRwithDcUdp ( sample_rate, pmsdrFile, pCmd );
+    pF->set (settings.readEntry("/sdr-shell/rx_f", "130900000" ).toLongLong());
         
 	// Read config
     //sample_rate = settings.readEntry( 
@@ -1532,6 +1604,9 @@ void Main_Widget::loadSettings()
 
     pmsdr_filter_state = settings.readEntry( 
 		"/sdr-shell/pmsdr_filter", "0" ).toInt();
+
+    pmsdr_dc_state = settings.readEntry( 
+		"/sdr-shell/pmsdr_dc", "0" ).toInt();
 
 	printf( "::: Configuration loading completed\n" );
 }
@@ -1727,24 +1802,15 @@ void Main_Widget::saveSettings()
     // Save the PM SDR if gain and filters
     settings.writeEntry( "/sdr-shell/pmsdr_gain",      pmsdr_gain_state   );
     settings.writeEntry( "/sdr-shell/pmsdr_filter",    pmsdr_filter_state );
+    settings.writeEntry( "/sdr-shell/pmsdr_dc",        pmsdr_dc_state );
 }
 
 void Main_Widget::finish()
 {
     saveSettings();
-    //
-    // terminate the sdr-core
-    //
-    pCmd->sendCommand ("setFinish");
+    pCmd->sendCommand ("setFinish");     // terminate the sdr-core
 
-    //
-    // terminate the pmsdr helper program
-    //
-    if ( pmsdrFile != NULL ) {
-        fprintf ( pmsdrFile, "quit\n" );
-        fflush  ( pmsdrFile );
-        fclose ( pmsdrFile );
-    }
+    delete pF;                           // terminate the pmsdr helper program
     delete pSpectrum;
     delete pMeter;
     delete pCmd;
@@ -1913,7 +1979,7 @@ void Main_Widget::setRxFrequency()
         //
         // update PMSDR LCD display
         //
-        if ( pmsdrFile != NULL) {
+        if ( pmsdrFile != NULL && pHwKnob == 0) {
             fprintf ( pmsdrFile, "plcd 0 1 %16.ld\n", (long int)pF->get() );
             fflush  ( pmsdrFile );
             //printf("************ %s: sent to PMSDR LCD: [%s]\n", __FUNCTION__, text);
@@ -1980,6 +2046,19 @@ void Main_Widget::setPMSDRfilter ( int newFilter )
         printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newFilter);
     }
     pmsdr_filter_state = newFilter;
+}
+
+
+void Main_Widget::setPMSDRdownConverter ( int newDc )
+{
+    printf(">>>>>>>>>>>> %s: newDc: %d\n", __FUNCTION__, newDc );
+
+    if ( pmsdrFile != NULL) {
+        fprintf ( pmsdrFile, "dfilter %d\n", newDc );
+        fflush  ( pmsdrFile );
+        printf("************ %s: sent to PMSDR: [%d]\n", __FUNCTION__, newDc);
+    }
+    pmsdr_dc_state = newDc;
 }
 
 
@@ -2694,6 +2773,34 @@ void Main_Widget::setPMSDR_Filter (int newFilter)
         break;
     }
     setPMSDRfilter ( newFilter );
+}
+
+void Main_Widget::setPMSDR_DownConverter (int newDcFilter)
+{
+    PMSDR_DcNoFilter_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_DcVhfFilter_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_DcUhfFilter_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+    PMSDR_DcBypass_label->setBackgroundColor( QColor( 0, 0, 0 ) );
+
+    switch (newDcFilter) {
+    case PMSDR_DC_NO_FILTER:
+        PMSDR_DcNoFilter_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Dc_label->setText( "DownConverter: flat" );
+        break;
+    case PMSDR_DC_VHF_FILTER:
+        PMSDR_DcVhfFilter_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Dc_label->setText( "DownConverter: VHF" );
+        break;
+    case PMSDR_DC_UHF_FILTER:
+        PMSDR_DcUhfFilter_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Dc_label->setText( "DownConverter: UHF" );
+        break;
+    case PMSDR_DC_BYPASS:
+        PMSDR_DcBypass_label->setBackgroundColor( QColor( 0, 150, 50 ) );
+        PMSDR_Dc_label->setText( "DownConverter DISABLED" );
+        break;
+    }
+    setPMSDRdownConverter ( newDcFilter );
 }
 
 void Main_Widget::set_SPEC( int state )
